@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sokongan Keluarga & Penjaga - MY OKU SENTRAL</title>
+    <meta name="description" content="Informasi bantuan, pelepasan cukai dan sokongan untuk keluarga dan penjaga OKU di Malaysia.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- MARKDOWN RENDER -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script defer src="settings.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        access: { 500: '#FBBF24', 600: '#D97706' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+        
+        /* BUANG SCROLLBAR HORIZONTAL */
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="familyData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                   <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+           <div class="flex items-center gap-3 md:gap-6">
+    <a href="index.html" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_home">Utama</a>
+    <a href="#bantuan" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_aid">Bantuan</a>
+    
+    <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+</div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-20 px-4 bg-gradient-to-br from-brand-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-visible">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-brand-200/50 rounded-full blur-3xl -translate-y-20 translate-x-20"></div>
+        
+        <div class="container mx-auto max-w-5xl relative z-10 text-center">
+            <div class="inline-block bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-300 font-bold px-4 py-1 rounded-full text-sm mb-4 animate-bounce">
+                <i class="fas fa-heart mr-2"></i><span x-text="txt[lang].hero_badge">Khas Untuk Ahli Keluarga</span>
+            </div>
+            <h1 class="text-4xl md:text-7xl font-black mb-6 leading-tight">
+                <span x-text="txt[lang].hero_title_1">Sokongan Keluarga &</span><br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-teal-400" x-text="txt[lang].hero_title_2">Penjaga OKU.</span>
+            </h1>
+            <p class="text-lg md:text-2xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-10" x-text="txt[lang].hero_desc">
+                Panduan komprehensif khusus untuk ahli keluarga dan penjaga. Ketahui bantuan penjagaan, pelepasan cukai, dan sokongan moral yang tersedia untuk anda.
+            </p>
+
+            <div class="max-w-3xl mx-auto relative group overflow-hidden" @click.outside="searchResults=[]">
+                <div class="absolute -inset-1 bg-gradient-to-r from-brand-400 to-teal-400 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                <form class="relative flex items-center bg-white dark:bg-gray-800 rounded-full p-2 shadow-2xl" @submit.prevent="doSearch()">
+                    <i class="fas fa-search text-gray-400 ml-4 text-xl"></i>
+                    <input type="text"
+                           x-model.trim="search"
+                           @input.debounce.200ms="doSearch()"
+                           @keydown.escape="searchResults=[]"
+                           :placeholder="txt[lang].search_placeholder"
+                           class="w-full bg-transparent border-none focus:ring-0 text-lg px-4 text-gray-800 dark:text-white placeholder-gray-400 font-semibold h-12 outline-none">
+                    <button type="submit"
+                            class="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3 rounded-full font-bold transition shadow-lg h-12"
+                            x-text="txt[lang].btn_search">
+                        CARI
+                    </button>
+                </form>
+
+                <div x-show="searchResults.length > 0"
+                     x-cloak
+                     x-transition
+                     class="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 z-40 border border-gray-100 dark:border-gray-700 max-h-80 overflow-y-auto text-left">
+                    <template x-for="res in searchResults" :key="res.id">
+                        <a :href="res.link" class="flex items-center gap-4 p-3 hover:bg-brand-50 dark:hover:bg-gray-700 rounded-xl transition group">
+                            <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition">
+                                <i :class="res.icon"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white" x-text="res.title[lang]"></h4>
+                                <p class="text-xs text-gray-500" x-text="res.desc[lang]"></p>
+                            </div>
+                        </a>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="bantuan" class="py-20 bg-brand-50/50 dark:bg-gray-800/50 min-h-screen">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="text-center mb-16">
+                <span class="text-brand-600 font-bold uppercase tracking-wider text-sm mb-2 block" x-text="txt[lang].info_uptitle">Pangkalan Data Khas</span>
+                <h2 class="text-4xl font-black text-gray-900 dark:text-white" x-text="txt[lang].info_title">Fasiliti & Bantuan Penjaga</h2>
+                <p class="mt-4 text-gray-500 dark:text-gray-400" x-text="txt[lang].info_desc">Senarai kemudahan kewangan, pelepasan cukai, dan kelonggaran bekerja untuk ibubapa dan ahli keluarga.</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 mb-10">
+                <template x-for="cat in categories" :key="cat.id">
+                    <button @click="activeCat = cat.id; search = ''" 
+                            class="px-6 py-3 rounded-full font-bold text-sm transition-all border-2 flex items-center gap-2"
+                            :class="activeCat === cat.id ? 'bg-brand-600 border-brand-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 border-transparent hover:border-brand-300 text-gray-600 dark:text-gray-300'">
+                        <i :class="cat.icon"></i> <span x-text="cat.label[lang]"></span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <template x-for="item in filteredData" :key="item.id">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border-l-8 border-brand-500 hover:shadow-xl transition flex flex-col h-full">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-brand-100 text-brand-800 text-[10px] font-bold px-2 py-1 rounded uppercase" x-text="item.provider"></span>
+                            <span class="font-black text-lg text-green-600" x-text="item.value"></span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-gray-900 dark:text-white" x-text="item.title[lang]"></h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed flex-grow" x-text="item.desc[lang]"></p>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl mb-4">
+                            <p class="text-xs font-bold text-gray-400 uppercase mb-2" x-text="txt[lang].lbl_criteria">Syarat Kelayakan:</p>
+                            <ul class="space-y-1">
+                                <template x-for="cri in item.criteria" :key="cri.ms">
+                                    <li class="flex items-start gap-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                        <i class="fas fa-check text-green-500 mt-0.5"></i> <span x-text="cri[lang]"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                        
+                        <div class="flex gap-2 mt-auto">
+                            <a :href="item.link" target="_blank" class="flex-1 text-center bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
+                                <i class="fas fa-external-link-alt"></i> <span x-text="txt[lang].btn_apply">Maklumat Lanjut</span>
+                            </a>
+                            <button @click="openChatWithQuery(item.title[lang])" class="px-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition" :title="txt[lang].btn_ask_bot">
+                                <i class="fas fa-comment"></i>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+                
+                <div x-show="filteredData.length === 0" class="col-span-1 md:col-span-2 text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+                    <i class="fas fa-folder-open text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500 dark:text-gray-400 font-medium" x-text="txt[lang].no_data">Tiada data dijumpai.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6" x-text="txt[lang].ft_desc">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400" x-text="txt[lang].ft_link1">Halaman Utama</a></li>
+                    <li><a href="daftar.html" class="hover:text-brand-400" x-text="txt[lang].ft_link2">Pendaftaran JKM</a></li>
+                    <li><a href="#bantuan" class="hover:text-brand-400" x-text="txt[lang].ft_link3">Semakan Bantuan</a></li>
+                    <li><a href="cukai.html" class="hover:text-brand-400" x-text="txt[lang].ft_link4">Pelepasan Cukai</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> <span x-text="txt[lang].ft_phone">Talian Kasih 15999</span></li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> info@jkm.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs" x-text="txt[lang].ft_copy">
+            © 2026 MYOKU Project. Bukan agensi kerajaan. Data untuk rujukan sahaja.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm" x-text="txt[lang].bot_name">Bot Bantuan Keluarga</h4>
+                        <span class="text-[10px] opacity-80 block" x-text="txt[lang].bot_status">Dalam Talian</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <div class="flex justify-start">
+                    <div class="bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" 
+                         x-html="txt[lang].bot_greet">
+                    </div>
+                </div>
+
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-text="msg.text">
+                        </div>
+                    </div>
+                </template>
+                <div x-show="isTyping" class="flex justify-start">
+                    <div class="bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 h-10 items-center">
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                    </div>
+                </div>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white outline-none">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dots text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function familyData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,
+                showSettings: false,
+                search: '',
+                searchResults: [],
+                activeCat: 'kewangan',
+                
+                chatOpen: false,
+userMsg: '',
+isTyping: false,
+
+messages: [],
+
+chatHistory: [
+{
+role: "system",
+content: "Anda adalah pembantu AI untuk portal MY OKU SENTRAL. Anda membantu keluarga dan penjaga OKU di Malaysia memahami bantuan kewangan, pelepasan cukai, sokongan komuniti, terapi, pendidikan khas, dan kemudahan penjagaan. Jawab dalam Bahasa Melayu yang jelas dan mesra."
+}
+],
+
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(l) {
+                    this.lang = l;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(l);
+                    } else {
+                        localStorage.setItem('myoku_lang', l);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if(val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+                
+                doSearch() {
+                    if(this.search.trim().length < 2) {
+                        this.searchResults = [];
+                        return;
+                    }
+                    const q = this.search.toLowerCase();
+                    this.searchResults = this.items.filter(item => 
+                        item.title[this.lang].toLowerCase().includes(q) || 
+                        item.desc[this.lang].toLowerCase().includes(q)
+                    );
+                },
+
+                get filteredData() {
+                    if(this.search.trim() !== '') {
+                        return this.items.filter(item => 
+                            item.title[this.lang].toLowerCase().includes(this.search.toLowerCase()) || 
+                            item.desc[this.lang].toLowerCase().includes(this.search.toLowerCase())
+                        );
+                    }
+                    return this.items.filter(item => item.cat === this.activeCat);
+                },
+
+                openChatWithQuery(query) {
+                    this.chatOpen = true;
+                    this.userMsg = query;
+                    setTimeout(() => {
+                        this.sendMessage();
+                    }, 500);
+                },
+
+                async sendMessage() {
+
+if(!this.userMsg.trim()) return;
+
+const userText = this.userMsg;
+
+this.messages.push({
+id: Date.now(),
+text: userText,
+sender: 'user'
+});
+
+this.chatHistory.push({
+role: "user",
+content: userText
+});
+
+this.userMsg = '';
+this.isTyping = true;
+
+this.scrollToBottom();
+
+try {
+
+const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"Accept": "application/json",
+"Authorization": "Bearer YOUR_MISTRAL_API_KEY"
+},
+body: JSON.stringify({
+model: "mistral-small-latest",
+messages: this.chatHistory,
+temperature: 0.7,
+max_tokens: 800
+})
+});
+
+const data = await response.json();
+
+const botReply = data.choices[0].message.content;
+
+this.chatHistory.push({
+role: "assistant",
+content: botReply
+});
+
+this.messages.push({
+id: Date.now()+1,
+text: marked.parse(botReply),
+sender: "bot"
+});
+
+} catch(error){
+
+console.error("AI Error:", error);
+
+this.messages.push({
+id: Date.now()+1,
+text: "Maaf, sistem AI sedang sibuk. Cuba lagi sebentar.",
+sender: "bot"
+});
+
+}
+
+this.isTyping = false;
+this.scrollToBottom();
+
+},
+                // ---------------------------------------------------------------- //
+                // TERJEMAHAN KATA (DICTIONARY) - data kekal sama
+                // ---------------------------------------------------------------- //
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        
+                        nav_logo: 'KELUARGA',
+                        menu_home: 'Utama',
+                        menu_aid: 'Bantuan Penjaga',
+                        btn_settings: 'Akses',
+                        
+                        hero_badge: 'Khas Untuk Ahli Keluarga',
+                        hero_title_1: 'Sokongan Keluarga &',
+                        hero_title_2: 'Penjaga OKU.',
+                        hero_desc: 'Panduan komprehensif khusus untuk ahli keluarga dan penjaga. Ketahui bantuan penjagaan, pelepasan cukai, dan sokongan moral yang tersedia untuk anda.',
+                        search_placeholder: 'Cari bantuan penjaga (cth: BPT, Cukai, Cuti)...',
+                        btn_search: 'CARI',
+                        
+                        info_uptitle: 'Pangkalan Data Khas',
+                        info_title: 'Fasiliti & Bantuan Penjaga',
+                        info_desc: 'Senarai kemudahan kewangan, pelepasan cukai, dan kelonggaran bekerja untuk ibubapa dan ahli keluarga.',
+                        lbl_criteria: 'Syarat Kelayakan Utama:',
+                        btn_apply: 'Maklumat Lanjut',
+                        btn_ask_bot: 'Tanya Bot',
+                        no_data: 'Tiada maklumat dalam kategori ini.',
+                        
+                        ft_desc: 'Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.',
+                        ft_links: 'Pautan Pantas',
+                        ft_link1: 'Halaman Utama',
+                        ft_link2: 'Pendaftaran JKM',
+                        ft_link3: 'Semakan Bantuan',
+                        ft_link4: 'Pelepasan Cukai',
+                        ft_contact: 'Hubungi',
+                        ft_phone: 'Talian Kasih 15999',
+                        ft_copy: '© 2026 MYOKU Project. Bukan agensi kerajaan. Data untuk rujukan sahaja.',
+                        
+                        bot_name: 'Bot Bantuan Keluarga',
+                        bot_status: 'Dalam Talian',
+                        bot_greet: 'Hai! 👋 Saya Bot Pintar OKU. Boleh saya bantu anda cari info tentang <b>Elaun Penjaga</b>, <b>Cuti</b>, atau <b>Pelepasan Cukai Anak</b>?',
+                        chat_ph: 'Taip soalan anda...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        
+                        nav_logo: 'FAMILY',
+                        menu_home: 'Home',
+                        menu_aid: 'Caregiver Aid',
+                        btn_settings: 'Access',
+                        
+                        hero_badge: 'Special For Family Members',
+                        hero_title_1: 'Family Support &',
+                        hero_title_2: 'Caregivers.',
+                        hero_desc: 'Comprehensive guide specifically for family members and caregivers. Discover care allowances, tax reliefs, and moral support available for you.',
+                        search_placeholder: 'Search caregiver aid (e.g., BPT, Tax, Leave)...',
+                        btn_search: 'SEARCH',
+                        
+                        info_uptitle: 'Special Database',
+                        info_title: 'Caregiver Facilities & Aid',
+                        info_desc: 'List of financial facilities, tax reliefs, and work flexibilities for parents and family members.',
+                        lbl_criteria: 'Main Eligibility Criteria:',
+                        btn_apply: 'More Info',
+                        btn_ask_bot: 'Ask Bot',
+                        no_data: 'No information found in this category.',
+                        
+                        ft_desc: 'Building an inclusive society through barrier-free information access. Made with ❤️ for Malaysia.',
+                        ft_links: 'Quick Links',
+                        ft_link1: 'Homepage',
+                        ft_link2: 'JKM Registration',
+                        ft_link3: 'Aid Checker',
+                        ft_link4: 'Tax Reliefs',
+                        ft_contact: 'Contact Us',
+                        ft_phone: 'Talian Kasih 15999',
+                        ft_copy: '© 2026 MYOKU Project. Not a government agency. Data for reference only.',
+                        
+                        bot_name: 'Family Assist Bot',
+                        bot_status: 'Online',
+                        bot_greet: 'Hi! 👋 I am the Smart Assist Bot. Can I help you find info about <b>Caregiver Allowance</b>, <b>Leave</b>, or <b>Child Tax Relief</b>?',
+                        chat_ph: 'Type your question here...'
+                    }
+                },
+
+                categories: [
+                    { id: 'kewangan', icon: 'fas fa-hand-holding-heart', label: { ms: 'Bantuan Kewangan', en: 'Financial Aid' } },
+                    { id: 'cukai', icon: 'fas fa-file-invoice-dollar', label: { ms: 'Pelepasan Cukai', en: 'Tax Relief' } },
+                    { id: 'cuti', icon: 'fas fa-calendar-check', label: { ms: 'Kemudahan Cuti', en: 'Leave Facilities' } },
+                    { id: 'sokongan', icon: 'fas fa-users-cog', label: { ms: 'Sokongan Komuniti', en: 'Community Support' } }
+                ],
+
+                items: [
+                    { 
+                        id: 1, cat: 'kewangan', icon: 'fas fa-bed', provider: 'JKM', value: 'RM500 / Bulan', link: 'https://www.jkm.gov.my/',
+                        title: { ms: 'Bantuan Penjagaan OKU Terlantar (BPT)', en: 'Bedridden PWD Care Assistance (BPT)' }, 
+                        desc: { ms: 'Bantuan kewangan bulanan kepada penjaga sepenuh masa kepada OKU atau pesakit kronik yang terlantar.', en: 'Monthly financial aid for full-time caregivers of bedridden PWDs or chronic patients.' },
+                        criteria: [
+                            { ms: 'Penjaga merupakan warganegara Malaysia.', en: 'Caregiver is a Malaysian citizen.' },
+                            { ms: 'Pendapatan keluarga tidak melebihi RM3,000.', en: 'Family income does not exceed RM3,000.' },
+                            { ms: 'OKU terlantar & memerlukan penjagaan rapi.', en: 'PWD is bedridden & requires intensive care.' }
+                        ]
+                    },
+                    { 
+                        id: 2, cat: 'cukai', icon: 'fas fa-child', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+                        title: { ms: 'Pelepasan Cukai Anak OKU', en: 'Disabled Child Tax Relief' }, 
+                        desc: { ms: 'Pelepasan cukai pendapatan untuk ibu bapa yang mempunyai anak berdaftar sebagai OKU dan belum berkahwin.', en: 'Income tax relief for parents who have an unmarried child registered as a PWD.' },
+                        criteria: [
+                            { ms: 'Anak mempunyai Kad OKU sah dari JKM.', en: 'Child has a valid JKM PWD Card.' },
+                            { ms: 'Tambahan RM8,000 jika anak OKU melanjutkan pelajaran di IPTA/IPTS.', en: 'Additional RM8,000 if the disabled child pursues higher education (IPTA/IPTS).' }
+                        ]
+                    },
+                    { 
+                        id: 3, cat: 'cukai', icon: 'fas fa-wheelchair', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+                        title: { ms: 'Pelepasan Pembelian Alat Sokongan Asas', en: 'Basic Support Equipment Tax Relief' }, 
+                        desc: { ms: 'Pelepasan cukai bagi perbelanjaan membeli peralatan sokongan asas untuk diri sendiri, pasangan, anak, atau ibu bapa OKU.', en: 'Tax relief for the purchase of basic support equipment for self, spouse, child, or disabled parents.' },
+                        criteria: [
+                            { ms: 'Resit pembelian atas nama pembayar cukai.', en: 'Purchase receipt is under the taxpayer\'s name.' },
+                            { ms: 'Peralatan diiktiraf (cth: Kerusi roda, alat pendengaran).', en: 'Recognized equipment (e.g., Wheelchair, hearing aids).' }
+                        ]
+                    },
+                    { 
+                        id: 4, cat: 'cuti', icon: 'fas fa-user-clock', provider: 'JPA', value: 'Bergaji Penuh', link: 'https://docs.jpa.gov.my/',
+                        title: { ms: 'Cuti Kuarantin Menjaga Anak Berjangkit', en: 'Quarantine Leave for Childcare' }, 
+                        desc: { ms: 'Kemudahan cuti tanpa rekod (bagi penjawat awam) untuk menjaga anak (termasuk anak OKU) yang menghidap penyakit berjangkit.', en: 'Unrecorded leave facility (for civil servants) to care for a child (including a disabled child) suffering from infectious diseases.' },
+                        criteria: [
+                            { ms: 'Khas untuk Penjawat Awam.', en: 'Exclusive for Civil Servants.' },
+                            { ms: 'Pengesahan dari pegawai perubatan.', en: 'Verification from a medical officer.' }
+                        ]
+                    },
+                    { 
+                        id: 5, cat: 'cuti', icon: 'fas fa-briefcase-medical', provider: 'JPA', value: 'Maksimum 365 Hari', link: 'https://docs.jpa.gov.my/',
+                        title: { ms: 'Cuti Menjaga Anak Tanpa Gaji (CMA)', en: 'Unpaid Childcare Leave' }, 
+                        desc: { ms: 'Cuti khas tanpa gaji bagi pegawai perkhidmatan awam yang perlu menyusukan dan menjaga anak.', en: 'Special unpaid leave for civil servants who need to nurse and care for their child.' },
+                        criteria: [
+                            { ms: 'Pegawai wanita atau lelaki (bergantung syarat JPA).', en: 'Female or male officer (subject to JPA conditions).' },
+                            { ms: 'Boleh disambung bagi kes anak OKU yang memerlukan penjagaan khas.', en: 'Can be extended for cases involving disabled children requiring special care.' }
+                        ]
+                    },
+                    { 
+                        id: 6, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'JKM', value: 'Pemulihan Harian', link: 'https://www.jkm.gov.my/',
+                        title: { ms: 'Program Pemulihan Dalam Komuniti (PDK)', en: 'Community-Based Rehabilitation (CBR)' }, 
+                        desc: { ms: 'Pusat asuhan dan latihan kemahiran untuk OKU di peringkat komuniti bagi mengurangkan beban penjaga bekerja.', en: 'Daycare and skills training centers for PWDs at the community level to ease the burden of working caregivers.' },
+                        criteria: [
+                            { ms: 'OKU yang disahkan dan berdaftar.', en: 'Verified and registered PWD.' },
+                            { ms: 'Yuran minima mengikut jawatankuasa PDK setempat.', en: 'Minimal fees according to local CBR committee.' }
+
+                        ]
+                        
+                    },
+                    { 
+id: 7, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'RM300 / Bulan', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Elaun Pekerja Cacat (EPC)', en: 'Disabled Worker Allowance (EPC)' },
+desc: { ms: 'Bantuan bulanan kepada OKU yang bekerja bagi menggalakkan mereka terus bekerja dan berdikari.', en: 'Monthly allowance for employed persons with disabilities to encourage independence.' },
+criteria: [
+{ ms: 'Pemohon berdaftar sebagai OKU.', en: 'Applicant must be a registered PWD.' },
+{ ms: 'Mempunyai pekerjaan dan pendapatan.', en: 'Must be employed and earning income.' }
+]
+},
+
+{ 
+id: 8, cat: 'kewangan', icon: 'fas fa-coins', provider: 'PERKESO', value: 'Bergantung Kes', link: 'https://www.perkeso.gov.my/',
+title: { ms: 'Faedah Hilang Upaya Kekal', en: 'Permanent Disability Benefit' },
+desc: { ms: 'Faedah kewangan kepada pekerja yang mengalami hilang upaya kekal akibat kemalangan kerja.', en: 'Financial benefits for workers who suffer permanent disability due to workplace accidents.' },
+criteria: [
+{ ms: 'Kemalangan berkaitan kerja.', en: 'Accident must be work-related.' },
+{ ms: 'Dilindungi di bawah PERKESO.', en: 'Must be covered by SOCSO.' }
+]
+},
+
+{ 
+id: 9, cat: 'cukai', icon: 'fas fa-user-injured', provider: 'LHDN', value: 'RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Individu OKU', en: 'Disabled Individual Tax Relief' },
+desc: { ms: 'Pelepasan cukai tambahan bagi individu yang mempunyai status OKU berdaftar.', en: 'Additional tax relief for individuals registered as persons with disabilities.' },
+criteria: [
+{ ms: 'Mempunyai kad OKU sah.', en: 'Must possess valid PWD card.' }
+]
+},
+
+{ 
+id: 10, cat: 'sokongan', icon: 'fas fa-school', provider: 'KPM', value: 'Pendidikan Khas', link: 'https://www.moe.gov.my/',
+title: { ms: 'Program Pendidikan Khas Integrasi (PPKI)', en: 'Special Education Integration Program' },
+desc: { ms: 'Program pendidikan khas di sekolah kerajaan untuk murid OKU.', en: 'Special education program in government schools for students with disabilities.' },
+criteria: [
+{ ms: 'Pelajar OKU berdaftar.', en: 'Registered PWD student.' },
+{ ms: 'Penilaian oleh Kementerian Pendidikan.', en: 'Assessment by Ministry of Education.' }
+]
+},
+
+{ 
+id: 11, cat: 'sokongan', icon: 'fas fa-hospital', provider: 'KKM', value: 'Subsidi Rawatan', link: 'https://www.moh.gov.my/',
+title: { ms: 'Rawatan Perubatan Subsidi OKU', en: 'Subsidized Medical Treatment for PWD' },
+desc: { ms: 'Subsidi rawatan dan pemeriksaan kesihatan di hospital kerajaan untuk OKU.', en: 'Subsidized treatment and health checkups at government hospitals.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' }
+]
+},
+
+{ 
+id: 12, cat: 'kewangan', icon: 'fas fa-graduation-cap', provider: 'JKM', value: 'RM300–RM500', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Pelajar OKU', en: 'PWD Student Assistance' },
+desc: { ms: 'Bantuan kewangan kepada pelajar OKU untuk membantu kos pendidikan.', en: 'Financial aid for students with disabilities to support education expenses.' },
+criteria: [
+{ ms: 'Pelajar OKU berdaftar.', en: 'Registered PWD student.' },
+{ ms: 'Masih belajar di sekolah / IPT.', en: 'Currently studying in school or university.' }
+]
+},
+
+{ 
+id: 13, cat: 'sokongan', icon: 'fas fa-users', provider: 'NGO', value: 'Sokongan Komuniti', link: 'https://www.malaysiacare.org/',
+title: { ms: 'Sokongan NGO OKU', en: 'PWD NGO Community Support' },
+desc: { ms: 'Program komuniti, latihan kemahiran dan sokongan sosial oleh NGO.', en: 'Community programs, skill training and social support by NGOs.' },
+criteria: [
+{ ms: 'Terbuka kepada komuniti OKU.', en: 'Open to PWD community.' }
+]
+},
+
+{ 
+id: 14, cat: 'cukai', icon: 'fas fa-heartbeat', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Perbelanjaan Perubatan OKU', en: 'Medical Expenses Tax Relief for PWD' },
+desc: { ms: 'Pelepasan cukai bagi perbelanjaan rawatan perubatan individu OKU.', en: 'Tax relief for medical treatment expenses for disabled individuals.' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Medical receipts required.' }
+]
+},
+
+{ 
+id: 15, cat: 'cuti', icon: 'fas fa-home', provider: 'Majikan', value: 'Flexible', link: '#',
+title: { ms: 'Kerja Fleksibel Penjaga OKU', en: 'Flexible Work for Caregivers' },
+desc: { ms: 'Sesetengah majikan menyediakan waktu kerja fleksibel untuk pekerja yang menjaga ahli keluarga OKU.', en: 'Some employers provide flexible working hours for employees caring for disabled family members.' },
+criteria: [
+{ ms: 'Bergantung kepada polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{ 
+id: 16, cat: 'sokongan', icon: 'fas fa-wheelchair', provider: 'JKM', value: 'Peralatan Sokongan', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Alat Tiruan / Sokongan', en: 'Artificial Aid & Assistive Devices' },
+desc: { ms: 'Bantuan pembelian alat seperti kerusi roda, kaki palsu dan alat sokongan mobiliti.', en: 'Aid for purchasing wheelchairs, prosthetics and mobility support devices.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' },
+{ ms: 'Penilaian pegawai perubatan.', en: 'Medical officer assessment.' }
+]
+},
+{ 
+  id: 17, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'JKM', value: 'RM150 / Bulan', link: 'https://www.jkm.gov.my/',
+  title: { ms: 'Elaun OKU Tidak Berupaya Bekerja (EOT)', en: 'PWD Unable-to-Work Allowance (EOT)' },
+  desc: { ms: 'Bantuan kewangan kepada OKU yang tidak mampu bekerja kerana keadaan kesihatan dan memerlukan sokongan asas.', en: 'Financial assistance for PWDs who are unable to work due to health conditions and need basic support.' },
+  criteria: [
+    { ms: 'OKU berdaftar dengan JKM.', en: 'PWD registered with JKM.' },
+    { ms: 'Tidak mempunyai pendapatan tetap.', en: 'No fixed income.' }
+  ]
+},
+
+{ 
+  id: 18, cat: 'kewangan', icon: 'fas fa-house-user', provider: 'JKM', value: 'Sekali / Berkala', link: 'https://www.jkm.gov.my/',
+  title: { ms: 'Bantuan Am Persekutuan (BA)', en: 'Federal General Assistance (BA)' },
+  desc: { ms: 'Bantuan tunai untuk keluarga berpendapatan rendah termasuk yang menjaga ahli keluarga OKU.', en: 'Cash aid for low-income families including those caring for a PWD family member.' },
+  criteria: [
+    { ms: 'Pendapatan isi rumah rendah / tiada pendapatan.', en: 'Low household income / no income.' },
+    { ms: 'Keutamaan kepada keluarga rentan (termasuk penjaga OKU).', en: 'Priority for vulnerable families (including PWD caregivers).' }
+  ]
+},
+
+{ 
+  id: 19, cat: 'kewangan', icon: 'fas fa-baby', provider: 'JKM', value: 'Sekali / Berkala', link: 'https://www.jkm.gov.my/',
+  title: { ms: 'Bantuan Kanak-Kanak (BKK)', en: 'Child Assistance (BKK)' },
+  desc: { ms: 'Bantuan kepada keluarga yang mempunyai anak (termasuk anak OKU) untuk kos sara hidup dan pendidikan asas.', en: 'Aid for families with children (including disabled children) to support living costs and basic education.' },
+  criteria: [
+    { ms: 'Keluarga berpendapatan rendah.', en: 'Low-income family.' },
+    { ms: 'Anak masih dalam tanggungan.', en: 'Child is dependent.' }
+  ]
+},
+
+{ 
+  id: 20, cat: 'kewangan', icon: 'fas fa-people-carry-box', provider: 'Zakat', value: 'Bergantung Negeri', link: 'https://www.zakatselangor.com.my/',
+  title: { ms: 'Bantuan Zakat Asnaf OKU / Penjaga', en: 'Zakat Aid for PWD / Caregivers' },
+  desc: { ms: 'Sebahagian negeri menyediakan bantuan zakat untuk asnaf OKU dan keluarga penjaga mengikut kelayakan.', en: 'Some states provide zakat assistance for eligible PWDs and caregiver families.' },
+  criteria: [
+    { ms: 'Tertakluk syarat asnaf & negeri.', en: 'Subject to asnaf category & state rules.' },
+    { ms: 'Dokumen sokongan diperlukan.', en: 'Supporting documents required.' }
+  ]
+},
+
+{ 
+  id: 21, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+  title: { ms: 'Pelepasan Perbelanjaan Rawatan Ibu Bapa OKU', en: 'Tax Relief for Disabled Parents Medical Expenses' },
+  desc: { ms: 'Pelepasan cukai bagi perbelanjaan rawatan perubatan ibu bapa OKU (mengikut garis panduan LHDN).', en: 'Tax relief for medical expenses of disabled parents (subject to LHDN guidelines).' },
+  criteria: [
+    { ms: 'Resit rawatan & dokumen sokongan.', en: 'Medical receipts & supporting documents.' },
+    { ms: 'Ibu bapa disahkan OKU (jika berkenaan).', en: 'Parents verified as PWD (if applicable).' }
+  ]
+},
+
+{ 
+  id: 22, cat: 'cukai', icon: 'fas fa-house-medical', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+  title: { ms: 'Pelepasan Peralatan Perubatan OKU', en: 'Tax Relief for PWD Medical Equipment' },
+  desc: { ms: 'Pelepasan cukai bagi pembelian peralatan perubatan/sokongan yang diperlukan oleh OKU.', en: 'Tax relief for the purchase of medical/assistive equipment needed by a PWD.' },
+  criteria: [
+    { ms: 'Peralatan berkaitan kesihatan & sokongan.', en: 'Equipment must be health/assistive related.' },
+    { ms: 'Resit atas nama pembayar cukai.', en: 'Receipt under taxpayer’s name.' }
+  ]
+},
+
+{ 
+  id: 23, cat: 'cukai', icon: 'fas fa-hand-holding-medical', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+  title: { ms: 'Pelepasan Terapi & Rehabilitasi OKU', en: 'Tax Relief for PWD Therapy & Rehabilitation' },
+  desc: { ms: 'Pelepasan cukai untuk kos terapi seperti fisioterapi/terapi pertuturan (jika memenuhi syarat).', en: 'Tax relief for therapy costs such as physiotherapy/speech therapy (subject to conditions).' },
+  criteria: [
+    { ms: 'Disokong surat / resit pusat rawatan.', en: 'Supported by clinic/center receipts.' },
+    { ms: 'Tertakluk garis panduan LHDN semasa.', en: 'Subject to current LHDN guidelines.' }
+  ]
+},
+
+{ 
+  id: 24, cat: 'cuti', icon: 'fas fa-user-nurse', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+  title: { ms: 'Cuti Kecemasan Menjaga Ahli Keluarga OKU', en: 'Emergency Leave to Care for a PWD Family Member' },
+  desc: { ms: 'Sesetengah syarikat memberi cuti kecemasan untuk penjagaan ahli keluarga (termasuk OKU).', en: 'Some companies provide emergency leave for caring family members (including PWD).' },
+  criteria: [
+    { ms: 'Bergantung polisi HR syarikat.', en: 'Depends on company HR policy.' },
+    { ms: 'Dokumen sokongan (jika diminta).', en: 'Supporting documents if requested.' }
+  ]
+},
+
+{ 
+  id: 25, cat: 'cuti', icon: 'fas fa-stethoscope', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+  title: { ms: 'Cuti Temujanji Hospital Penjaga', en: 'Caregiver Hospital Appointment Leave' },
+  desc: { ms: 'Kelonggaran masa kerja untuk membawa anak/ibu bapa OKU ke temujanji rawatan.', en: 'Work flexibility to accompany a disabled child/parent to medical appointments.' },
+  criteria: [
+    { ms: 'Bukti temujanji hospital (jika perlu).', en: 'Proof of appointment (if needed).' },
+    { ms: 'Diputuskan oleh majikan.', en: 'Approved by employer.' }
+  ]
+},
+
+{ 
+  id: 26, cat: 'sokongan', icon: 'fas fa-chalkboard-teacher', provider: 'JKM', value: 'Latihan & Kursus', link: 'https://www.jkm.gov.my/',
+  title: { ms: 'Latihan Keibubapaan / Penjagaan OKU', en: 'Parenting & PWD Care Training' },
+  desc: { ms: 'Program latihan penjagaan asas, pengurusan emosi, dan kemahiran untuk penjaga OKU.', en: 'Training programs for basic care, emotional management, and skills for PWD caregivers.' },
+  criteria: [
+    { ms: 'Terbuka kepada penjaga/keluarga OKU.', en: 'Open to PWD caregivers/family members.' }
+  ]
+},
+
+{ 
+  id: 27, cat: 'sokongan', icon: 'fas fa-comments', provider: 'NGO', value: 'Sesi Sokongan', link: 'https://www.befrienders.org.my/',
+  title: { ms: 'Sokongan Emosi & Kaunseling Penjaga', en: 'Emotional Support & Counseling for Caregivers' },
+  desc: { ms: 'Sokongan mental/emosi untuk penjaga yang mengalami burnout, stres atau kemurungan.', en: 'Mental/emotional support for caregivers facing burnout, stress, or depression.' },
+  criteria: [
+    { ms: 'Terbuka kepada umum.', en: 'Open to the public.' }
+  ]
+},
+
+{ 
+  id: 28, cat: 'sokongan', icon: 'fas fa-building', provider: 'PDK', value: 'Harian', link: 'https://www.jkm.gov.my/',
+  title: { ms: 'Penjagaan Harian di PDK', en: 'Day Care Support at CBR Centers' },
+  desc: { ms: 'Kemudahan penjagaan siang dan aktiviti latihan untuk OKU bagi membantu penjaga bekerja.', en: 'Day care and training activities for PWDs to support working caregivers.' },
+  criteria: [
+    { ms: 'Tertakluk kapasiti PDK setempat.', en: 'Subject to local center capacity.' },
+    { ms: 'OKU berdaftar.', en: 'Registered PWD.' }
+  ]
+},
+
+{ 
+  id: 29, cat: 'kewangan', icon: 'fas fa-briefcase', provider: 'PERKESO', value: 'Program Kerjaya', link: 'https://www.perkeso.gov.my/',
+  title: { ms: 'Program Return To Work (RTW)', en: 'Return To Work (RTW) Program' },
+  desc: { ms: 'Program rehabilitasi dan penempatan kerja semula untuk individu yang tercedera/kurang upaya akibat kerja.', en: 'Rehabilitation and return-to-employment program for individuals injured/disabled due to work.' },
+  criteria: [
+    { ms: 'Kes berkaitan pekerjaan / caruman PERKESO.', en: 'Work-related case / SOCSO contribution.' }
+  ]
+},
+
+{ 
+  id: 30, cat: 'sokongan', icon: 'fas fa-bus', provider: 'Pengangkutan', value: 'Diskaun / Kemudahan', link: 'https://www.myrapid.com.my/',
+  title: { ms: 'Kemudahan Pengangkutan OKU', en: 'PWD Public Transport Facilities' },
+  desc: { ms: 'Sesetengah operator pengangkutan menyediakan kemudahan akses & diskaun untuk OKU dan penjaga.', en: 'Some transport operators provide accessibility features & discounts for PWDs and caregivers.' },
+  criteria: [
+    { ms: 'Kad OKU diperlukan (jika berkenaan).', en: 'PWD card may be required.' }
+  ]
+},
+
+{ 
+  id: 31, cat: 'cukai', icon: 'fas fa-file-signature', provider: 'LHDN', value: 'Dokumen Sokongan', link: 'https://mytax.hasil.gov.my/',
+  title: { ms: 'Dokumen & Resit Pelepasan OKU (Checklist)', en: 'PWD Tax Relief Documents (Checklist)' },
+  desc: { ms: 'Senarai dokumen penting seperti resit, surat doktor, dan kad OKU untuk tuntutan pelepasan cukai.', en: 'Important documents checklist such as receipts, doctor letters, and PWD card for tax relief claims.' },
+  criteria: [
+    { ms: 'Simpan resit & rekod sekurang-kurangnya 7 tahun.', en: 'Keep receipts & records for at least 7 years.' }
+  ]
+},
+
+{ 
+  id: 32, cat: 'cuti', icon: 'fas fa-laptop-house', provider: 'Majikan', value: 'WFA / Hybrid', link: '#',
+  title: { ms: 'Kerja Dari Rumah (WFA) Untuk Penjaga', en: 'Work From Home (WFA) for Caregivers' },
+  desc: { ms: 'Pilihan kerja dari rumah/hybrid untuk penjaga OKU (bergantung jenis kerja & polisi organisasi).', en: 'Work-from-home/hybrid options for caregivers (depending on role & policy).' },
+  criteria: [
+    { ms: 'Bergantung kesesuaian kerja.', en: 'Depends on job suitability.' },
+    { ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+  ]
+},
+
+{ 
+  id: 33, cat: 'sokongan', icon: 'fas fa-handshake', provider: 'Komuniti', value: 'Sukarelawan', link: '#',
+  title: { ms: 'Jaringan Sukarelawan Penjaga', en: 'Caregiver Volunteer Network' },
+  desc: { ms: 'Jaringan sukarelawan untuk membantu penjaga sementara (respite care) atau bantuan logistik.', en: 'Volunteer networks to support temporary caregiving (respite care) or logistics.' },
+  criteria: [
+    { ms: 'Bergantung komuniti setempat.', en: 'Depends on local community availability.' }
+  ]
+},
+
+{ 
+  id: 34, cat: 'kewangan', icon: 'fas fa-heart', provider: 'Hospital / NGO', value: 'Bergantung Program', link: '#',
+  title: { ms: 'Dana Khas Rawatan & Peralatan OKU', en: 'Special Fund for Treatment & Assistive Devices' },
+  desc: { ms: 'Sesetengah hospital/NGO ada dana bantuan untuk rawatan atau pembelian peralatan sokongan.', en: 'Some hospitals/NGOs offer aid funds for treatment or assistive device purchases.' },
+  criteria: [
+    { ms: 'Penilaian kes & dokumen sokongan.', en: 'Case assessment & supporting documents.' }
+  ]
+},
+
+{ 
+  id: 35, cat: 'sokongan', icon: 'fas fa-book-open', provider: 'KPM/Komuniti', value: 'Bimbingan', link: 'https://www.moe.gov.my/',
+  title: { ms: 'Sokongan Pembelajaran Anak OKU', en: 'Learning Support for Disabled Children' },
+  desc: { ms: 'Bantuan bimbingan pembelajaran dan intervensi awal untuk anak OKU.', en: 'Learning guidance and early intervention support for disabled children.' },
+  criteria: [
+    { ms: 'Terbuka kepada murid berkeperluan khas.', en: 'Open to special needs students.' }
+  ]
+},
+
+{ 
+  id: 36, cat: 'cukai', icon: 'fas fa-car', provider: 'Agensi Berkaitan', value: 'Bergantung Polisi', link: '#',
+  title: { ms: 'Kemudahan Kenderaan / Mobiliti OKU', en: 'PWD Vehicle / Mobility Facilities' },
+  desc: { ms: 'Sesetengah kemudahan berkaitan mobiliti OKU (mengikut polisi semasa dan kelayakan).', en: 'Certain facilities related to PWD mobility (subject to current policies and eligibility).' },
+  criteria: [
+    { ms: 'Tertakluk syarat & dokumen sokongan.', en: 'Subject to conditions & supporting documents.' }
+  ]
+},
+
+{ 
+  id: 37, cat: 'cuti', icon: 'fas fa-user-shield', provider: 'JPA', value: 'Tanpa Rekod', link: 'https://docs.jpa.gov.my/',
+  title: { ms: 'Kelonggaran Penjawat Awam (Kes Penjagaan)', en: 'Civil Service Flexibility (Care Cases)' },
+  desc: { ms: 'Kemudahan kelonggaran tertentu untuk penjawat awam yang berdepan komitmen penjagaan keluarga.', en: 'Certain flexibility facilities for civil servants with caregiving commitments.' },
+  criteria: [
+    { ms: 'Tertakluk peraturan & arahan semasa.', en: 'Subject to current circulars & regulations.' }
+  ]
+},
+
+{ 
+  id: 38, cat: 'kewangan', icon: 'fas fa-hands-holding-circle', provider: 'JKM', value: 'Bergantung Program', link: 'https://www.jkm.gov.my/',
+  title: { ms: 'Geran / Projek Ekonomi OKU', en: 'PWD Economic Empowerment Grants' },
+  desc: { ms: 'Program untuk bantu OKU atau keluarga bina pendapatan melalui latihan dan bantuan peralatan kecil.', en: 'Programs to help PWDs or families generate income through training and small equipment support.' },
+  criteria: [
+    { ms: 'OKU berdaftar atau keluarga penjaga.', en: 'Registered PWD or caregiver family.' }
+  ]
+},
+
+{ 
+  id: 39, cat: 'sokongan', icon: 'fas fa-star', provider: 'Komuniti', value: 'Peer Support', link: '#',
+  title: { ms: 'Kumpulan Sokongan Ibu Bapa (Parent Support Group)', en: 'Parent Support Group (Peer Support)' },
+  desc: { ms: 'Kumpulan sokongan untuk berkongsi pengalaman, tips penjagaan, dan sokongan moral.', en: 'Support groups to share experiences, caregiving tips, and moral support.' },
+  criteria: [
+    { ms: 'Terbuka kepada ibu bapa/penjaga.', en: 'Open to parents/caregivers.' }
+  ]
+},
+
+{ 
+  id: 40, cat: 'kewangan', icon: 'fas fa-file-medical', provider: 'JKM', value: 'Bergantung Keperluan', link: 'https://www.jkm.gov.my/',
+  title: { ms: 'Bantuan Keperluan Khas (Kecemasan)', en: 'Special Needs Assistance (Emergency)' },
+  desc: { ms: 'Bantuan segera untuk kes tertentu seperti keperluan ubat, makanan, atau keperluan asas penjagaan.', en: 'Immediate assistance for specific cases such as medication, food, or essential caregiving needs.' },
+  criteria: [
+    { ms: 'Tertakluk siasatan dan kelulusan.', en: 'Subject to assessment and approval.' }
+  ]
+},
+{
+id: 41, cat: 'kewangan', icon: 'fas fa-hand-holding-heart', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Kecemasan Keluarga OKU', en: 'Emergency Aid for PWD Families' },
+desc: { ms: 'Bantuan sementara kepada keluarga yang menjaga OKU apabila berlaku kecemasan kewangan.', en: 'Temporary assistance for families caring for a PWD during financial emergencies.' },
+criteria: [
+{ ms: 'Keluarga berpendapatan rendah.', en: 'Low income household.' },
+{ ms: 'Kes disiasat oleh pegawai kebajikan.', en: 'Case assessed by welfare officer.' }
+]
+},
+
+{
+id: 42, cat: 'kewangan', icon: 'fas fa-graduation-cap', provider: 'JKM', value: 'RM300–RM500', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Pendidikan OKU', en: 'PWD Education Assistance' },
+desc: { ms: 'Bantuan kewangan untuk menyokong pendidikan pelajar OKU di sekolah atau institusi pengajian.', en: 'Financial aid to support education for students with disabilities.' },
+criteria: [
+{ ms: 'Pelajar OKU berdaftar.', en: 'Registered PWD student.' },
+{ ms: 'Masih belajar.', en: 'Currently studying.' }
+]
+},
+
+{
+id: 43, cat: 'cukai', icon: 'fas fa-file-invoice', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Rawatan Perubatan OKU', en: 'Tax Relief for PWD Medical Treatment' },
+desc: { ms: 'Pelepasan cukai untuk perbelanjaan rawatan perubatan berkaitan OKU.', en: 'Tax relief for medical treatment expenses related to disabilities.' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Medical receipts required.' }
+]
+},
+
+{
+id: 44, cat: 'cuti', icon: 'fas fa-user-clock', provider: 'Majikan', value: 'Flexible', link: '#',
+title: { ms: 'Kelonggaran Waktu Kerja Penjaga', en: 'Flexible Working Hours for Caregivers' },
+desc: { ms: 'Sesetengah majikan memberi kelonggaran waktu kerja untuk pekerja yang menjaga ahli keluarga OKU.', en: 'Some employers allow flexible hours for employees caring for disabled family members.' },
+criteria: [
+{ ms: 'Tertakluk polisi majikan.', en: 'Subject to employer policy.' }
+]
+},
+
+{
+id: 45, cat: 'sokongan', icon: 'fas fa-users', provider: 'NGO', value: 'Program Komuniti', link: '#',
+title: { ms: 'Program Sokongan Komuniti OKU', en: 'Community Support Program for PWD' },
+desc: { ms: 'Program komuniti yang menyediakan aktiviti, latihan dan sokongan sosial untuk OKU.', en: 'Community programs providing activities, training and social support for PWD.' },
+criteria: [
+{ ms: 'Terbuka kepada komuniti OKU.', en: 'Open to the PWD community.' }
+]
+},
+
+{
+id: 46, cat: 'kewangan', icon: 'fas fa-coins', provider: 'Zakat', value: 'Bergantung Negeri', link: '#',
+title: { ms: 'Bantuan Zakat Penjaga OKU', en: 'Zakat Aid for PWD Caregivers' },
+desc: { ms: 'Bantuan zakat kepada keluarga yang menjaga ahli keluarga OKU.', en: 'Zakat assistance for families caring for disabled members.' },
+criteria: [
+{ ms: 'Tertakluk syarat asnaf.', en: 'Subject to zakat eligibility.' }
+]
+},
+
+{
+id: 47, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'JKM', value: 'Latihan', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Latihan Kemahiran Penjaga', en: 'Caregiver Skills Training' },
+desc: { ms: 'Latihan asas penjagaan OKU seperti pengurusan kesihatan dan mobiliti.', en: 'Basic training for caregivers such as health and mobility management.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga OKU.', en: 'Open to PWD caregivers.' }
+]
+},
+
+{
+id: 48, cat: 'cukai', icon: 'fas fa-wheelchair', provider: 'LHDN', value: 'RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Cukai Individu OKU', en: 'Tax Relief for Disabled Individual' },
+desc: { ms: 'Pelepasan cukai tambahan untuk individu yang mempunyai status OKU.', en: 'Additional tax relief for individuals with PWD status.' },
+criteria: [
+{ ms: 'Mempunyai kad OKU sah.', en: 'Valid PWD card.' }
+]
+},
+
+{
+id: 49, cat: 'cuti', icon: 'fas fa-calendar-check', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Menjaga Ahli Keluarga OKU', en: 'Leave to Care for Disabled Family Member' },
+desc: { ms: 'Kelonggaran cuti khas untuk pekerja menjaga ahli keluarga OKU.', en: 'Special leave flexibility for employees caring for disabled family members.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 50, cat: 'sokongan', icon: 'fas fa-comments', provider: 'NGO', value: 'Kaunseling', link: '#',
+title: { ms: 'Kaunseling Penjaga OKU', en: 'Counseling for PWD Caregivers' },
+desc: { ms: 'Sokongan emosi dan psikologi untuk penjaga yang mengalami tekanan.', en: 'Emotional and psychological support for stressed caregivers.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 51, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Peralatan OKU', en: 'Assistive Equipment Aid' },
+desc: { ms: 'Bantuan kewangan untuk membeli alat sokongan seperti kerusi roda.', en: 'Financial assistance to purchase assistive devices like wheelchairs.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' }
+]
+},
+
+{
+id: 52, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Rawatan Ibu Bapa', en: 'Tax Relief for Parents Medical Expenses' },
+desc: { ms: 'Pelepasan cukai bagi perbelanjaan rawatan ibu bapa termasuk ibu bapa OKU.', en: 'Tax relief for medical expenses of parents including disabled parents.' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Medical receipts required.' }
+]
+},
+
+{
+id: 53, cat: 'cuti', icon: 'fas fa-laptop-house', provider: 'Majikan', value: 'Hybrid / Remote', link: '#',
+title: { ms: 'Kerja Fleksibel Penjaga OKU', en: 'Flexible Work Arrangement for Caregivers' },
+desc: { ms: 'Pilihan kerja hybrid atau remote untuk penjaga ahli keluarga OKU.', en: 'Hybrid or remote work options for employees caring for disabled family members.' },
+criteria: [
+{ ms: 'Bergantung polisi organisasi.', en: 'Depends on organisation policy.' }
+]
+},
+
+{
+id: 54, cat: 'sokongan', icon: 'fas fa-school', provider: 'KPM', value: 'Program Pendidikan', link: 'https://www.moe.gov.my/',
+title: { ms: 'Pendidikan Khas Integrasi', en: 'Special Education Integration Program' },
+desc: { ms: 'Program pendidikan khas untuk pelajar OKU di sekolah kerajaan.', en: 'Special education program for disabled students in government schools.' },
+criteria: [
+{ ms: 'Pelajar OKU berdaftar.', en: 'Registered PWD student.' }
+]
+},
+
+{
+id: 55, cat: 'kewangan', icon: 'fas fa-people-carry', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Sokongan Keluarga OKU', en: 'Family Support Aid for PWD' },
+desc: { ms: 'Bantuan kepada keluarga yang menanggung kos penjagaan OKU.', en: 'Aid for families bearing the cost of caring for a disabled member.' },
+criteria: [
+{ ms: 'Isi rumah berpendapatan rendah.', en: 'Low income household.' }
+]
+},
+
+{
+id: 56, cat: 'sokongan', icon: 'fas fa-hospital', provider: 'KKM', value: 'Subsidi Rawatan', link: 'https://www.moh.gov.my/',
+title: { ms: 'Subsidi Rawatan Hospital', en: 'Hospital Treatment Subsidy' },
+desc: { ms: 'Subsidi rawatan hospital kerajaan untuk OKU.', en: 'Subsidized treatment at government hospitals for PWD.' },
+criteria: [
+{ ms: 'Kad OKU diperlukan.', en: 'PWD card required.' }
+]
+},
+
+{
+id: 57, cat: 'cukai', icon: 'fas fa-user-injured', provider: 'LHDN', value: 'RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Cukai Individu Kurang Upaya', en: 'Tax Relief for Disabled Individuals' },
+desc: { ms: 'Pelepasan cukai tambahan kepada individu kurang upaya.', en: 'Additional tax relief for disabled individuals.' },
+criteria: [
+{ ms: 'Individu mempunyai kad OKU.', en: 'Individual has a PWD card.' }
+]
+},
+
+{
+id: 58, cat: 'cuti', icon: 'fas fa-calendar-day', provider: 'Majikan', value: 'Flexible', link: '#',
+title: { ms: 'Cuti Temujanji Hospital', en: 'Hospital Appointment Leave' },
+desc: { ms: 'Kelonggaran cuti untuk membawa ahli keluarga OKU ke hospital.', en: 'Leave flexibility to bring disabled family members to hospital appointments.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 59, cat: 'sokongan', icon: 'fas fa-handshake', provider: 'Komuniti', value: 'Peer Support', link: '#',
+title: { ms: 'Kumpulan Sokongan Penjaga', en: 'Caregiver Support Groups' },
+desc: { ms: 'Kumpulan sokongan untuk berkongsi pengalaman menjaga OKU.', en: 'Support groups to share experiences caring for PWD.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 60, cat: 'kewangan', icon: 'fas fa-hand-holding-medical', provider: 'JKM', value: 'Bergantung Keperluan', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Perubatan OKU', en: 'PWD Medical Aid' },
+desc: { ms: 'Bantuan kewangan untuk kos rawatan perubatan OKU.', en: 'Financial aid for medical treatment of persons with disabilities.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' }
+]
+},
+{
+id: 61, cat: 'kewangan', icon: 'fas fa-coins', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Kewangan Tambahan OKU', en: 'Additional Financial Aid for PWD' },
+desc: { ms: 'Bantuan kewangan tambahan bagi OKU yang memerlukan sokongan kos sara hidup.', en: 'Additional financial aid for PWDs requiring support for living expenses.' },
+criteria: [
+{ ms: 'OKU berdaftar dengan JKM.', en: 'Registered PWD with JKM.' },
+{ ms: 'Pendapatan isi rumah rendah.', en: 'Low household income.' }
+]
+},
+
+{
+id: 62, cat: 'kewangan', icon: 'fas fa-piggy-bank', provider: 'Zakat', value: 'Bergantung Negeri', link: '#',
+title: { ms: 'Bantuan Sara Hidup Penjaga OKU', en: 'Living Support Aid for Caregivers' },
+desc: { ms: 'Bantuan sara hidup untuk keluarga yang menjaga ahli keluarga OKU.', en: 'Living assistance for families caring for a disabled family member.' },
+criteria: [
+{ ms: 'Tertakluk syarat asnaf.', en: 'Subject to zakat eligibility.' }
+]
+},
+
+{
+id: 63, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Cukai Pembelian Alat OKU', en: 'Tax Relief for Assistive Devices' },
+desc: { ms: 'Pelepasan cukai bagi pembelian alat bantuan seperti kerusi roda atau alat pendengaran.', en: 'Tax relief for assistive devices such as wheelchairs or hearing aids.' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Purchase receipt required.' }
+]
+},
+
+{
+id: 64, cat: 'cuti', icon: 'fas fa-user-md', provider: 'Majikan', value: 'Flexible', link: '#',
+title: { ms: 'Cuti Rawatan Keluarga OKU', en: 'Leave for PWD Family Medical Care' },
+desc: { ms: 'Kelonggaran cuti untuk menjaga ahli keluarga OKU yang sedang menjalani rawatan.', en: 'Leave flexibility for caring for a disabled family member undergoing treatment.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 65, cat: 'sokongan', icon: 'fas fa-users', provider: 'Komuniti', value: 'Program Komuniti', link: '#',
+title: { ms: 'Program Aktiviti Sosial OKU', en: 'PWD Social Activity Programs' },
+desc: { ms: 'Program komuniti yang membantu OKU berinteraksi dan meningkatkan keyakinan diri.', en: 'Community programs helping PWDs interact and build confidence.' },
+criteria: [
+{ ms: 'Terbuka kepada komuniti OKU.', en: 'Open to the PWD community.' }
+]
+},
+
+{
+id: 66, cat: 'kewangan', icon: 'fas fa-briefcase', provider: 'PERKESO', value: 'Program Kerjaya', link: 'https://www.perkeso.gov.my/',
+title: { ms: 'Program Latihan Pekerjaan OKU', en: 'PWD Employment Training Program' },
+desc: { ms: 'Latihan kemahiran pekerjaan untuk membantu OKU mendapatkan pekerjaan.', en: 'Job skill training programs to help PWDs gain employment.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' }
+]
+},
+
+{
+id: 67, cat: 'cukai', icon: 'fas fa-file-medical', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Terapi OKU', en: 'Tax Relief for Therapy Costs' },
+desc: { ms: 'Pelepasan cukai bagi kos terapi seperti fisioterapi dan terapi pertuturan.', en: 'Tax relief for therapy costs such as physiotherapy and speech therapy.' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Treatment receipts required.' }
+]
+},
+
+{
+id: 68, cat: 'cuti', icon: 'fas fa-clock', provider: 'Majikan', value: 'Flexible Hours', link: '#',
+title: { ms: 'Kelonggaran Waktu Kerja', en: 'Flexible Working Hours' },
+desc: { ms: 'Majikan boleh memberi kelonggaran waktu kerja kepada penjaga OKU.', en: 'Employers may provide flexible hours for employees caring for PWD family members.' },
+criteria: [
+{ ms: 'Bergantung polisi syarikat.', en: 'Depends on company policy.' }
+]
+},
+
+{
+id: 69, cat: 'sokongan', icon: 'fas fa-comments', provider: 'NGO', value: 'Sesi Sokongan', link: '#',
+title: { ms: 'Sokongan Emosi Penjaga', en: 'Emotional Support for Caregivers' },
+desc: { ms: 'Program sokongan mental untuk penjaga yang mengalami tekanan.', en: 'Mental health support programs for stressed caregivers.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 70, cat: 'kewangan', icon: 'fas fa-hands-helping', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Sokongan Penjaga', en: 'Caregiver Support Assistance' },
+desc: { ms: 'Bantuan kepada penjaga yang menanggung kos penjagaan harian OKU.', en: 'Assistance for caregivers covering daily care costs of PWDs.' },
+criteria: [
+{ ms: 'Isi rumah berpendapatan rendah.', en: 'Low income household.' }
+]
+},
+
+{
+id: 71, cat: 'kewangan', icon: 'fas fa-house-user', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Perumahan Keluarga OKU', en: 'Housing Support for PWD Families' },
+desc: { ms: 'Bantuan kepada keluarga OKU yang memerlukan sokongan perumahan.', en: 'Housing support for families with disabled members.' },
+criteria: [
+{ ms: 'Pendapatan rendah.', en: 'Low income.' }
+]
+},
+
+{
+id: 72, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Perbelanjaan Perubatan Keluarga', en: 'Tax Relief for Family Medical Expenses' },
+desc: { ms: 'Pelepasan cukai untuk kos rawatan ahli keluarga termasuk OKU.', en: 'Tax relief for medical expenses of family members including PWDs.' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 73, cat: 'cuti', icon: 'fas fa-hospital-user', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Temujanji Perubatan', en: 'Medical Appointment Leave' },
+desc: { ms: 'Cuti khas untuk membawa ahli keluarga OKU ke hospital atau klinik.', en: 'Special leave to accompany a disabled family member to hospital appointments.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 74, cat: 'sokongan', icon: 'fas fa-school', provider: 'KPM', value: 'Program Pendidikan', link: 'https://www.moe.gov.my/',
+title: { ms: 'Program Pendidikan Khas', en: 'Special Education Program' },
+desc: { ms: 'Program pendidikan khas untuk kanak-kanak OKU.', en: 'Special education programs for children with disabilities.' },
+criteria: [
+{ ms: 'Pelajar OKU berdaftar.', en: 'Registered PWD student.' }
+]
+},
+
+{
+id: 75, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'NGO', value: 'Dana Bantuan', link: '#',
+title: { ms: 'Dana Sokongan OKU', en: 'PWD Support Fund' },
+desc: { ms: 'Dana bantuan yang ditawarkan oleh NGO untuk membantu OKU.', en: 'Support funds offered by NGOs to assist PWDs.' },
+criteria: [
+{ ms: 'Bergantung program NGO.', en: 'Depends on NGO program.' }
+]
+},
+
+{
+id: 76, cat: 'cukai', icon: 'fas fa-file-signature', provider: 'LHDN', value: 'Dokumen Sokongan', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Checklist Dokumen Pelepasan OKU', en: 'PWD Tax Relief Document Checklist' },
+desc: { ms: 'Panduan dokumen yang diperlukan untuk tuntutan pelepasan cukai berkaitan OKU.', en: 'Guide to documents required for PWD-related tax relief claims.' },
+criteria: [
+{ ms: 'Simpan semua resit.', en: 'Keep all receipts.' }
+]
+},
+
+{
+id: 77, cat: 'cuti', icon: 'fas fa-laptop-house', provider: 'Majikan', value: 'Remote Work', link: '#',
+title: { ms: 'Kerja Dari Rumah Penjaga', en: 'Work From Home for Caregivers' },
+desc: { ms: 'Pilihan bekerja dari rumah bagi pekerja yang menjaga ahli keluarga OKU.', en: 'Work-from-home options for employees caring for disabled family members.' },
+criteria: [
+{ ms: 'Bergantung polisi organisasi.', en: 'Depends on organization policy.' }
+]
+},
+
+{
+id: 78, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'Komuniti', value: 'Sukarelawan', link: '#',
+title: { ms: 'Program Sukarelawan Penjaga', en: 'Caregiver Volunteer Program' },
+desc: { ms: 'Program sukarelawan yang membantu penjaga dalam aktiviti harian OKU.', en: 'Volunteer programs assisting caregivers in daily PWD activities.' },
+criteria: [
+{ ms: 'Terbuka kepada komuniti.', en: 'Open to community.' }
+]
+},
+
+{
+id: 79, cat: 'kewangan', icon: 'fas fa-medkit', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Rawatan OKU', en: 'PWD Treatment Aid' },
+desc: { ms: 'Bantuan kewangan untuk kos rawatan kesihatan OKU.', en: 'Financial assistance for healthcare costs of PWDs.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' }
+]
+},
+
+{
+id: 80, cat: 'sokongan', icon: 'fas fa-star', provider: 'Komuniti', value: 'Peer Support', link: '#',
+title: { ms: 'Kumpulan Sokongan Penjaga OKU', en: 'PWD Caregiver Support Group' },
+desc: { ms: 'Kumpulan sokongan yang membantu penjaga berkongsi pengalaman dan tips penjagaan.', en: 'Support groups where caregivers share experiences and caregiving tips.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+{
+id: 81, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Kos Penjagaan Harian', en: 'Daily Care Cost Assistance' },
+desc: { ms: 'Bantuan untuk meringankan kos penjagaan harian OKU seperti keperluan asas dan pengangkutan.', en: 'Aid to reduce daily care costs such as essentials and transport for PWD caregiving.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' },
+{ ms: 'Keutamaan keluarga berpendapatan rendah.', en: 'Priority for low-income families.' }
+]
+},
+
+{
+id: 82, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Terapi Pemulihan', en: 'Rehabilitation Therapy Tax Relief' },
+desc: { ms: 'Pelepasan cukai bagi kos terapi pemulihan OKU termasuk fisioterapi/rehabilitasi.', en: 'Tax relief for rehabilitation therapy costs including physiotherapy/rehab.' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Receipts required.' },
+{ ms: 'Tertakluk garis panduan semasa.', en: 'Subject to current guidelines.' }
+]
+},
+
+{
+id: 83, cat: 'cuti', icon: 'fas fa-calendar-day', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Fleksibel Penjaga', en: 'Flexible Caregiver Leave' },
+desc: { ms: 'Kemudahan cuti fleksibel untuk penjaga yang perlu mengurus rawatan dan urusan OKU.', en: 'Flexible leave for caregivers managing treatment and disability-related matters.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 84, cat: 'sokongan', icon: 'fas fa-users', provider: 'NGO', value: 'Bimbingan', link: '#',
+title: { ms: 'Sesi Bimbingan Penjaga OKU', en: 'Caregiver Guidance Sessions' },
+desc: { ms: 'Sesi bimbingan untuk penjaga tentang rutin penjagaan, keselamatan, dan pengurusan stres.', en: 'Guidance sessions for caregivers on routines, safety, and stress management.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 85, cat: 'kewangan', icon: 'fas fa-piggy-bank', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Keperluan Asas Penjaga', en: 'Basic Needs Aid for Caregivers' },
+desc: { ms: 'Bantuan untuk keperluan asas penjaga/keluarga yang menjaga OKU.', en: 'Assistance for basic needs of caregivers/families caring for PWD.' },
+criteria: [
+{ ms: 'Pendapatan isi rumah rendah.', en: 'Low household income.' }
+]
+},
+
+{
+id: 86, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Pembelian Peralatan Mobiliti', en: 'Mobility Equipment Tax Relief' },
+desc: { ms: 'Pelepasan cukai bagi pembelian peralatan mobiliti seperti walker, tongkat, atau kerusi roda.', en: 'Tax relief for mobility equipment such as walkers, canes, or wheelchairs.' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Purchase receipt required.' }
+]
+},
+
+{
+id: 87, cat: 'cuti', icon: 'fas fa-user-clock', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Kelonggaran Masuk Lewat / Balik Awal', en: 'Late Arrival / Early Leave Flexibility' },
+desc: { ms: 'Kelonggaran masa bagi penjaga yang perlu urus jadual rawatan atau penjagaan OKU.', en: 'Time flexibility for caregivers handling treatment schedules or care duties.' },
+criteria: [
+{ ms: 'Bergantung polisi organisasi.', en: 'Depends on organizational policy.' }
+]
+},
+
+{
+id: 88, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'JKM', value: 'Sokongan Praktikal', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Sokongan Penjagaan Dalam Komuniti', en: 'Community Care Support' },
+desc: { ms: 'Sokongan komuniti untuk mengurangkan beban penjaga melalui aktiviti dan bantuan setempat.', en: 'Community support to reduce caregiver burden through local activities and assistance.' },
+criteria: [
+{ ms: 'Terbuka kepada komuniti OKU/penjaga.', en: 'Open to PWD/caregiver community.' }
+]
+},
+
+{
+id: 89, cat: 'kewangan', icon: 'fas fa-hand-holding-heart', provider: 'NGO', value: 'Dana Bantuan', link: '#',
+title: { ms: 'Dana Bantuan Kecemasan OKU', en: 'PWD Emergency Support Fund' },
+desc: { ms: 'Dana bantuan kecemasan untuk kos rawatan/peralatan apabila berlaku keadaan mendesak.', en: 'Emergency funds for treatment/equipment costs during urgent situations.' },
+criteria: [
+{ ms: 'Tertakluk penilaian kes.', en: 'Subject to case assessment.' }
+]
+},
+
+{
+id: 90, cat: 'cukai', icon: 'fas fa-file-signature', provider: 'LHDN', value: 'Dokumen', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pengesahan Dokumen Untuk Tuntutan OKU', en: 'Document Verification for PWD Claims' },
+desc: { ms: 'Panduan ringkas dokumen penting: kad OKU, resit, surat doktor dan rekod perbelanjaan.', en: 'Quick guide to key documents: PWD card, receipts, doctor letters, and expense records.' },
+criteria: [
+{ ms: 'Simpan resit & dokumen lengkap.', en: 'Keep complete receipts & documents.' }
+]
+},
+
+{
+id: 91, cat: 'cuti', icon: 'fas fa-briefcase-medical', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Rawatan Susulan', en: 'Follow-up Treatment Leave' },
+desc: { ms: 'Cuti untuk penjaga hadir rawatan susulan OKU seperti fisioterapi atau klinik pakar.', en: 'Leave for caregivers attending follow-up treatments such as physio or specialist clinics.' },
+criteria: [
+{ ms: 'Bukti temujanji (jika diminta).', en: 'Appointment proof if requested.' }
+]
+},
+
+{
+id: 92, cat: 'sokongan', icon: 'fas fa-comments', provider: 'Komuniti', value: 'Mentoring', link: '#',
+title: { ms: 'Mentor Penjaga (Peer Mentor)', en: 'Caregiver Peer Mentoring' },
+desc: { ms: 'Mentor rakan sebaya untuk penjaga baharu belajar rutin penjagaan dan coping strategy.', en: 'Peer mentors for new caregivers to learn routines and coping strategies.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga baharu.', en: 'Open to new caregivers.' }
+]
+},
+
+{
+id: 93, cat: 'kewangan', icon: 'fas fa-medkit', provider: 'JKM', value: 'Bergantung Keperluan', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Ubat / Keperluan Perubatan', en: 'Medication / Medical Needs Aid' },
+desc: { ms: 'Bantuan untuk kos ubat atau keperluan perubatan asas berkaitan penjagaan OKU.', en: 'Aid for medication costs or basic medical needs related to PWD care.' },
+criteria: [
+{ ms: 'Dokumen perubatan diperlukan.', en: 'Medical documents required.' }
+]
+},
+
+{
+id: 94, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Perbelanjaan Rehabilitasi', en: 'Rehabilitation Expenses Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk perbelanjaan rehabilitasi OKU mengikut kelayakan.', en: 'Tax relief for rehabilitation expenses subject to eligibility.' },
+criteria: [
+{ ms: 'Resit/rawatan sah diperlukan.', en: 'Valid receipts/treatment required.' }
+]
+},
+
+{
+id: 95, cat: 'cuti', icon: 'fas fa-user-shield', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Urusan Dokumentasi OKU', en: 'Leave for PWD Documentation Matters' },
+desc: { ms: 'Cuti untuk urusan pendaftaran/kemaskini kad OKU, laporan perubatan atau urusan rasmi.', en: 'Leave for PWD card registration/update, medical reports, or official matters.' },
+criteria: [
+{ ms: 'Bergantung polisi HR.', en: 'Depends on HR policy.' }
+]
+},
+
+{
+id: 96, cat: 'sokongan', icon: 'fas fa-school', provider: 'Komuniti', value: 'Intervensi Awal', link: '#',
+title: { ms: 'Sokongan Intervensi Awal', en: 'Early Intervention Support' },
+desc: { ms: 'Sokongan intervensi awal untuk kanak-kanak OKU bagi membantu perkembangan dan komunikasi.', en: 'Early intervention support for disabled children to aid development and communication.' },
+criteria: [
+{ ms: 'Keutamaan kanak-kanak.', en: 'Priority for children.' }
+]
+},
+
+{
+id: 97, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Pengangkutan Rawatan OKU', en: 'Transport Aid for PWD Treatment' },
+desc: { ms: 'Bantuan kos pengangkutan untuk menghadiri temujanji rawatan hospital/klinik.', en: 'Transport cost assistance for hospital/clinic appointments.' },
+criteria: [
+{ ms: 'Bukti temujanji/rawatan.', en: 'Proof of appointment/treatment.' }
+]
+},
+
+{
+id: 98, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Perbelanjaan Penjagaan', en: 'Caregiving Expenses Tax Relief' },
+desc: { ms: 'Pelepasan cukai bagi perbelanjaan berkaitan penjagaan OKU (jika memenuhi syarat).', en: 'Tax relief for caregiving-related expenses (subject to conditions).' },
+criteria: [
+{ ms: 'Simpan resit & rekod.', en: 'Keep receipts & records.' },
+{ ms: 'Tertakluk garis panduan semasa.', en: 'Subject to current guidelines.' }
+]
+},
+
+{
+id: 99, cat: 'cuti', icon: 'fas fa-calendar-check', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Pengiring Rawatan', en: 'Medical Escort Leave' },
+desc: { ms: 'Cuti untuk mengiring OKU ke rawatan, terapi atau urusan kesihatan berkala.', en: 'Leave to escort PWD to treatment, therapy, or routine healthcare.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 100, cat: 'sokongan', icon: 'fas fa-hands', provider: 'NGO', value: 'Respite Support', link: '#',
+title: { ms: 'Respite Care (Penjagaan Sementara)', en: 'Respite Care (Temporary Care)' },
+desc: { ms: 'Sokongan penjagaan sementara untuk memberi ruang rehat kepada penjaga utama.', en: 'Temporary caregiving support to give primary caregivers rest time.' },
+criteria: [
+{ ms: 'Bergantung ketersediaan program.', en: 'Depends on program availability.' }
+]
+},
+
+{
+id: 101, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Kos Terapi OKU', en: 'Aid for PWD Therapy Costs' },
+desc: { ms: 'Bantuan untuk menampung kos terapi pemulihan seperti fisioterapi dan terapi pekerjaan.', en: 'Aid to cover rehabilitation therapy costs such as physiotherapy and occupational therapy.' },
+criteria: [
+{ ms: 'Laporan/temujanji terapi diperlukan.', en: 'Therapy report/appointment required.' }
+]
+},
+
+{
+id: 102, cat: 'cukai', icon: 'fas fa-file-medical', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Pemeriksaan & Diagnostik', en: 'Tax Relief for Diagnostic & Checkup Costs' },
+desc: { ms: 'Pelepasan cukai bagi perbelanjaan pemeriksaan/diagnostik berkaitan OKU (tertakluk syarat).', en: 'Tax relief for checkups/diagnostics related to disability (subject to conditions).' },
+criteria: [
+{ ms: 'Resit sah diperlukan.', en: 'Valid receipts required.' }
+]
+},
+
+{
+id: 103, cat: 'cuti', icon: 'fas fa-user-nurse', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Terapi Berkala', en: 'Recurring Therapy Leave' },
+desc: { ms: 'Cuti/masa fleksibel untuk penjaga yang perlu hadir terapi berkala bersama OKU.', en: 'Flexible leave/time for caregivers attending recurring therapy with PWD.' },
+criteria: [
+{ ms: 'Bukti jadual terapi (jika diminta).', en: 'Therapy schedule proof if requested.' }
+]
+},
+
+{
+id: 104, cat: 'sokongan', icon: 'fas fa-users-cog', provider: 'JKM', value: 'Program', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Sesi Pendidikan Penjaga', en: 'Caregiver Education Sessions' },
+desc: { ms: 'Sesi penerangan tentang hak OKU, akses fasiliti dan sumber bantuan untuk penjaga.', en: 'Sessions on PWD rights, facility access, and aid resources for caregivers.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga/keluarga.', en: 'Open to caregivers/family.' }
+]
+},
+
+{
+id: 105, cat: 'kewangan', icon: 'fas fa-coins', provider: 'NGO', value: 'Bergantung Program', link: '#',
+title: { ms: 'Bantuan Mikro (Micro Grant) Penjaga', en: 'Caregiver Micro Grant' },
+desc: { ms: 'Bantuan kecil untuk menampung kos segera seperti peralatan asas dan keperluan rawatan.', en: 'Small grants for urgent costs like basic equipment and treatment needs.' },
+criteria: [
+{ ms: 'Tertakluk program semasa.', en: 'Subject to current program.' }
+]
+},
+
+{
+id: 106, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Peralatan Sokongan Asas', en: 'Basic Assistive Equipment Relief' },
+desc: { ms: 'Pelepasan cukai untuk peralatan sokongan asas OKU (mengikut syarat).', en: 'Tax relief for basic assistive equipment (subject to conditions).' },
+criteria: [
+{ ms: 'Peralatan diiktiraf & resit diperlukan.', en: 'Recognized equipment & receipts required.' }
+]
+},
+
+{
+id: 107, cat: 'cuti', icon: 'fas fa-calendar-week', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Urusan Sekolah/Pendidikan Anak OKU', en: 'Leave for Disabled Child School Matters' },
+desc: { ms: 'Cuti untuk urusan sekolah seperti mesyuarat PPKI, intervensi atau penilaian pendidikan khas.', en: 'Leave for school matters such as special education meetings, interventions, or assessments.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 108, cat: 'sokongan', icon: 'fas fa-comments', provider: 'NGO', value: 'Helpline', link: '#',
+title: { ms: 'Talian Sokongan Penjaga', en: 'Caregiver Support Helpline' },
+desc: { ms: 'Talian bantuan untuk penjaga mendapatkan nasihat, rujukan dan sokongan emosi.', en: 'Helpline for caregivers to get advice, referrals, and emotional support.' },
+criteria: [
+{ ms: 'Terbuka kepada umum.', en: 'Open to the public.' }
+]
+},
+
+{
+id: 109, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Keperluan Pemakanan Khas', en: 'Special Nutrition Needs Aid' },
+desc: { ms: 'Bantuan untuk keperluan pemakanan khas OKU yang memerlukan diet tertentu (jika layak).', en: 'Aid for special nutrition needs for PWD requiring specific diets (if eligible).' },
+criteria: [
+{ ms: 'Disokong dokumen perubatan.', en: 'Supported by medical documents.' }
+]
+},
+
+{
+id: 110, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Perbelanjaan Kesihatan Penjaga', en: 'Tax Relief for Caregiver Health Expenses' },
+desc: { ms: 'Pelepasan cukai bagi perbelanjaan kesihatan berkaitan tanggungan dan penjagaan (tertakluk syarat).', en: 'Tax relief for health expenses related to dependents and care (subject to conditions).' },
+criteria: [
+{ ms: 'Resit diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 111, cat: 'cuti', icon: 'fas fa-user-check', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Penilaian OKU (Hospital/Pakar)', en: 'Leave for Disability Assessment (Hospital/Specialist)' },
+desc: { ms: 'Cuti untuk menghadiri penilaian pakar, pemeriksaan dan laporan perubatan untuk OKU.', en: 'Leave to attend specialist assessments, examinations, and medical reports for PWD.' },
+criteria: [
+{ ms: 'Bukti temujanji (jika diminta).', en: 'Appointment proof if requested.' }
+]
+},
+
+{
+id: 112, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'Komuniti', value: 'Bantuan Logistik', link: '#',
+title: { ms: 'Bantuan Logistik Penjaga', en: 'Caregiver Logistics Support' },
+desc: { ms: 'Sokongan logistik seperti bantuan ulang-alik, membeli barang, atau urusan harian penjagaan.', en: 'Logistics support such as transport help, shopping assistance, or daily care errands.' },
+criteria: [
+{ ms: 'Bergantung komuniti setempat.', en: 'Depends on local community.' }
+]
+},
+
+{
+id: 113, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'Zakat', value: 'Bergantung Negeri', link: '#',
+title: { ms: 'Bantuan Perubatan Zakat (OKU)', en: 'Zakat Medical Aid (PWD)' },
+desc: { ms: 'Bantuan perubatan melalui zakat untuk OKU/keluarga yang layak mengikut negeri.', en: 'Medical assistance via zakat for eligible PWDs/families by state.' },
+criteria: [
+{ ms: 'Tertakluk kelayakan asnaf.', en: 'Subject to asnaf eligibility.' }
+]
+},
+
+{
+id: 114, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Alat Pendengaran', en: 'Hearing Aid Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk pembelian alat pendengaran atau peralatan berkaitan (tertakluk syarat).', en: 'Tax relief for hearing aids or related equipment (subject to conditions).' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Purchase receipt required.' }
+]
+},
+
+{
+id: 115, cat: 'cuti', icon: 'fas fa-calendar-alt', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Urusan Terapi & Rehabilitasi', en: 'Leave for Therapy & Rehabilitation Matters' },
+desc: { ms: 'Cuti bagi penjaga untuk urusan terapi/rehabilitasi yang memerlukan kehadiran penjaga.', en: 'Leave for caregivers handling therapy/rehab matters requiring caregiver attendance.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 116, cat: 'sokongan', icon: 'fas fa-users', provider: 'PDK/Komuniti', value: 'Aktiviti Harian', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Aktiviti Harian & Latihan OKU', en: 'Daily Activities & PWD Training' },
+desc: { ms: 'Aktiviti harian dan latihan kemahiran di pusat komuniti bagi membantu perkembangan OKU.', en: 'Daily activities and skill training at community centers to support PWD development.' },
+criteria: [
+{ ms: 'OKU berdaftar (jika diperlukan).', en: 'Registered PWD (if required).' }
+]
+},
+
+{
+id: 117, cat: 'kewangan', icon: 'fas fa-coins', provider: 'NGO', value: 'Bergantung Program', link: '#',
+title: { ms: 'Bantuan Khas Peralatan Rumah (OKU)', en: 'Home Assistive Setup Aid (PWD)' },
+desc: { ms: 'Bantuan untuk penyesuaian asas rumah seperti handrail, ramp mini atau akses mudah.', en: 'Aid for basic home adjustments such as handrails, mini ramps, or accessibility setup.' },
+criteria: [
+{ ms: 'Tertakluk penilaian keperluan.', en: 'Subject to needs assessment.' }
+]
+},
+
+{
+id: 118, cat: 'cukai', icon: 'fas fa-file-invoice', provider: 'LHDN', value: 'Panduan', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Panduan Tuntutan Pelepasan OKU', en: 'Guide to Claiming PWD Tax Relief' },
+desc: { ms: 'Panduan ringkas langkah tuntutan pelepasan cukai berkaitan OKU dan dokumen diperlukan.', en: 'Quick guide on claiming PWD-related tax relief and required documents.' },
+criteria: [
+{ ms: 'Rujuk garis panduan semasa LHDN.', en: 'Refer to current LHDN guidelines.' }
+]
+},
+
+{
+id: 119, cat: 'cuti', icon: 'fas fa-user-clock', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Kelonggaran Jadual Shift Penjaga', en: 'Shift Schedule Flexibility for Caregivers' },
+desc: { ms: 'Kelonggaran jadual shift untuk penjaga yang perlu susun masa rawatan/penjagaan OKU.', en: 'Shift schedule flexibility for caregivers managing treatment/care routines.' },
+criteria: [
+{ ms: 'Bergantung polisi tempat kerja.', en: 'Depends on workplace policy.' }
+]
+},
+
+{
+id: 120, cat: 'sokongan', icon: 'fas fa-heart', provider: 'Komuniti', value: 'Sokongan Moral', link: '#',
+title: { ms: 'Sokongan Moral & Motivasi Penjaga', en: 'Moral & Motivation Support for Caregivers' },
+desc: { ms: 'Sesi sokongan moral untuk penjaga supaya kekal kuat dan konsisten menjaga OKU.', en: 'Moral support sessions to help caregivers stay strong and consistent.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+{
+id: 121, cat: 'kewangan', icon: 'fas fa-coins', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Keperluan Harian OKU', en: 'Daily Essentials Aid for PWD' },
+desc: { ms: 'Bantuan untuk menampung keperluan harian OKU dan keluarga penjaga seperti makanan, lampin dewasa, dan barangan asas.', en: 'Aid to support daily essentials such as food, adult diapers, and basic caregiving items.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' },
+{ ms: 'Keutamaan pendapatan rendah.', en: 'Priority for low-income households.' }
+]
+},
+
+{
+id: 122, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'NGO', value: 'Bergantung Program', link: '#',
+title: { ms: 'Tabung Bantuan Penjaga', en: 'Caregiver Assistance Fund' },
+desc: { ms: 'Tabung komuniti/NGO untuk membantu penjaga dari segi kos rawatan dan keperluan segera.', en: 'Community/NGO fund to help caregivers with treatment costs and urgent needs.' },
+criteria: [
+{ ms: 'Tertakluk penilaian kes.', en: 'Subject to case assessment.' }
+]
+},
+
+{
+id: 123, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Perbelanjaan Rawatan Pakar', en: 'Specialist Treatment Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk rawatan pakar dan pemeriksaan lanjutan berkaitan OKU (tertakluk syarat).', en: 'Tax relief for specialist treatment and advanced examinations related to disability (subject to conditions).' },
+criteria: [
+{ ms: 'Resit/surat rawatan diperlukan.', en: 'Receipts/treatment letters required.' }
+]
+},
+
+{
+id: 124, cat: 'cuti', icon: 'fas fa-calendar-check', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Mengurus Temujanji Terapi', en: 'Leave to Manage Therapy Appointments' },
+desc: { ms: 'Cuti untuk penjaga mengurus temujanji terapi, rehabilitasi dan rawatan berkala.', en: 'Leave for caregivers managing therapy, rehab, and recurring treatment appointments.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 125, cat: 'sokongan', icon: 'fas fa-users', provider: 'Komuniti', value: 'Peer Support', link: '#',
+title: { ms: 'Komuniti Penjaga OKU Setempat', en: 'Local PWD Caregiver Community' },
+desc: { ms: 'Komuniti setempat untuk penjaga berkongsi info bantuan, tips, dan sokongan moral.', en: 'Local community for caregivers to share aid info, tips, and moral support.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 126, cat: 'kewangan', icon: 'fas fa-medkit', provider: 'JKM', value: 'Bergantung Keperluan', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Kos Ubat Jangka Panjang', en: 'Long-term Medication Cost Aid' },
+desc: { ms: 'Bantuan untuk kos ubat jangka panjang dan rawatan susulan bagi OKU (jika layak).', en: 'Aid for long-term medication costs and follow-up treatments (if eligible).' },
+criteria: [
+{ ms: 'Dokumen perubatan diperlukan.', en: 'Medical documents required.' },
+{ ms: 'Tertakluk kelulusan.', en: 'Subject to approval.' }
+]
+},
+
+{
+id: 127, cat: 'cukai', icon: 'fas fa-file-invoice', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Peranti Sokongan OKU', en: 'Tax Relief for Assistive Devices' },
+desc: { ms: 'Pelepasan cukai bagi pembelian peranti sokongan seperti alat komunikasi, alat pendengaran atau alat bantuan mobiliti.', en: 'Tax relief for assistive devices such as communication aids, hearing aids, or mobility aids.' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 128, cat: 'cuti', icon: 'fas fa-user-clock', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Kelonggaran Shift Penjaga OKU', en: 'Caregiver Shift Flexibility' },
+desc: { ms: 'Kelonggaran jadual shift untuk penjaga mengikut jadual rawatan dan rutin penjagaan.', en: 'Shift flexibility for caregivers based on treatment schedule and care routine.' },
+criteria: [
+{ ms: 'Bergantung polisi tempat kerja.', en: 'Depends on workplace policy.' }
+]
+},
+
+{
+id: 129, cat: 'sokongan', icon: 'fas fa-comments', provider: 'NGO', value: 'Kaunseling', link: '#',
+title: { ms: 'Kaunseling Keluarga Penjaga', en: 'Family Counseling for Caregivers' },
+desc: { ms: 'Sesi kaunseling untuk keluarga penjaga bagi mengurus tekanan dan konflik penjagaan.', en: 'Counseling sessions for caregiver families to manage stress and care-related conflict.' },
+criteria: [
+{ ms: 'Terbuka kepada keluarga/penjaga.', en: 'Open to families/caregivers.' }
+]
+},
+
+{
+id: 130, cat: 'kewangan', icon: 'fas fa-bus', provider: 'Komuniti', value: 'Bergantung Program', link: '#',
+title: { ms: 'Bantuan Tambang Rawatan', en: 'Treatment Transport Subsidy' },
+desc: { ms: 'Subsidi tambang untuk perjalanan ke hospital/terapi bagi keluarga yang menjaga OKU.', en: 'Transport subsidy for hospital/therapy trips for caregiver families.' },
+criteria: [
+{ ms: 'Bukti temujanji/rawatan.', en: 'Proof of appointment/treatment.' }
+]
+},
+
+{
+id: 131, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Pemeriksaan Kesihatan OKU', en: 'Tax Relief for PWD Health Screening' },
+desc: { ms: 'Pelepasan cukai bagi pemeriksaan kesihatan berkaitan OKU (tertakluk syarat).', en: 'Tax relief for health screenings related to disability (subject to conditions).' },
+criteria: [
+{ ms: 'Resit diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 132, cat: 'cuti', icon: 'fas fa-hospital-user', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Mengiring Rawatan Hospital', en: 'Hospital Escort Leave' },
+desc: { ms: 'Cuti untuk mengiring OKU menghadiri rawatan hospital, pembedahan atau pemeriksaan pakar.', en: 'Leave to escort PWD to hospital treatment, surgery, or specialist examination.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 133, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'PDK', value: 'Harian', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Aktiviti Pemulihan Harian', en: 'Daily Rehabilitation Activities' },
+desc: { ms: 'Aktiviti pemulihan dan latihan kemahiran di pusat komuniti untuk menyokong perkembangan OKU.', en: 'Rehab activities and skill training at community centers to support PWD development.' },
+criteria: [
+{ ms: 'OKU berdaftar (jika perlu).', en: 'Registered PWD (if required).' }
+]
+},
+
+{
+id: 134, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'Zakat', value: 'Bergantung Negeri', link: '#',
+title: { ms: 'Bantuan Sara Hidup OKU (Zakat)', en: 'Living Assistance for PWD (Zakat)' },
+desc: { ms: 'Bantuan sara hidup untuk OKU dan keluarga yang layak melalui institusi zakat negeri.', en: 'Living assistance for eligible PWDs and families via state zakat institutions.' },
+criteria: [
+{ ms: 'Tertakluk kelayakan asnaf.', en: 'Subject to asnaf eligibility.' }
+]
+},
+
+{
+id: 135, cat: 'cukai', icon: 'fas fa-file-signature', provider: 'LHDN', value: 'Panduan', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Panduan Simpan Resit Tuntutan', en: 'Guide to Keeping Claim Receipts' },
+desc: { ms: 'Panduan menyimpan resit dan rekod perbelanjaan untuk tuntutan pelepasan cukai berkaitan OKU.', en: 'Guide to keeping receipts and expense records for PWD-related tax relief claims.' },
+criteria: [
+{ ms: 'Simpan rekod lengkap.', en: 'Keep complete records.' }
+]
+},
+
+{
+id: 136, cat: 'cuti', icon: 'fas fa-laptop-house', provider: 'Majikan', value: 'Hybrid/Remote', link: '#',
+title: { ms: 'Pengaturan Kerja Fleksibel (Hybrid)', en: 'Flexible Work Arrangement (Hybrid)' },
+desc: { ms: 'Pengaturan kerja hybrid untuk penjaga agar lebih mudah mengurus rutin penjagaan OKU.', en: 'Hybrid arrangement to help caregivers manage daily caregiving routines.' },
+criteria: [
+{ ms: 'Bergantung kesesuaian kerja.', en: 'Depends on job suitability.' }
+]
+},
+
+{
+id: 137, cat: 'sokongan', icon: 'fas fa-heart', provider: 'NGO', value: 'Support Session', link: '#',
+title: { ms: 'Sesi Sokongan Burnout Penjaga', en: 'Caregiver Burnout Support Sessions' },
+desc: { ms: 'Sesi khas untuk penjaga yang burnout: coping strategy, rehat, dan sokongan komuniti.', en: 'Sessions for burnt-out caregivers: coping strategies, rest planning, and community support.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 138, cat: 'kewangan', icon: 'fas fa-hand-holding-heart', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Pengurusan Penjagaan', en: 'Care Management Assistance' },
+desc: { ms: 'Bantuan berkaitan pengurusan penjagaan seperti keperluan asas dan kos sokongan penjaga.', en: 'Assistance related to care management such as essentials and caregiving support costs.' },
+criteria: [
+{ ms: 'Keutamaan keluarga berpendapatan rendah.', en: 'Priority for low-income families.' }
+]
+},
+
+{
+id: 139, cat: 'cukai', icon: 'fas fa-wheelchair', provider: 'LHDN', value: 'RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Individu OKU (Ringkas)', en: 'PWD Individual Relief (Quick)' },
+desc: { ms: 'Ringkasan pelepasan cukai individu OKU untuk memudahkan semakan pengguna.', en: 'Quick summary of tax relief for disabled individuals to ease user checking.' },
+criteria: [
+{ ms: 'Kad OKU sah.', en: 'Valid PWD card.' }
+]
+},
+
+{
+id: 140, cat: 'cuti', icon: 'fas fa-calendar-alt', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Khas Penjaga (Case-by-case)', en: 'Special Caregiver Leave (Case-by-case)' },
+desc: { ms: 'Cuti khas untuk penjaga apabila berlaku situasi penjagaan yang memerlukan tindakan segera.', en: 'Special leave when urgent caregiving situations require immediate action.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 141, cat: 'sokongan', icon: 'fas fa-users-cog', provider: 'Komuniti', value: 'Workshop', link: '#',
+title: { ms: 'Bengkel Penjagaan Asas OKU', en: 'Basic PWD Care Workshops' },
+desc: { ms: 'Bengkel penjagaan asas: pemindahan selamat, kebersihan, pemakanan, dan rutin terapi.', en: 'Workshops on safe transfers, hygiene, nutrition, and therapy routines.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 142, cat: 'kewangan', icon: 'fas fa-coins', provider: 'NGO', value: 'Bergantung Program', link: '#',
+title: { ms: 'Bantuan Barangan Keperluan Penjaga', en: 'Caregiver Essentials Support' },
+desc: { ms: 'Bantuan barangan seperti lampin, susu khas, atau keperluan penjagaan untuk OKU.', en: 'Support items like diapers, special milk, or caregiving essentials for PWD.' },
+criteria: [
+{ ms: 'Tertakluk saringan penerima.', en: 'Subject to recipient screening.' }
+]
+},
+
+{
+id: 143, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Perbelanjaan Perubatan Tanggungan', en: 'Dependent Medical Expense Tax Relief' },
+desc: { ms: 'Pelepasan cukai bagi perbelanjaan perubatan tanggungan termasuk ahli keluarga OKU (tertakluk syarat).', en: 'Tax relief for dependents’ medical expenses including disabled family members (subject to conditions).' },
+criteria: [
+{ ms: 'Resit diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 144, cat: 'cuti', icon: 'fas fa-user-nurse', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Mengurus Alat Sokongan', en: 'Leave to Manage Assistive Devices' },
+desc: { ms: 'Cuti untuk urusan pembelian/servis/repair alat sokongan seperti kerusi roda dan alat pendengaran.', en: 'Leave to purchase/service/repair assistive devices like wheelchairs and hearing aids.' },
+criteria: [
+{ ms: 'Bukti urusan (jika diminta).', en: 'Proof if requested.' }
+]
+},
+
+{
+id: 145, cat: 'sokongan', icon: 'fas fa-comments', provider: 'NGO', value: 'Support Group', link: '#',
+title: { ms: 'Kumpulan Sokongan Ibu Bapa Anak OKU', en: 'Support Group for Parents of Disabled Children' },
+desc: { ms: 'Kumpulan sokongan untuk ibu bapa: pengalaman, tips, dan rujukan bantuan pendidikan/terapi.', en: 'Parent support group sharing experiences, tips, and referrals for education/therapy.' },
+criteria: [
+{ ms: 'Terbuka kepada ibu bapa/penjaga.', en: 'Open to parents/caregivers.' }
+]
+},
+
+{
+id: 146, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Keperluan Kesihatan OKU', en: 'Aid for PWD Healthcare Needs' },
+desc: { ms: 'Bantuan untuk menampung kos berkaitan kesihatan seperti pemeriksaan, ubat, dan alat sokongan.', en: 'Aid to cover health-related costs such as checkups, medication, and assistive devices.' },
+criteria: [
+{ ms: 'Dokumen perubatan diperlukan.', en: 'Medical documents required.' }
+]
+},
+
+{
+id: 147, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Pembelian Alat Bantu', en: 'Tax Relief for Assistive Purchases' },
+desc: { ms: 'Pelepasan cukai bagi kos pembelian alat bantu OKU yang diiktiraf (tertakluk syarat).', en: 'Tax relief for purchases of recognized assistive devices (subject to conditions).' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 148, cat: 'cuti', icon: 'fas fa-calendar-week', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Urusan Kebajikan / JKM', en: 'Leave for Welfare/JKM Matters' },
+desc: { ms: 'Cuti untuk urusan kebajikan seperti permohonan bantuan, temu duga JKM atau pengemaskinian maklumat.', en: 'Leave for welfare matters such as aid applications, JKM interviews, or info updates.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 149, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'Komuniti', value: 'Volunteer', link: '#',
+title: { ms: 'Sukarelawan Bantuan Penjagaan', en: 'Care Assistance Volunteers' },
+desc: { ms: 'Sukarelawan membantu penjaga dalam aktiviti harian seperti membeli barang atau bantuan sementara.', en: 'Volunteers help caregivers with errands or temporary assistance.' },
+criteria: [
+{ ms: 'Bergantung ketersediaan sukarelawan.', en: 'Depends on volunteer availability.' }
+]
+},
+
+{
+id: 150, cat: 'kewangan', icon: 'fas fa-coins', provider: 'Zakat', value: 'Bergantung Negeri', link: '#',
+title: { ms: 'Bantuan Peralatan OKU (Zakat)', en: 'Assistive Equipment Aid (Zakat)' },
+desc: { ms: 'Bantuan zakat untuk pembelian peralatan sokongan OKU mengikut kelayakan negeri.', en: 'Zakat aid for assistive equipment purchase subject to state eligibility.' },
+criteria: [
+{ ms: 'Tertakluk kelayakan asnaf.', en: 'Subject to asnaf eligibility.' }
+]
+},
+
+{
+id: 151, cat: 'cukai', icon: 'fas fa-file-signature', provider: 'LHDN', value: 'Checklist', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Checklist Tuntutan Pelepasan (OKU)', en: 'PWD Tax Relief Claim Checklist' },
+desc: { ms: 'Checklist ringkas untuk tuntutan: kad OKU, resit, surat doktor, dan rekod perbelanjaan.', en: 'Simple checklist: PWD card, receipts, doctor letters, and expense records.' },
+criteria: [
+{ ms: 'Pastikan dokumen lengkap.', en: 'Ensure documents are complete.' }
+]
+},
+
+{
+id: 152, cat: 'cuti', icon: 'fas fa-user-md', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Temujanji Pakar', en: 'Specialist Appointment Leave' },
+desc: { ms: 'Cuti untuk menghadiri temujanji pakar bagi OKU termasuk pemeriksaan dan susulan.', en: 'Leave to attend specialist appointments including checkups and follow-ups.' },
+criteria: [
+{ ms: 'Bukti temujanji (jika diminta).', en: 'Appointment proof if requested.' }
+]
+},
+
+{
+id: 153, cat: 'sokongan', icon: 'fas fa-heart', provider: 'NGO', value: 'Support', link: '#',
+title: { ms: 'Sokongan Psikososial Penjaga', en: 'Psychosocial Support for Caregivers' },
+desc: { ms: 'Sokongan psikososial untuk membantu penjaga mengurus emosi, stres, dan keseimbangan hidup.', en: 'Psychosocial support to help caregivers manage emotions, stress, and life balance.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 154, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Makanan Khas OKU', en: 'Special Food Aid for PWD' },
+desc: { ms: 'Bantuan untuk makanan khas/keperluan pemakanan tertentu bagi OKU (jika disahkan).', en: 'Aid for special food/nutrition needs for PWD (if medically certified).' },
+criteria: [
+{ ms: 'Dokumen perubatan diperlukan.', en: 'Medical documents required.' }
+]
+},
+
+{
+id: 155, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Terapi Pertuturan', en: 'Speech Therapy Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk kos terapi pertuturan bagi OKU (tertakluk syarat).', en: 'Tax relief for speech therapy costs (subject to conditions).' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 156, cat: 'cuti', icon: 'fas fa-clock', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Kelonggaran Waktu (Terapi Berkala)', en: 'Time Flexibility (Recurring Therapy)' },
+desc: { ms: 'Kelonggaran waktu kerja untuk penjaga yang perlu hadir terapi berkala bersama OKU.', en: 'Work-time flexibility for caregivers attending recurring therapy sessions.' },
+criteria: [
+{ ms: 'Bergantung polisi organisasi.', en: 'Depends on organization policy.' }
+]
+},
+
+{
+id: 157, cat: 'sokongan', icon: 'fas fa-users', provider: 'PDK/NGO', value: 'Aktiviti', link: '#',
+title: { ms: 'Aktiviti Sosial & Integrasi OKU', en: 'PWD Social & Integration Activities' },
+desc: { ms: 'Aktiviti sosial untuk membantu OKU bersosial, bina keyakinan dan kemahiran hidup.', en: 'Social activities to help PWDs socialize, build confidence, and life skills.' },
+criteria: [
+{ ms: 'Terbuka kepada komuniti OKU.', en: 'Open to the PWD community.' }
+]
+},
+
+{
+id: 158, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'NGO', value: 'Bergantung Program', link: '#',
+title: { ms: 'Bantuan One-off Peralatan', en: 'One-off Equipment Support' },
+desc: { ms: 'Bantuan sekali (one-off) untuk membeli peralatan penting seperti kerusi roda atau alat mobiliti.', en: 'One-off support to purchase essential equipment like wheelchairs or mobility aids.' },
+criteria: [
+{ ms: 'Tertakluk penilaian keperluan.', en: 'Subject to needs assessment.' }
+]
+},
+
+{
+id: 159, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Terapi Pekerjaan', en: 'Occupational Therapy Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk kos terapi pekerjaan bagi OKU (tertakluk syarat).', en: 'Tax relief for occupational therapy costs (subject to conditions).' },
+criteria: [
+{ ms: 'Resit diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 160, cat: 'cuti', icon: 'fas fa-calendar-day', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Kecemasan Rawatan OKU', en: 'Emergency Leave for PWD Treatment' },
+desc: { ms: 'Cuti kecemasan apabila berlaku situasi rawatan mendadak seperti kecemasan hospital.', en: 'Emergency leave for sudden treatment situations such as hospital emergencies.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 161, cat: 'sokongan', icon: 'fas fa-comments', provider: 'Komuniti', value: 'Support', link: '#',
+title: { ms: 'Sesi Sharing Penjaga', en: 'Caregiver Sharing Sessions' },
+desc: { ms: 'Sesi berkongsi pengalaman penjaga: rutin, cabaran, dan cara selesaikan masalah harian.', en: 'Sessions to share caregiving routines, challenges, and practical solutions.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 162, cat: 'kewangan', icon: 'fas fa-coins', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Keperluan Kebersihan', en: 'Hygiene Needs Assistance' },
+desc: { ms: 'Bantuan untuk keperluan kebersihan seperti lampin, wipes, dan barangan penjagaan diri OKU.', en: 'Aid for hygiene needs such as diapers, wipes, and personal care items.' },
+criteria: [
+{ ms: 'Keutamaan keluarga berpendapatan rendah.', en: 'Priority for low-income families.' }
+]
+},
+
+{
+id: 163, cat: 'cukai', icon: 'fas fa-file-invoice', provider: 'LHDN', value: 'Panduan', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Panduan Tuntutan Resit Perubatan', en: 'Guide to Claiming Medical Receipts' },
+desc: { ms: 'Panduan ringkas cara susun resit perubatan untuk tuntutan pelepasan berkaitan OKU.', en: 'Quick guide on organizing medical receipts for PWD-related relief claims.' },
+criteria: [
+{ ms: 'Simpan resit & rekod lengkap.', en: 'Keep full receipts and records.' }
+]
+},
+
+{
+id: 164, cat: 'cuti', icon: 'fas fa-user-check', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Kelonggaran Waktu Urusan Sekolah', en: 'Time Flexibility for School Matters' },
+desc: { ms: 'Kelonggaran waktu untuk ibu bapa/penjaga urus urusan sekolah anak OKU.', en: 'Time flexibility for parents/caregivers handling disabled child school matters.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 165, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'NGO', value: 'Respite', link: '#',
+title: { ms: 'Program Rehat Penjaga (Respite)', en: 'Caregiver Respite Program' },
+desc: { ms: 'Program rehat penjaga untuk mengurangkan burnout melalui bantuan penjagaan sementara.', en: 'Respite program to reduce burnout through temporary caregiving support.' },
+criteria: [
+{ ms: 'Bergantung kapasiti program.', en: 'Depends on program capacity.' }
+]
+},
+
+{
+id: 166, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'Zakat', value: 'Bergantung Negeri', link: '#',
+title: { ms: 'Bantuan Bulanan OKU (Zakat)', en: 'Monthly PWD Aid (Zakat)' },
+desc: { ms: 'Sesetengah negeri menyediakan bantuan bulanan kepada OKU/penjaga melalui dana zakat.', en: 'Some states offer monthly support for PWDs/caregivers through zakat funds.' },
+criteria: [
+{ ms: 'Tertakluk kelayakan asnaf.', en: 'Subject to asnaf eligibility.' }
+]
+},
+
+{
+id: 167, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Pembelian Kerusi Roda', en: 'Wheelchair Purchase Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk pembelian kerusi roda sebagai peralatan sokongan asas.', en: 'Tax relief for wheelchair purchases as basic assistive equipment.' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Purchase receipt required.' }
+]
+},
+
+{
+id: 168, cat: 'cuti', icon: 'fas fa-calendar-week', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Urusan Pendaftaran OKU', en: 'Leave for PWD Registration Matters' },
+desc: { ms: 'Cuti untuk urusan pendaftaran/kemaskini OKU dan urusan dokumentasi berkaitan.', en: 'Leave for PWD registration/updates and related documentation.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 169, cat: 'sokongan', icon: 'fas fa-users', provider: 'Komuniti', value: 'Support Group', link: '#',
+title: { ms: 'Support Group Penjaga (Online)', en: 'Online Caregiver Support Group' },
+desc: { ms: 'Kumpulan sokongan atas talian untuk penjaga berkongsi info bantuan dan semangat.', en: 'Online support groups for caregivers to share aid info and encouragement.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 170, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Alat Mobiliti Tambahan', en: 'Additional Mobility Aid Support' },
+desc: { ms: 'Bantuan untuk pembelian/penyelenggaraan alat mobiliti seperti walker dan kerusi roda.', en: 'Aid for purchase/maintenance of mobility devices like walkers and wheelchairs.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' }
+]
+},
+
+{
+id: 171, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Rawatan Susulan', en: 'Follow-up Treatment Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk kos rawatan susulan berkaitan OKU (tertakluk syarat).', en: 'Tax relief for disability-related follow-up treatments (subject to conditions).' },
+criteria: [
+{ ms: 'Resit rawatan diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 172, cat: 'cuti', icon: 'fas fa-user-nurse', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Mengurus Terapi Anak OKU', en: 'Leave to Manage Disabled Child Therapy' },
+desc: { ms: 'Cuti untuk ibu bapa/penjaga mengurus terapi anak OKU termasuk jadual mingguan/bulanan.', en: 'Leave for parents/caregivers managing disabled child therapy schedules.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 173, cat: 'sokongan', icon: 'fas fa-chalkboard-teacher', provider: 'NGO', value: 'Kelas', link: '#',
+title: { ms: 'Kelas Kemahiran Hidup OKU', en: 'Life Skills Classes for PWD' },
+desc: { ms: 'Kelas kemahiran hidup untuk OKU seperti komunikasi, pengurusan diri dan kemahiran asas.', en: 'Life skills classes such as communication, self-management, and basic skills.' },
+criteria: [
+{ ms: 'Terbuka kepada OKU mengikut program.', en: 'Open to PWDs depending on program.' }
+]
+},
+
+{
+id: 174, cat: 'kewangan', icon: 'fas fa-coins', provider: 'NGO', value: 'Bergantung Program', link: '#',
+title: { ms: 'Bantuan Peralatan Pembelajaran Anak OKU', en: 'Learning Equipment Aid for Disabled Children' },
+desc: { ms: 'Bantuan untuk peralatan pembelajaran seperti alat bantu komunikasi atau bahan pembelajaran khas.', en: 'Aid for learning equipment such as communication aids or special learning materials.' },
+criteria: [
+{ ms: 'Disokong dokumen sekolah/terapi.', en: 'Supported by school/therapy documents.' }
+]
+},
+
+{
+id: 175, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Alat Komunikasi OKU', en: 'Tax Relief for PWD Communication Aids' },
+desc: { ms: 'Pelepasan cukai untuk pembelian alat komunikasi bagi OKU (tertakluk syarat).', en: 'Tax relief for communication aids for PWD (subject to conditions).' },
+criteria: [
+{ ms: 'Resit diperlukan.', en: 'Receipt required.' }
+]
+},
+
+{
+id: 176, cat: 'cuti', icon: 'fas fa-calendar-day', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Urusan Kebajikan Negeri', en: 'Leave for State Welfare Matters' },
+desc: { ms: 'Cuti untuk urusan kebajikan di peringkat negeri/daerah berkaitan bantuan OKU.', en: 'Leave for welfare matters at state/district level related to PWD assistance.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 177, cat: 'sokongan', icon: 'fas fa-heart', provider: 'Komuniti', value: 'Motivasi', link: '#',
+title: { ms: 'Sesi Motivasi Penjaga', en: 'Caregiver Motivation Sessions' },
+desc: { ms: 'Sesi motivasi dan sokongan untuk penjaga kekal kuat, konsisten dan terurus.', en: 'Motivation and support sessions to keep caregivers strong and organized.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 178, cat: 'kewangan', icon: 'fas fa-hand-holding-heart', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Keperluan Penjagaan Khas', en: 'Special Care Needs Assistance' },
+desc: { ms: 'Bantuan untuk keperluan penjagaan khas seperti peralatan tertentu dan keperluan rutin penjagaan.', en: 'Aid for special care needs such as specific equipment and routine caregiving needs.' },
+criteria: [
+{ ms: 'Penilaian keperluan diperlukan.', en: 'Needs assessment required.' }
+]
+},
+
+{
+id: 179, cat: 'cukai', icon: 'fas fa-file-invoice', provider: 'LHDN', value: 'Panduan', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Panduan Pelepasan (Ringkasan)', en: 'Tax Relief Guide (Summary)' },
+desc: { ms: 'Ringkasan pelepasan cukai berkaitan OKU untuk memudahkan pengguna faham kategori tuntutan.', en: 'Summary of PWD-related tax relief to help users understand claim categories.' },
+criteria: [
+{ ms: 'Rujuk garis panduan terkini.', en: 'Refer to latest guidelines.' }
+]
+},
+
+{
+id: 180, cat: 'cuti', icon: 'fas fa-user-clock', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Kelonggaran Waktu Untuk Penjagaan Harian', en: 'Time Flexibility for Daily Care' },
+desc: { ms: 'Kelonggaran waktu untuk penjaga mengurus makan ubat, rutin kebersihan dan penjagaan harian OKU.', en: 'Time flexibility for medication, hygiene routine, and daily care management.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 181, cat: 'sokongan', icon: 'fas fa-users', provider: 'NGO', value: 'Program', link: '#',
+title: { ms: 'Program Latihan Penjaga Baharu', en: 'New Caregiver Training Program' },
+desc: { ms: 'Program latihan untuk penjaga baharu: rutin penjagaan, komunikasi, dan keselamatan asas.', en: 'Training for new caregivers: care routines, communication, and basic safety.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga baharu.', en: 'Open to new caregivers.' }
+]
+},
+
+{
+id: 182, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'Komuniti', value: 'Bergantung Program', link: '#',
+title: { ms: 'Bantuan Barangan Penjagaan (Komuniti)', en: 'Community Care Supplies Assistance' },
+desc: { ms: 'Komuniti setempat menyediakan bantuan barangan penjagaan seperti lampin atau keperluan kebersihan.', en: 'Local community provides care supplies like diapers or hygiene items.' },
+criteria: [
+{ ms: 'Bergantung sumbangan komuniti.', en: 'Depends on community donations.' }
+]
+},
+
+{
+id: 183, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Rehabilitasi Berkala', en: 'Recurring Rehabilitation Cost Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk kos rehabilitasi berkala seperti sesi terapi mingguan/bulanan.', en: 'Tax relief for recurring rehabilitation costs such as weekly/monthly therapy sessions.' },
+criteria: [
+{ ms: 'Resit diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 184, cat: 'cuti', icon: 'fas fa-calendar-alt', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Urusan Kewangan Bantuan', en: 'Leave for Aid Financial Matters' },
+desc: { ms: 'Cuti untuk mengurus urusan bantuan kewangan seperti temu duga, dokumentasi dan pengesahan.', en: 'Leave to manage aid-related interviews, documentation, and verification.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 185, cat: 'sokongan', icon: 'fas fa-comments', provider: 'Komuniti', value: 'Rujukan', link: '#',
+title: { ms: 'Rujukan Bantuan & Agensi', en: 'Aid & Agency Referrals' },
+desc: { ms: 'Khidmat rujukan untuk cari agensi/NGO yang sesuai mengikut kategori OKU dan keperluan penjaga.', en: 'Referral service to find suitable agencies/NGOs based on disability and caregiver needs.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga/keluarga.', en: 'Open to caregivers/family.' }
+]
+},
+
+{
+id: 186, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Kos Penjagaan Jangka Panjang', en: 'Long-term Care Cost Assistance' },
+desc: { ms: 'Bantuan untuk penjagaan jangka panjang apabila OKU memerlukan penjagaan berterusan.', en: 'Aid for long-term care needs requiring ongoing caregiving.' },
+criteria: [
+{ ms: 'OKU berdaftar.', en: 'Registered PWD.' },
+{ ms: 'Penilaian kes diperlukan.', en: 'Case assessment required.' }
+]
+},
+
+{
+id: 187, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM6,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Pembelian Alat Ortopedik', en: 'Orthopedic Equipment Tax Relief' },
+desc: { ms: 'Pelepasan cukai untuk pembelian alat ortopedik atau sokongan mobiliti (tertakluk syarat).', en: 'Tax relief for orthopedic equipment or mobility support (subject to conditions).' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 188, cat: 'cuti', icon: 'fas fa-user-check', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Cuti Urusan Laporan Perubatan', en: 'Leave for Medical Report Matters' },
+desc: { ms: 'Cuti untuk urusan mendapatkan laporan perubatan, surat pakar, dan dokumen sokongan.', en: 'Leave to obtain medical reports, specialist letters, and supporting documents.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 189, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'NGO', value: 'Kelas', link: '#',
+title: { ms: 'Kelas Pengurusan Penjagaan', en: 'Care Management Classes' },
+desc: { ms: 'Kelas pengurusan penjagaan: jadual ubat, diet, keselamatan rumah dan komunikasi penjaga.', en: 'Care management classes: medication schedule, diet, home safety, and caregiver communication.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 190, cat: 'kewangan', icon: 'fas fa-coins', provider: 'NGO', value: 'Dana', link: '#',
+title: { ms: 'Dana Bantuan Terapi Anak OKU', en: 'Therapy Fund for Disabled Children' },
+desc: { ms: 'Dana bantuan untuk menampung kos terapi anak OKU seperti terapi pertuturan atau terapi pekerjaan.', en: 'Fund to cover therapy costs for disabled children such as speech or occupational therapy.' },
+criteria: [
+{ ms: 'Tertakluk program NGO.', en: 'Subject to NGO program.' }
+]
+},
+
+{
+id: 191, cat: 'cukai', icon: 'fas fa-receipt', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Rawatan Terlantar', en: 'Bedridden Care Treatment Tax Relief' },
+desc: { ms: 'Pelepasan cukai bagi kos rawatan berkaitan penjagaan OKU terlantar (tertakluk syarat).', en: 'Tax relief for treatment costs related to bedridden PWD care (subject to conditions).' },
+criteria: [
+{ ms: 'Resit/rawatan diperlukan.', en: 'Receipts/treatment required.' }
+]
+},
+
+{
+id: 192, cat: 'cuti', icon: 'fas fa-calendar-check', provider: 'Majikan', value: 'Bergantung Polisi', link: '#',
+title: { ms: 'Cuti Pengiring Terapi', en: 'Therapy Escort Leave' },
+desc: { ms: 'Cuti untuk mengiring OKU ke sesi terapi di pusat rehabilitasi atau hospital.', en: 'Leave to escort PWD to therapy sessions at rehab centers or hospitals.' },
+criteria: [
+{ ms: 'Kelulusan majikan.', en: 'Employer approval.' }
+]
+},
+
+{
+id: 193, cat: 'sokongan', icon: 'fas fa-users', provider: 'Komuniti', value: 'Support', link: '#',
+title: { ms: 'Rakan Sokongan Penjaga (Buddy System)', en: 'Caregiver Buddy System' },
+desc: { ms: 'Sistem rakan sokongan untuk penjaga: tolong-menolong, check-in emosi dan bantuan kecil.', en: 'Buddy system for caregivers: mutual help, emotional check-ins, and small assistance.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 194, cat: 'kewangan', icon: 'fas fa-wallet', provider: 'Komuniti', value: 'Bergantung Sumbangan', link: '#',
+title: { ms: 'Bantuan Barangan Perubatan (Sumbangan)', en: 'Medical Supplies Assistance (Donations)' },
+desc: { ms: 'Bantuan barangan perubatan melalui sumbangan seperti kerusi roda terpakai, walker, atau peralatan asas.', en: 'Donated medical supplies such as used wheelchairs, walkers, or basic equipment.' },
+criteria: [
+{ ms: 'Bergantung stok sumbangan.', en: 'Depends on donated stock.' }
+]
+},
+
+{
+id: 195, cat: 'cukai', icon: 'fas fa-file-invoice', provider: 'LHDN', value: 'Panduan', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Tip Tuntutan Pelepasan (Resit & Dokumen)', en: 'Tax Claim Tips (Receipts & Docs)' },
+desc: { ms: 'Tip menyusun resit mengikut kategori supaya tuntutan pelepasan OKU lebih kemas dan mudah diaudit.', en: 'Tips to sort receipts by category for cleaner claims and easier audit checks.' },
+criteria: [
+{ ms: 'Simpan rekod lengkap & teratur.', en: 'Keep complete and organized records.' }
+]
+},
+
+{
+id: 196, cat: 'cuti', icon: 'fas fa-user-clock', provider: 'Majikan', value: 'Fleksibel', link: '#',
+title: { ms: 'Kelonggaran Waktu (Kecemasan Penjagaan)', en: 'Time Flexibility (Care Emergencies)' },
+desc: { ms: 'Kelonggaran waktu apabila berlaku kecemasan penjagaan seperti ke hospital, jatuh sakit atau isu keselamatan.', en: 'Time flexibility during care emergencies such as hospital visits, sudden illness, or safety issues.' },
+criteria: [
+{ ms: 'Bergantung polisi majikan.', en: 'Depends on employer policy.' }
+]
+},
+
+{
+id: 197, cat: 'sokongan', icon: 'fas fa-heart', provider: 'NGO', value: 'Support', link: '#',
+title: { ms: 'Sokongan Kesihatan Mental Penjaga', en: 'Caregiver Mental Health Support' },
+desc: { ms: 'Sokongan kesihatan mental untuk penjaga melalui kaunseling, sesi coping dan rujukan profesional.', en: 'Mental health support through counseling, coping sessions, and professional referrals.' },
+criteria: [
+{ ms: 'Terbuka kepada penjaga.', en: 'Open to caregivers.' }
+]
+},
+
+{
+id: 198, cat: 'kewangan', icon: 'fas fa-hand-holding-usd', provider: 'JKM', value: 'Bergantung Kes', link: 'https://www.jkm.gov.my/',
+title: { ms: 'Bantuan Kos Penjagaan Rumah', en: 'Home Care Cost Assistance' },
+desc: { ms: 'Bantuan untuk kos penjagaan di rumah termasuk keperluan asas dan peralatan penjagaan.', en: 'Aid for home care costs including essentials and caregiving equipment.' },
+criteria: [
+{ ms: 'Penilaian pegawai kebajikan.', en: 'Assessment by welfare officer.' }
+]
+},
+
+{
+id: 199, cat: 'cukai', icon: 'fas fa-file-invoice-dollar', provider: 'LHDN', value: 'Sehingga RM8,000', link: 'https://mytax.hasil.gov.my/',
+title: { ms: 'Pelepasan Kos Peralatan Kesihatan', en: 'Tax Relief for Health Equipment Costs' },
+desc: { ms: 'Pelepasan cukai bagi kos peralatan kesihatan yang digunakan untuk penjagaan OKU (tertakluk syarat).', en: 'Tax relief for health equipment used for PWD care (subject to conditions).' },
+criteria: [
+{ ms: 'Resit pembelian diperlukan.', en: 'Receipts required.' }
+]
+},
+
+{
+id: 200, cat: 'sokongan', icon: 'fas fa-hands-helping', provider: 'Komuniti', value: 'Sokongan', link: '#',
+title: { ms: 'Pusat Sokongan Penjaga (Rujukan Setempat)', en: 'Caregiver Support Center (Local Referral)' },
+desc: { ms: 'Rujukan setempat untuk penjaga mendapatkan info bantuan, program komuniti dan sokongan moral.', en: 'Local referral for caregivers to get aid info, community programs, and moral support.' },
+criteria: [
+{ ms: 'Bergantung lokasi dan komuniti setempat.', en: 'Depends on location and local community.' }
+]
+},
+                ]
+            }
+        }
+    </script>
+</body>
+</html>

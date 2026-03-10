@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY OKU SENTRAL - Info Cukai & Insentif</title>
+    <meta name="description" content="Panduan lengkap pelepasan cukai pendapatan LHDN, pengecualian duti eksais, dan cukai jalan JPJ untuk OKU.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- MARKDOWN RENDER -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- FONT AWESOME -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        access: { 500: '#FBBF24', 600: '#D97706' }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slight': 'bounce 2s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+        
+        .tab-content { transition: all 0.3s ease-in-out; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="appData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                   <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+            <div class="hidden md:flex items-center gap-6">
+    <a href="index.html" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].nav_home">Laman Utama</a>
+    <a href="#lhdn" class="font-bold hover:text-brand-600 transition">LHDN</a>
+    <a href="#kenderaan" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].nav_vehicle">Kenderaan</a>
+    
+    <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+</div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 px-4 relative overflow-hidden">
+        <div class="container mx-auto max-w-5xl relative z-10 text-center">
+            <div class="inline-block p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-brand-600 mb-6 animate-bounce-slight">
+                <i class="fas fa-file-invoice-dollar text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight">
+                <span x-text="txt[lang].hero_title">Pelepasan Cukai &</span><br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-teal-400" x-text="txt[lang].hero_subtitle">Insentif Kewangan</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto" x-text="txt[lang].hero_desc">
+                Ketahui hak anda dalam penjimatan cukai pendapatan (LHDN), pengecualian cukai jalan (JPJ), dan duti eksais kenderaan.
+            </p>
+        </div>
+    </header>
+
+    <section class="sticky top-20 z-40 bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-md py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4 flex justify-center gap-4">
+            <button @click="activeTab = 'lhdn'" 
+                :class="activeTab === 'lhdn' ? 'bg-brand-600 text-white shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'"
+                class="px-6 py-3 rounded-full font-bold transition-all duration-300 flex items-center gap-2 border border-gray-200 dark:border-gray-700">
+                <i class="fas fa-landmark"></i> <span x-text="txt[lang].tab_lhdn">Cukai Pendapatan</span>
+            </button>
+            <button @click="activeTab = 'vehicle'" 
+                :class="activeTab === 'vehicle' ? 'bg-brand-600 text-white shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'"
+                class="px-6 py-3 rounded-full font-bold transition-all duration-300 flex items-center gap-2 border border-gray-200 dark:border-gray-700">
+                <i class="fas fa-car"></i> <span x-text="txt[lang].tab_vehicle">Kenderaan & Jalan</span>
+            </button>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-4 py-12 max-w-5xl min-h-screen">
+        
+        <div x-show="activeTab === 'lhdn'" x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" id="lhdn">
+            
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6 mb-10 flex items-start gap-4">
+                <i class="fas fa-info-circle text-2xl text-blue-600 mt-1"></i>
+                <div>
+                    <h3 class="font-bold text-lg text-blue-800 dark:text-blue-300" x-text="txt[lang].lhdn_note_title">Nota Penting LHDN</h3>
+                    <p class="text-sm text-blue-700 dark:text-blue-200 mt-1" x-text="txt[lang].lhdn_note_desc">
+                        Pastikan anda berdaftar dengan JKM dan mempunyai Kad OKU yang sah untuk menuntut pelepasan ini semasa e-Filing.
+                    </p>
+                </div>
+            </div>
+
+            <h2 class="text-3xl font-black mb-8 flex items-center gap-3">
+                <span class="bg-brand-600 text-white w-10 h-10 rounded-lg flex items-center justify-center text-lg">1</span>
+                <span x-text="txt[lang].list_relief_title">Senarai Pelepasan Cukai</span>
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-16">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-8 border-green-500 hover:-translate-y-1 transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase">Kod 5000</div>
+                        <i class="fas fa-user text-gray-300 text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" x-text="txt[lang].relief_self_title">Individu OKU</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-4" x-text="txt[lang].relief_self_desc">Pelepasan tambahan untuk individu yang disahkan sebagai OKU.</p>
+                    <div class="text-3xl font-black text-brand-600">RM 6,000</div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-8 border-purple-500 hover:-translate-y-1 transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold uppercase">Kod 3000</div>
+                        <i class="fas fa-user-friends text-gray-300 text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" x-text="txt[lang].relief_spouse_title">Pasangan OKU</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-4" x-text="txt[lang].relief_spouse_desc">Jika suami/isteri adalah OKU (walaupun tidak bekerja).</p>
+                    <div class="text-3xl font-black text-brand-600">RM 5,000</div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-8 border-orange-500 hover:-translate-y-1 transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold uppercase">Kod Anak</div>
+                        <i class="fas fa-child text-gray-300 text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" x-text="txt[lang].relief_child_title">Anak OKU</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-4" x-text="txt[lang].relief_child_desc">Pelepasan tambahan ke atas pelepasan anak biasa.</p>
+                    <div class="text-3xl font-black text-brand-600">RM 6,000</div>
+                    <span class="text-xs text-gray-400 block mt-2" x-text="txt[lang].relief_child_note">*Tambahan RM8,000 jika di IPT (Total RM14,000)</span>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-8 border-blue-500 hover:-translate-y-1 transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase">Resit Perlu</div>
+                        <i class="fas fa-wheelchair text-gray-300 text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" x-text="txt[lang].relief_equip_title">Alat Sokongan Asas</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-4" x-text="txt[lang].relief_equip_desc">Pembelian alat seperti kerusi roda, alat pendengaran, kaki palsu.</p>
+                    <div class="text-3xl font-black text-brand-600" x-text="txt[lang].upto_6k">Sehingga RM 6,000</div>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-500 rounded-full blur-3xl opacity-20 -mr-20 -mt-20"></div>
+                
+                <h2 class="text-2xl font-black mb-6 flex items-center gap-2 relative z-10">
+                    <i class="fas fa-calculator text-brand-400"></i> <span x-text="txt[lang].calc_title">Kalkulator Anggaran Pelepasan</span>
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-8 relative z-10">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-400 mb-2" x-text="txt[lang].lbl_income">Pendapatan Tahunan (RM)</label>
+                            <input type="number" x-model="calcIncome" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-brand-500 outline-none" placeholder="0.00">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 p-3 bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-700 transition">
+                                <input type="checkbox" x-model="isSelfOku" class="w-5 h-5 rounded text-brand-500 focus:ring-offset-gray-900">
+                                <span x-text="txt[lang].chk_self">Saya adalah OKU (Individu)</span>
+                            </label>
+                            
+                            <label class="flex items-center gap-3 p-3 bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-700 transition">
+                                <input type="checkbox" x-model="isSpouseOku" class="w-5 h-5 rounded text-brand-500 focus:ring-offset-gray-900">
+                                <span x-text="txt[lang].chk_spouse">Pasangan adalah OKU</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-700 transition">
+                                <input type="checkbox" x-model="hasEquip" class="w-5 h-5 rounded text-brand-500 focus:ring-offset-gray-900">
+                                <span x-text="txt[lang].chk_equip">Ada beli Alat Sokongan (Max RM6k)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-brand-600 rounded-2xl p-6 flex flex-col justify-center items-center text-center">
+                        <span class="text-brand-200 text-sm font-bold uppercase tracking-widest mb-2" x-text="txt[lang].lbl_total_relief">Jumlah Pelepasan OKU</span>
+                        <div class="text-5xl font-black mb-2">RM <span x-text="calculateTotalRelief()">0</span></div>
+                        <p class="text-xs text-brand-200 opacity-70" x-text="txt[lang].calc_disclaimer">*Anggaran kasar sahaja. Tidak termasuk pelepasan KWSP, Insurans dll.</p>
+                        
+                        <a href="https://mytax.hasil.gov.my/" target="_blank" class="mt-6 bg-white text-brand-600 px-6 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg">
+                            <i class="fas fa-external-link-alt mr-2"></i> MyTax LHDN
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div x-show="activeTab === 'vehicle'" x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" id="kenderaan">
+            
+            <h2 class="text-3xl font-black mb-8 flex items-center gap-3">
+                <span class="bg-brand-600 text-white w-10 h-10 rounded-lg flex items-center justify-center text-lg">2</span>
+                <span x-text="txt[lang].veh_title">Insentif Kenderaan & Jalan</span>
+            </h2>
+
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl mb-10 border border-gray-100 dark:border-gray-700 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-400/20 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="w-24 h-24 bg-yellow-100 dark:bg-yellow-900/50 rounded-full flex items-center justify-center text-yellow-600 text-4xl flex-shrink-0">
+                        <i class="fas fa-car-side"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2" x-text="txt[lang].roadtax_title">Pengecualian Cukai Jalan (LKM)</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed" x-text="txt[lang].roadtax_desc">
+                            OKU Fizikal yang memandu sendiri atau dijaga oleh keluarga layak mendapat pengecualian 100% bayaran Lesen Kenderaan Motor (Road Tax).
+                        </p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-check-circle text-green-500"></i> <span x-text="txt[lang].rt_cond1">Kereta buatan tempatan (Proton/Perodua)</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-check-circle text-green-500"></i> <span x-text="txt[lang].rt_cond2">Atau kereta import yang diubahsuai khas</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-check-circle text-green-500"></i> <span x-text="txt[lang].rt_cond3">Satu kereta untuk satu OKU sahaja</span>
+                            </li>
+                        </ul>
+                        <a href="https://public.jpj.gov.my/public/login.zul" target="_blank" class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-bold transition">
+                            <i class="fas fa-id-card"></i> Portal MySIKAP JPJ
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border border-gray-100 dark:border-gray-700 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-purple-400/20 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="w-24 h-24 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center text-purple-600 text-4xl flex-shrink-0">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2" x-text="txt[lang].duty_title">Pengecualian Duti Eksais</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed" x-text="txt[lang].duty_desc">
+                            Pengecualian 100% duti eksais untuk pembelian kenderaan tempatan (nasional) baharu sahaja.
+                        </p>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl mb-6 border-l-4 border-purple-500">
+                            <h4 class="font-bold text-sm mb-2 uppercase" x-text="txt[lang].steps_title">Langkah Permohonan:</h4>
+                            <ol class="list-decimal list-inside text-sm space-y-1 text-gray-600 dark:text-gray-300">
+                                <li x-text="txt[lang].step_1">Dapatkan surat sokongan JKM.</li>
+                                <li x-text="txt[lang].step_2">Kemukakan kepada MOF (Kementerian Kewangan).</li>
+                                <li x-text="txt[lang].step_3">Beli kereta dengan surat kelulusan.</li>
+                            </ol>
+                        </div>
+
+                        <a href="http://www.customs.gov.my/" target="_blank" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-bold transition">
+                            <i class="fas fa-globe"></i> Portal Kastam
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html#bantuan" class="hover:text-brand-400">Semakan Bantuan</a></li>
+                    <li><a href="cukai.html" class="text-brand-500 font-bold">Pelepasan Cukai</a></li>
+                    <li><a href="index.html#direktori" class="hover:text-brand-400">Direktori</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> info@hasil.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Tax Assistant</h4>
+                        <span class="text-[10px] opacity-80 block">Online</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dollar text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function appData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+                activeTab: 'lhdn',
+                
+                // Calculator Variables
+                calcIncome: '',
+                isSelfOku: false,
+                isSpouseOku: false,
+                hasEquip: false,
+
+                // Chat
+               // Chat
+chatOpen: false,
+userMsg: '',
+isTyping: false,
+
+messages: [
+    { id: 1, text: "Hai! Saya Tax Assistant MY OKU. Anda boleh tanya tentang pelepasan cukai LHDN, cukai jalan JPJ, atau duti eksais.", sender: 'bot' }
+],
+
+chatHistory: [
+    {
+        role: "system",
+        content: "Anda adalah pembantu AI untuk portal MY OKU SENTRAL. Fokus anda adalah membantu OKU Malaysia memahami pelepasan cukai LHDN, pengecualian cukai jalan JPJ, dan insentif kewangan kerajaan. Jawab dalam Bahasa Melayu yang jelas dan mesra."
+    }
+],
+                // FUNCTION: Calculate Relief
+                calculateTotalRelief() {
+                    let total = 0;
+                    if (this.isSelfOku) total += 6000;
+                    if (this.isSpouseOku) total += 5000;
+                    if (this.hasEquip) total += 6000;
+                    return total.toLocaleString();
+                },
+
+                // DICTIONARY (✅ data kekal sama)
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        nav_home: 'Laman Utama',
+                        nav_vehicle: 'Kenderaan',
+                        btn_settings: 'Akses',
+                        
+                        hero_title: 'Pelepasan Cukai &',
+                        hero_subtitle: 'Insentif Kewangan',
+                        hero_desc: 'Ketahui hak anda dalam penjimatan cukai pendapatan (LHDN), pengecualian cukai jalan (JPJ), dan duti eksais kenderaan.',
+                        
+                        tab_lhdn: 'Cukai Pendapatan',
+                        tab_vehicle: 'Kenderaan & Jalan',
+                        
+                        lhdn_note_title: 'Nota Penting LHDN',
+                        lhdn_note_desc: 'Pastikan anda berdaftar dengan JKM dan mempunyai Kad OKU yang sah untuk menuntut pelepasan ini semasa e-Filing.',
+                        
+                        list_relief_title: 'Senarai Pelepasan Cukai',
+                        relief_self_title: 'Individu OKU',
+                        relief_self_desc: 'Pelepasan tambahan untuk individu yang disahkan sebagai OKU.',
+                        relief_spouse_title: 'Pasangan OKU',
+                        relief_spouse_desc: 'Jika suami/isteri adalah OKU (walaupun tidak bekerja).',
+                        relief_child_title: 'Anak OKU',
+                        relief_child_desc: 'Pelepasan tambahan ke atas pelepasan anak biasa.',
+                        relief_child_note: '*Tambahan RM8,000 jika di IPT (Total RM14,000)',
+                        relief_equip_title: 'Alat Sokongan Asas',
+                        relief_equip_desc: 'Pembelian alat seperti kerusi roda, alat pendengaran, kaki palsu.',
+                        upto_6k: 'Sehingga RM 6,000',
+                        
+                        calc_title: 'Kalkulator Anggaran Pelepasan',
+                        lbl_income: 'Pendapatan Tahunan (RM)',
+                        chk_self: 'Saya adalah OKU (Individu)',
+                        chk_spouse: 'Pasangan adalah OKU',
+                        chk_equip: 'Ada beli Alat Sokongan (Max RM6k)',
+                        lbl_total_relief: 'Jumlah Pelepasan OKU',
+                        calc_disclaimer: '*Anggaran kasar sahaja. Tidak termasuk pelepasan KWSP, Insurans dll.',
+                        
+                        veh_title: 'Insentif Kenderaan & Jalan',
+                        roadtax_title: 'Pengecualian Cukai Jalan (LKM)',
+                        roadtax_desc: 'OKU Fizikal yang memandu sendiri atau dijaga oleh keluarga layak mendapat pengecualian 100% bayaran Lesen Kenderaan Motor (Road Tax).',
+                        rt_cond1: 'Kereta buatan tempatan (Proton/Perodua)',
+                        rt_cond2: 'Atau kereta import yang diubahsuai khas',
+                        rt_cond3: 'Satu kereta untuk satu OKU sahaja',
+                        
+                        duty_title: 'Pengecualian Duti Eksais',
+                        duty_desc: 'Pengecualian 100% duti eksais untuk pembelian kenderaan tempatan (nasional) baharu sahaja.',
+                        steps_title: 'Langkah Permohonan:',
+                        step_1: 'Dapatkan surat sokongan JKM.',
+                        step_2: 'Kemukakan kepada MOF (Kementerian Kewangan).',
+                        step_3: 'Beli kereta dengan surat kelulusan.',
+                        
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Taip soalan anda...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        nav_home: 'Home',
+                        nav_vehicle: 'Vehicles',
+                        btn_settings: 'Access',
+                        
+                        hero_title: 'Tax Reliefs &',
+                        hero_subtitle: 'Financial Incentives',
+                        hero_desc: 'Know your rights for Income Tax (LHDN) savings, Road Tax (JPJ) exemptions, and vehicle excise duties.',
+                        
+                        tab_lhdn: 'Income Tax',
+                        tab_vehicle: 'Vehicle & Road',
+                        
+                        lhdn_note_title: 'Important LHDN Note',
+                        lhdn_note_desc: 'Ensure you are registered with JKM and hold a valid OKU Card to claim these reliefs during e-Filing.',
+                        
+                        list_relief_title: 'List of Tax Reliefs',
+                        relief_self_title: 'Disabled Individual',
+                        relief_self_desc: 'Additional relief for individuals certified as PWD/OKU.',
+                        relief_spouse_title: 'Disabled Spouse',
+                        relief_spouse_desc: 'If husband/wife is PWD (even if not working).',
+                        relief_child_title: 'Disabled Child',
+                        relief_child_desc: 'Additional relief on top of standard child relief.',
+                        relief_child_note: '*Extra RM8,000 if in Tertiary Ed (Total RM14,000)',
+                        relief_equip_title: 'Basic Supporting Equipment',
+                        relief_equip_desc: 'Purchase of equipment like wheelchairs, hearing aids, prosthetics.',
+                        upto_6k: 'Up to RM 6,000',
+                        
+                        calc_title: 'Relief Estimator Calculator',
+                        lbl_income: 'Annual Income (RM)',
+                        chk_self: 'I am PWD (Individual)',
+                        chk_spouse: 'Spouse is PWD',
+                        chk_equip: 'Bought Support Equipment (Max RM6k)',
+                        lbl_total_relief: 'Total PWD Relief',
+                        calc_disclaimer: '*Rough estimate only. Excludes EPF, Insurance etc.',
+                        
+                        veh_title: 'Vehicle & Road Incentives',
+                        roadtax_title: 'Road Tax Exemption (LKM)',
+                        roadtax_desc: 'Physical PWDs who drive themselves or are cared for by family are eligible for 100% Road Tax exemption.',
+                        rt_cond1: 'Local made cars (Proton/Perodua)',
+                        rt_cond2: 'Or specially modified imported cars',
+                        rt_cond3: 'One car per PWD only',
+                        
+                        duty_title: 'Excise Duty Exemption',
+                        duty_desc: '100% excise duty exemption for the purchase of new national (local) vehicles only.',
+                        steps_title: 'Application Steps:',
+                        step_1: 'Get support letter from JKM.',
+                        step_2: 'Submit to MOF (Ministry of Finance).',
+                        step_3: 'Buy car with approval letter.',
+                        
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Type your question...'
+                    }
+                },
+
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                async sendMessage() {
+
+    if (this.userMsg.trim() === '') return;
+
+    const userText = this.userMsg;
+
+    // Papar mesej user
+    this.messages.push({
+        id: Date.now(),
+        text: userText,
+        sender: 'user'
+    });
+
+    // Simpan history
+    this.chatHistory.push({
+        role: "user",
+        content: userText
+    });
+
+    this.userMsg = '';
+    this.isTyping = true;
+
+    try {
+
+        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer S95Fojas52zPHqJMpwyS8DxXHhUwxEhS`
+            },
+            body: JSON.stringify({
+                model: "mistral-small-latest",
+                messages: this.chatHistory,
+                max_tokens: 1000,
+                temperature: 0.7
+            })
+        });
+
+        const data = await response.json();
+
+        const botReply = data.choices[0].message.content;
+
+        this.chatHistory.push({
+            role: "assistant",
+            content: botReply
+        });
+
+        this.messages.push({
+            id: Date.now() + 1,
+            text: marked.parse(botReply),
+            sender: 'bot'
+        });
+
+    } catch (error) {
+
+        console.error("Mistral Error:", error);
+
+        this.messages.push({
+            id: Date.now() + 1,
+            text: "Maaf, sistem AI sedang sibuk. Cuba lagi sebentar.",
+            sender: 'bot'
+        });
+
+    } finally {
+
+        this.isTyping = false;
+
+        this.$nextTick(() => {
+            const container = document.getElementById('chat-messages');
+            if (container) container.scrollTop = container.scrollHeight;
+        });
+
+    }
+
+}
+            }
+        }
+    </script>
+</body>
+</html>

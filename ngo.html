@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direktori NGO - MY OKU SENTRAL</title>
+    <meta name="description" content="Direktori lengkap NGO dan badan kebajikan OKU di Malaysia.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        access: { 500: '#FBBF24', 600: '#D97706' }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="ngoPageData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+            <div class="flex items-center gap-3 md:gap-6">
+                <a href="index.html" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].nav_home">Utama</a>
+                <a href="index.html#direktori" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].nav_dir">Direktori</a>
+                <a href="#" class="font-bold text-brand-600 transition" x-text="txt[lang].nav_ngo">NGO</a>
+                
+                <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 px-4 bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+        <div class="container mx-auto max-w-6xl relative z-10">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-6xl font-black mb-4">
+                    <span x-text="txt[lang].hero_title">Jaringan Kasih</span> 
+                    <span class="text-brand-600">NGO</span>
+                </h1>
+                <p class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto" x-text="txt[lang].hero_desc">
+                    Cari pertubuhan, persatuan, dan badan kebajikan yang sedia membantu anda. Sambungkan diri anda dengan komuniti yang menyokong.
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div class="md:col-span-5 relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" x-model="filterName" :placeholder="txt[lang].ph_search" 
+                               class="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl border-none focus:ring-2 focus:ring-brand-500 dark:text-white font-semibold">
+                    </div>
+
+                    <div class="md:col-span-3 relative">
+                        <i class="fas fa-map-marker-alt absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <select x-model="filterState" class="w-full pl-12 pr-8 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl border-none focus:ring-2 focus:ring-brand-500 dark:text-white font-semibold appearance-none cursor-pointer">
+                            <option value="" x-text="txt[lang].opt_all_states">Semua Negeri</option>
+                            <option value="Johor">Johor</option>
+                            <option value="Kedah">Kedah</option>
+                            <option value="Kelantan">Kelantan</option>
+                            <option value="Melaka">Melaka</option>
+                            <option value="Negeri Sembilan">Negeri Sembilan</option>
+                            <option value="Pahang">Pahang</option>
+                            <option value="Perak">Perak</option>
+                            <option value="Perlis">Perlis</option>
+                            <option value="Pulau Pinang">Pulau Pinang</option>
+                            <option value="Sabah">Sabah</option>
+                            <option value="Sarawak">Sarawak</option>
+                            <option value="Selangor">Selangor</option>
+                            <option value="Terengganu">Terengganu</option>
+                            <option value="Kuala Lumpur">Kuala Lumpur</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+
+                    <div class="md:col-span-4 relative">
+                        <i class="fas fa-list absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <select x-model="filterCat" class="w-full pl-12 pr-8 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl border-none focus:ring-2 focus:ring-brand-500 dark:text-white font-semibold appearance-none cursor-pointer">
+                            <option value="" x-text="txt[lang].opt_all_cats">Semua Kategori</option>
+                            <option value="physical" x-text="txt[lang].cat_physical">Fizikal</option>
+                            <option value="visual" x-text="txt[lang].cat_visual">Penglihatan</option>
+                            <option value="hearing" x-text="txt[lang].cat_hearing">Pendengaran</option>
+                            <option value="mental" x-text="txt[lang].cat_mental">Mental & Intelek</option>
+                            <option value="learning" x-text="txt[lang].cat_learning">Masalah Pembelajaran</option>
+                            <option value="autism" x-text="txt[lang].cat_autism">Autisme</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div class="container mx-auto px-4 max-w-7xl">
+            
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold dark:text-white">
+                    <span x-text="filteredNGOs.length"></span> 
+                    <span x-text="txt[lang].res_found">Organisasi Ditemui</span>
+                </h3>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="ngo in filteredNGOs" :key="ngo.id">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-2xl hover:-translate-y-1 transition duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full">
+                        
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-14 h-14 rounded-xl bg-brand-50 dark:bg-gray-700 flex items-center justify-center text-2xl text-brand-600 shadow-sm">
+                                <i :class="ngo.icon"></i>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" 
+                                  :class="getBadgeColor(ngo.category)">
+                                <span x-text="getCatLabel(ngo.category)"></span>
+                            </span>
+                        </div>
+
+                        <h4 class="text-xl font-black mb-2 text-gray-900 dark:text-white leading-tight" x-text="ngo.name"></h4>
+                        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            <i class="fas fa-map-marker-alt text-brand-500"></i>
+                            <span x-text="ngo.state"></span>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-6 flex-1 line-clamp-3" x-text="ngo.desc[lang]"></p>
+
+                        <div class="grid grid-cols-2 gap-3 mt-auto">
+                            <a :href="ngo.website" target="_blank" class="flex items-center justify-center gap-2 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-bold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                                <i class="fas fa-globe"></i> Website
+                            </a>
+                            <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURI(ngo.name)" target="_blank" class="flex items-center justify-center gap-2 py-2 rounded-lg bg-brand-600 text-white font-bold text-sm hover:bg-brand-700 transition shadow-lg shadow-brand-500/30">
+                                <i class="fas fa-location-arrow"></i> Peta
+                            </a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div x-show="filteredNGOs.length === 0" class="text-center py-20">
+                <div class="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl text-gray-400">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400" x-text="txt[lang].no_result">Tiada NGO ditemui dengan kriteria ini.</h3>
+                <button @click="resetFilter()" class="mt-4 text-brand-600 font-bold hover:underline" x-text="txt[lang].btn_reset">Tetapkan Semula</button>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="daftar.html" class="hover:text-brand-400">Pendaftaran JKM</a></li>
+                    <li><a href="kewangan.html" class="hover:text-brand-400">Semakan Bantuan</a></li>
+                    <li><a href="ngo.html" class="hover:text-brand-400">Direktori NGO</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> info@jkm.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">OKU Assist Bot</h4>
+                        <span class="text-[10px] opacity-80 block">Online</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dots text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function ngoPageData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+                
+                // Filter States
+                filterName: '',
+                filterState: '',
+                filterCat: '',
+
+                // Chatbot
+                chatOpen: false,
+                userMsg: '',
+                messages: [
+                    { id: 1, text: 'Hai! 👋 Boleh saya bantu anda mencari NGO berdekatan atau mengikut kategori?', sender: 'bot' }
+                ],
+
+                // Translations
+                 txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        btn_settings: 'Akses',
+                        nav_home: 'Utama',
+                        nav_dir: 'Direktori',
+                        nav_ngo: 'NGO',
+                        hero_title: 'Jaringan Kasih',
+                        hero_desc: 'Cari pertubuhan, persatuan, dan badan kebajikan yang sedia membantu anda. Sambungkan diri anda dengan komuniti yang menyokong.',
+                        ph_search: 'Cari nama NGO...',
+                        opt_all_states: 'Semua Negeri',
+                        opt_all_cats: 'Semua Kategori',
+                        cat_physical: 'Fizikal',
+                        cat_visual: 'Penglihatan',
+                        cat_hearing: 'Pendengaran',
+                        cat_mental: 'Mental',
+                        cat_learning: 'Pembelajaran',
+                        cat_autism: 'Autisme',
+                        res_found: 'Organisasi Ditemui',
+                        no_result: 'Tiada NGO ditemui dengan kriteria ini.',
+                        btn_reset: 'Tetapkan Semula',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Taip soalan anda...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        btn_settings: 'Access',
+                        nav_home: 'Home',
+                        nav_dir: 'Directory',
+                        nav_ngo: 'NGO',
+                        hero_title: 'Support Network',
+                        hero_desc: 'Find organizations, associations, and charities ready to help you. Connect yourself with a supportive community.',
+                        ph_search: 'Search NGO name...',
+                        opt_all_states: 'All States',
+                        opt_all_cats: 'All Categories',
+                        cat_physical: 'Physical',
+                        cat_visual: 'Visual',
+                        cat_hearing: 'Hearing',
+                        cat_mental: 'Mental',
+                        cat_learning: 'Learning',
+                        cat_autism: 'Autism',
+                        res_found: 'Organizations Found',
+                        no_result: 'No NGOs found matching your criteria.',
+                        btn_reset: 'Reset Filters',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Type your question...'
+                    }
+                },
+
+                // DATABASE NGO
+                ngos: [
+                    { id: 1, name: 'Malaysian Federation of the Deaf (MFD)', category: 'hearing', state: 'Selangor', website: 'https://www.ymf.org.my', icon: 'fas fa-deaf', desc: { ms: 'Pusat sehenti bagi komuniti Pekak Malaysia, menawarkan latihan bahasa isyarat dan advokasi.', en: 'One-stop center for the Malaysian Deaf community, offering sign language training and advocacy.' } },
+                    { id: 2, name: 'Malaysian Association for the Blind (MAB)', category: 'visual', state: 'Kuala Lumpur', website: 'https://mab.org.my', icon: 'fas fa-eye-slash', desc: { ms: 'Menyediakan latihan vokasional, braille, dan pemulihan bagi OKU Penglihatan.', en: 'Provides vocational training, Braille, and rehabilitation for the visually impaired.' } },
+                    { id: 3, name: 'National Autism Society of Malaysia (NASOM)', category: 'autism', state: 'Selangor', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Menawarkan perkhidmatan pendidikan, rawatan, dan sokongan untuk individu autisme.', en: 'Offers education, intervention, and support services for individuals with autism.' } },
+                    { id: 4, name: 'Damai Disabled Person Association', category: 'physical', state: 'Selangor', website: 'https://damai.org.my', icon: 'fas fa-wheelchair', desc: { ms: 'Fokus kepada latihan pekerjaan dan hidup berdikari untuk OKU Fizikal.', en: 'Focuses on employment training and independent living for the physically disabled.' } },
+                    { id: 5, name: 'Persatuan Sindrom Down Malaysia (PSDM)', category: 'learning', state: 'Kuala Lumpur', website: 'http://www.downsyndromemalaysia.org', icon: 'fas fa-child', desc: { ms: 'Pusat advokasi dan sokongan untuk individu dengan Sindrom Down dan keluarga mereka.', en: 'Advocacy and support center for individuals with Down Syndrome and their families.' } },
+                    { id: 6, name: 'Spastic Children\'s Association of Selangor & FT', category: 'physical', state: 'Selangor', website: 'https://scasft.org', icon: 'fas fa-crutch', desc: { ms: 'Pusat rawatan dan pendidikan khas untuk kanak-kanak Cerebral Palsy.', en: 'Treatment and special education center for children with Cerebral Palsy.' } },
+                    { id: 7, name: 'Malaysian Mental Health Association (MMHA)', category: 'mental', state: 'Kuala Lumpur', website: 'https://mmha.org.my', icon: 'fas fa-brain', desc: { ms: 'Menyediakan sokongan kesihatan mental, rehabilitasi psikiatri dan kaunseling.', en: 'Provides mental health support, psychiatric rehabilitation, and counseling.' } },
+                    { id: 8, name: 'Tun Hussein Onn National Eye Hospital', category: 'visual', state: 'Selangor', website: 'https://www.thoneh.com', icon: 'fas fa-hospital', desc: { ms: 'Hospital pakar mata yang juga menyediakan latihan dan bantuan komuniti.', en: 'Specialist eye hospital that also provides training and community aid.' } },
+                    { id: 9, name: 'Cheshire Home Selangor', category: 'physical', state: 'Selangor', website: 'https://cheshire.org.my', icon: 'fas fa-home', desc: { ms: 'Rumah kediaman dan latihan untuk individu kurang upaya fizikal.', en: 'Residential home and training for physically disabled individuals.' } },
+                    { id: 10, name: 'Persatuan Dyslexia Malaysia', category: 'learning', state: 'Kuala Lumpur', website: 'http://www.dyslexiamalaysia.org.my', icon: 'fas fa-book-reader', desc: { ms: 'Membantu kanak-kanak disleksia melalui program pembelajaran khusus.', en: 'Helping dyslexic children through specialized learning programs.' } },
+                    { id: 11, name: 'Job Coach Network Malaysia', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-briefcase', desc: { ms: 'Rangkaian sokongan pekerjaan untuk membantu OKU kekal dalam pekerjaan.', en: 'Employment support network to help PWDs sustain employment.' } },
+                    { id: 12, name: 'Society of the Blind in Malaysia (SBM)', category: 'visual', state: 'Kuala Lumpur', website: 'http://sbm.org.my', icon: 'fas fa-low-vision', desc: { ms: 'Memperjuangkan hak sosio-ekonomi OKU penglihatan di Malaysia.', en: 'Advocating specifically for the socio-economic rights of the blind.' } },
+                    { id: 13, name: 'Befrienders KL', category: 'mental', state: 'Kuala Lumpur', website: 'https://www.befrienders.org.my', icon: 'fas fa-phone-alt', desc: { ms: 'Talian sokongan emosi percuma 24 jam untuk pencegahan bunuh diri.', en: 'Free 24-hour emotional support hotline for suicide prevention.' } },
+                    { id: 14, name: 'Beautiful Gate Foundation', category: 'physical', state: 'Selangor', website: 'https://beautifulgate.org.my', icon: 'fas fa-door-open', desc: { ms: 'Pusat latihan hidup berdikari dan kerjaya untuk OKU di Petaling Jaya.', en: 'Independent living and career training center for PWDs in Petaling Jaya.' } },
+                    { id: 15, name: 'Sarawak Society for the Deaf', category: 'hearing', state: 'Sarawak', website: 'https://sarawakdeaf.org', icon: 'fas fa-hands', desc: { ms: 'Pusat komuniti pekak utama di Borneo, terletak di Kuching.', en: 'Major deaf community center in Borneo, located in Kuching.' } },
+                    { id: 16, name: 'Sabah Society for the Blind', category: 'visual', state: 'Sabah', website: 'https://www.facebook.com/sabahsocietyfortheblind', icon: 'fas fa-eye', desc: { ms: 'Pusat latihan dan rehabilitasi untuk komuniti buta di Sabah.', en: 'Training and rehabilitation center for the blind community in Sabah.' } },
+                    { id: 17, name: 'Eden Handicap Service Centre', category: 'physical', state: 'Pulau Pinang', website: 'https://www.edenhandicap.org', icon: 'fas fa-heart', desc: { ms: 'Pusat kebajikan Kristian yang menawarkan latihan dan perlindungan di Penang.', en: 'Christian welfare center offering training and shelter in Penang.' } },
+                    { id: 18, name: 'Kiwanis Down Syndrome Foundation', category: 'learning', state: 'Selangor', website: 'https://kdsf.org.my', icon: 'fas fa-child', desc: { ms: 'Pendidikan awal untuk kanak-kanak sindrom down (0-6 tahun).', en: 'Early education for children with Down Syndrome (0-6 years).' } },
+                    // --- NEGERI JOHOR ---
+                { id: 19, name: 'Johor Area Rehabilitation Organisation (JARO)', category: 'physical', state: 'Johor', website: 'https://jaro.org.my', icon: 'fas fa-hands-helping', desc: { ms: 'Menyediakan latihan vokasional, kraftangan dan pekerjaan untuk OKU fizikal di Johor.', en: 'Provides vocational training, handicraft and employment for the physically disabled in Johor.' } },
+                { id: 20, name: 'Persatuan Kanak-Kanak Spastik Johor', category: 'physical', state: 'Johor', website: 'https://spasticjohor.org.my', icon: 'fas fa-wheelchair', desc: { ms: 'Pusat pemulihan dan pendidikan khas yang komprehensif untuk kanak-kanak Cerebral Palsy di Johor.', en: 'Comprehensive rehabilitation and special education center for children with Cerebral Palsy in Johor.' } },
+                { id: 21, name: 'Persatuan Sindrom Down Negeri Johor', category: 'learning', state: 'Johor', website: 'https://www.facebook.com/psdnj', icon: 'fas fa-child', desc: { ms: 'Menyediakan program intervensi awal, pendidikan dan sokongan untuk kanak-kanak Sindrom Down.', en: 'Provides early intervention programs, education and support for children with Down Syndrome.' } },
+                { id: 22, name: 'Persatuan Penjagaan Kanak-Kanak Terencat Akal Johor Bahru', category: 'mental', state: 'Johor', website: 'http://www.kktajb.org', icon: 'fas fa-brain', desc: { ms: 'Pusat jagaan harian dan latihan untuk kanak-kanak serta orang dewasa bermasalah pembelajaran dan mental.', en: 'Day care and training center for children and adults with learning and mental disabilities.' } },
+                { id: 23, name: 'Calvary Victory Centre (CVC)', category: 'autism', state: 'Johor', website: 'https://calvary.com.my/cvc', icon: 'fas fa-puzzle-piece', desc: { ms: 'Pusat pendidikan khas yang direka khusus untuk melatih kanak-kanak dan belia autisme di Johor Bahru.', en: 'Special education center specifically designed to train children and youth with autism in Johor Bahru.' } },
+                { id: 24, name: 'Persatuan Orang Pekak Johor (SDNJ)', category: 'hearing', state: 'Johor', website: 'https://www.facebook.com/Johordeaf/', icon: 'fas fa-deaf', desc: { ms: 'Memperjuangkan kebajikan, dan menyediakan kelas bahasa isyarat untuk komuniti pekak Johor.', en: 'Advocating welfare, and providing sign language classes for the deaf community in Johor.' } },
+                { id: 25, name: 'Pertubuhan Kebajikan Anak Yatim & OKU Batu Pahat', category: 'all', state: 'Johor', website: 'https://www.facebook.com/pkayoku', icon: 'fas fa-home', desc: { ms: 'Pusat perlindungan dan jagaan kebajikan untuk pelbagai kategori OKU dan anak yatim di Batu Pahat.', en: 'Shelter and welfare care center for various categories of PWDs and orphans in Batu Pahat.' } },
+                { id: 26, name: 'Kiwanis Down Syndrome Foundation (Batu Pahat)', category: 'learning', state: 'Johor', website: 'https://kdsf.org.my', icon: 'fas fa-users', desc: { ms: 'Pusat intervensi awal dan pendidikan khusus untuk anak-anak Sindrom Down di sekitar Batu Pahat.', en: 'Early intervention and special education center for Down Syndrome children around Batu Pahat.' } },
+                { id: 27, name: 'MAB (Malaysian Association for the Blind) Cawangan Johor', category: 'visual', state: 'Johor', website: 'https://mab.org.my', icon: 'fas fa-eye-slash', desc: { ms: 'Menyediakan perkhidmatan pemulihan, orientasi, dan latihan mobiliti untuk OKU penglihatan setempat.', en: 'Provides rehabilitation, orientation, and mobility training services for the local visually impaired.' } },
+                { id: 28, name: 'Persatuan Disleksia Malaysia (Cawangan Johor Bahru)', category: 'learning', state: 'Johor', website: 'http://www.dyslexiamalaysia.org.my', icon: 'fas fa-book-reader', desc: { ms: 'Membantu murid disleksia merapatkan jurang pembelajaran mereka melalui kaedah pengajaran khusus.', en: 'Helping dyslexic students bridge their learning gap through specialized teaching methods.' } },
+                { id: 29, name: 'Hope Mission Welfare Society Johor Bahru', category: 'all', state: 'Johor', website: 'https://hopemission.org.my', icon: 'fas fa-heart', desc: { ms: 'Pertubuhan kebajikan yang memberi bantuan makanan, perlindungan dan sokongan kepada OKU miskin.', en: 'Welfare society providing food aid, shelter, and support to underprivileged PWDs.' } },
+                { id: 30, name: 'Pusat Jagaan Kasih Setia', category: 'physical', state: 'Johor', website: 'https://www.facebook.com/PusatJagaanKasihSetia', icon: 'fas fa-bed', desc: { ms: 'Menjaga pesakit kronik, warga emas dan golongan OKU terlantar yang memerlukan penjagaan rapi.', en: 'Caring for chronically ill, elderly, and bedridden PWDs who require intensive care.' } },
+                { id: 31, name: 'Handicapped and Mentally Disabled Children Association Johor Bahru (Saleng)', category: 'mental', state: 'Johor', website: 'http://www.handicapjb.org.my', icon: 'fas fa-hand-holding-medical', desc: { ms: 'Rumah jagaan terkenal di Saleng untuk individu cacat anggota dan mental yang terbiar atau miskin.', en: 'Well-known care home in Saleng for physically and mentally disabled individuals who are abandoned or poor.' } },
+                { id: 32, name: 'Johor Cheshire Home (Rumah Amal Cheshire)', category: 'physical', state: 'Johor', website: 'https://www.facebook.com/johorcheshire/', icon: 'fas fa-home', desc: { ms: 'Menyediakan tempat tinggal dan penjagaan untuk golongan OKU fizikal yang tiada tempat bergantung.', en: 'Provides residential care and support for physically disabled individuals with no dependents.' } },
+                { id: 33, name: 'NASOM Cawangan Johor Bahru', category: 'autism', state: 'Johor', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Pusat intervensi awal dan latihan kemahiran untuk kanak-kanak dan belia autisme di JB.', en: 'Early intervention and skills training center for children and youth with autism in JB.' } },
+                { id: 34, name: 'NASOM Cawangan Muar', category: 'autism', state: 'Johor', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Cawangan NASOM di daerah Muar yang memfokuskan kepada pendidikan khas kanak-kanak autisme.', en: 'NASOM branch in Muar focusing on special education for children with autism.' } },
+                { id: 35, name: 'Befrienders Johor Bahru', category: 'mental', state: 'Johor', website: 'https://www.befriendersjb.org', icon: 'fas fa-phone-alt', desc: { ms: 'Sokongan emosi tanpa prejudis dan sulit untuk mereka yang mengalami kemurungan dan masalah mental.', en: 'Confidential and non-judgmental emotional support for those experiencing depression and mental health issues.' } },
+                { id: 36, name: 'Pusat Jagaan Kanak-Kanak Istimewa Lagenda Suria (Kulai)', category: 'learning', state: 'Johor', website: 'https://www.facebook.com/pusatjagaankanakkanakistimewalegendasuria', icon: 'fas fa-school', desc: { ms: 'Pusat asuhan dan didikan khusus untuk kanak-kanak berkeperluan khas di Kulai.', en: 'Specialized daycare and education center for children with special needs in Kulai.' } },
+                { id: 37, name: 'Persatuan Pembangunan Orang Kurang Upaya Anggota Johor (POKUAJ)', category: 'physical', state: 'Johor', website: 'https://www.facebook.com/pokuaj/', icon: 'fas fa-wheelchair', desc: { ms: 'Memperkasa kemahiran OKU fizikal melalui sukan, rekreasi dan keusahawanan di Johor.', en: 'Empowering physical PWDs through sports, recreation, and entrepreneurship in Johor.' } },
+                { id: 38, name: 'Pusat Latihan Kanak-Kanak Cacat Istimewa Kluang', category: 'learning', state: 'Johor', website: 'https://www.facebook.com/pusatlatihankanakkanakcacatistimewakluang/', icon: 'fas fa-chalkboard-teacher', desc: { ms: 'Pusat pemulihan dan latihan kemahiran hidup untuk kanak-kanak istimewa di daerah Kluang.', en: 'Rehabilitation and life skills training center for special children in the Kluang district.' } },
+                { id: 39, name: 'Grace Covenant Community Care', category: 'mental', state: 'Johor', website: 'https://www.gracecovenant.org.my', icon: 'fas fa-hands-helping', desc: { ms: 'Menyediakan penjagaan psikiatri, terapi dan perlindungan untuk golongan yang mempunyai masalah mental.', en: 'Provides psychiatric care, therapy, and shelter for individuals with mental health conditions.' } },
+                { id: 40, name: 'Amitabha Centre (Cawangan Johor)', category: 'all', state: 'Johor', website: 'https://amitabhamalaysia.org', icon: 'fas fa-praying-hands', desc: { ms: 'Pusat kebajikan yang menempatkan warga emas, anak yatim dan juga golongan OKU yang memerlukan rawatan.', en: 'Welfare center housing the elderly, orphans, and PWDs in need of care.' } },
+                { id: 41, name: 'Pertubuhan Pemulihan Dalam Komuniti (PDK) Johor Bahru', category: 'all', state: 'Johor', website: 'https://www.jkm.gov.my', icon: 'fas fa-users-cog', desc: { ms: 'Salah satu pusat rujukan utama program PDK JKM untuk pemulihan OKU di peringkat komuniti setempat.', en: 'One of the main reference centers for JKM\'s CBR program for PWD rehabilitation at the community level.' } },
+                { id: 42, name: 'Persatuan Kebajikan Orang Kurang Upaya (PKOKU) Segamat', category: 'physical', state: 'Johor', website: 'https://www.facebook.com/groups/pkokusegamat/', icon: 'fas fa-handshake', desc: { ms: 'NGO akar umbi yang aktif memperjuangkan nasib dan menyalurkan bantuan kepada OKU di Segamat.', en: 'Grassroots NGO actively advocating and channeling aid to PWDs in Segamat.' } },
+                { id: 43, name: 'Care Haven (Kota Tinggi)', category: 'all', state: 'Johor', website: 'https://carehaven.org.my', icon: 'fas fa-house-user', desc: { ms: 'Pusat perlindungan yang turut mengambil kira kebajikan kanak-kanak dan dewasa berstatus OKU terbiar.', en: 'A shelter that also caters to the welfare of abandoned children and adults with disabilities.' } },
+                { id: 44, name: 'Persatuan Orang Pekak Kedah Darul Aman (POPKDA)', category: 'hearing', state: 'Kedah', website: 'http://persatuan-orang-pekak-kedah.blogspot.com', icon: 'fas fa-deaf', desc: { ms: 'Persatuan utama yang memperjuangkan hak, kebajikan, dan kemahiran hidup komuniti pekak di Kedah.', en: 'The main association advocating for the rights, welfare, and life skills of the deaf community in Kedah.' } },
+                { id: 45, name: 'Persatuan Kanak-Kanak Khas Sungai Petani', category: 'learning', state: 'Kedah', website: 'https://www.jkm.gov.my', icon: 'fas fa-child', desc: { ms: 'Pusat penjagaan harian dan latihan untuk kanak-kanak berkeperluan khas di sekitar Sungai Petani.', en: 'Daycare and training center for children with special needs around Sungai Petani.' } },
+                { id: 46, name: 'NASOM Cawangan Alor Setar', category: 'autism', state: 'Kedah', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Penyedia Program Intervensi Awal (EIP) yang memfokuskan kepada kanak-kanak autisme di Alor Setar.', en: 'Early Intervention Program (EIP) provider focusing on children with autism in Alor Setar.' } },
+                { id: 47, name: 'Pusat Jagaan Kanak-Kanak Intervensi Awalan NASOM (Lunas)', category: 'autism', state: 'Kedah', website: 'https://www.nasom.org.my', icon: 'fas fa-hands-helping', desc: { ms: 'Cawangan NASOM di daerah Kulim/Lunas untuk membantu intervensi awal kanak-kanak autisme setempat.', en: 'NASOM branch in the Kulim/Lunas area to assist in the early intervention of local autistic children.' } },
+                { id: 48, name: 'Persatuan Sindrom Down Kedah', category: 'learning', state: 'Kedah', website: 'https://downsyndromemalaysia.com', icon: 'fas fa-smile', desc: { ms: 'Memberi sokongan kepada ahli keluarga serta program pendidikan untuk anak-anak Sindrom Down di Kedah.', en: 'Provides support to family members and educational programs for children with Down Syndrome in Kedah.' } },
+                { id: 49, name: 'Persatuan Kebajikan Hemah Tinggi Alor Setar (Good Heart Kedah)', category: 'all', state: 'Kedah', website: 'https://www.facebook.com/goodheartkedah/', icon: 'fas fa-heart', desc: { ms: 'Pusat jagaan kediaman pelbagai kategori OKU dan warga emas yang memerlukan penjagaan khas.', en: 'A residential care center for various categories of PWDs and the elderly in need of special care.' } },
+                { id: 50, name: 'Society of the Blind Malaysia (SBM) Cawangan Kedah', category: 'visual', state: 'Kedah', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Cawangan SBM di Kedah yang aktif menganjurkan program kemasyarakatan dan pemerkasaan OKU penglihatan.', en: 'SBM branch in Kedah actively organizing community programs and empowerment for the visually impaired.' } },
+                { id: 51, name: 'Persatuan Kebajikan Orang Cacat Negeri Kedah (PKOCNK)', category: 'physical', state: 'Kedah', website: 'https://www.jkm.gov.my', icon: 'fas fa-wheelchair', desc: { ms: 'Persatuan induk yang menjaga kebajikan dan menyatukan golongan OKU fizikal di seluruh negeri Kedah.', en: 'The main association that looks after the welfare and unites the physically disabled across Kedah.' } },
+                { id: 52, name: 'Persatuan Kanak-Kanak Spastik (Cerebral Palsy) Kedah', category: 'physical', state: 'Kedah', website: 'https://www.facebook.com/spastikkedah', icon: 'fas fa-crutch', desc: { ms: 'Penyedia perkhidmatan fisioterapi dan pendidikan khas untuk kanak-kanak Cerebral Palsy di Kedah.', en: 'Provider of physiotherapy and special education services for children with Cerebral Palsy in Kedah.' } },
+                { id: 53, name: 'MAB (Malaysian Association for the Blind) Pusat Latihan Sungai Petani', category: 'visual', state: 'Kedah', website: 'https://mab.org.my', icon: 'fas fa-eye-slash', desc: { ms: 'Pusat latihan kemahiran vokasional (seperti urutan) khusus untuk OKU penglihatan di utara semenanjung.', en: 'Vocational skills training center (such as massage) specifically for the visually impaired in the northern peninsula.' } },
+                { id: 54, name: 'Persatuan Kesihatan Mental Kedah', category: 'mental', state: 'Kedah', website: 'https://mmha.org.my', icon: 'fas fa-brain', desc: { ms: 'Meningkatkan kesedaran kesihatan mental dan memberi sokongan pemulihan psikiatri di Alor Setar.', en: 'Raising mental health awareness and providing psychiatric rehabilitation support in Alor Setar.' } },
+                { id: 55, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Langkawi', category: 'all', state: 'Kedah', website: 'https://www.jkm.gov.my', icon: 'fas fa-umbrella-beach', desc: { ms: 'Pusat jagaan dan latihan kemahiran asas untuk pelbagai kategori OKU di pulau Langkawi.', en: 'Daycare and basic skills training center for various categories of PWDs on Langkawi island.' } },
+                { id: 56, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Baling', category: 'all', state: 'Kedah', website: 'https://www.jkm.gov.my', icon: 'fas fa-users-cog', desc: { ms: 'Memberi pendedahan kemahiran hidup dan intervensi awal untuk OKU di daerah Baling.', en: 'Providing life skills exposure and early intervention for PWDs in the Baling district.' } },
+                { id: 57, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kubang Pasu', category: 'all', state: 'Kedah', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands-helping', desc: { ms: 'Pusat sehenti komuniti bagi menyokong rehabilitasi fizikal dan mental OKU di Kubang Pasu.', en: 'A community one-stop center to support the physical and mental rehabilitation of PWDs in Kubang Pasu.' } },
+                { id: 58, name: 'Pertubuhan Kebajikan Kanak-Kanak Istimewa (PKKI) Kulim', category: 'learning', state: 'Kedah', website: 'https://www.facebook.com/pkkikulim', icon: 'fas fa-school', desc: { ms: 'Pusat bimbingan khas untuk kanak-kanak bermasalah pembelajaran dan lewat perkembangan di Kulim.', en: 'Special guidance center for children with learning disabilities and developmental delays in Kulim.' } },
+                { id: 59, name: 'Pusat Penjagaan Kanak-Kanak Cacat Taman Tuanku Haminah', category: 'mental', state: 'Kedah', website: 'https://www.jkm.gov.my', icon: 'fas fa-bed', desc: { ms: 'Rumah perlindungan dan penjagaan rapi untuk kanak-kanak cacat fizikal dan mental yang teruk.', en: 'A shelter and intensive care home for children with severe physical and mental disabilities.' } },
+                { id: 60, name: 'Persatuan Orang Cacat Penglihatan Islam Malaysia (PERTIS) Wilayah Utara', category: 'visual', state: 'Kedah', website: 'https://pertis.org.my', icon: 'fas fa-quran', desc: { ms: 'Menyediakan kelas agama, fardu ain, dan Al-Quran Braille untuk OKU penglihatan di Kedah.', en: 'Provides religious classes, obligatory duties, and Braille Quran for the visually impaired in Kedah.' } },
+                // --- NEGERI KELANTAN ---
+                { id: 61, name: 'Yayasan Orang Kurang Upaya Kelantan (YOKUK)', category: 'all', state: 'Kelantan', website: 'https://yokuk.org', icon: 'fas fa-heartbeat', desc: { ms: 'Yayasan utama di Kelantan yang menyediakan rawatan paliatif, fisioterapi, dan kerusi roda percuma untuk OKU.', en: 'The main foundation in Kelantan providing palliative care, physiotherapy, and free wheelchairs for PWDs.' } },
+                { id: 62, name: 'Persatuan Orang Pekak Kelantan (POPK)', category: 'hearing', state: 'Kelantan', website: 'https://www.facebook.com/popk.kelantan', icon: 'fas fa-deaf', desc: { ms: 'Memperjuangkan nasib golongan pekak di Kelantan serta menyediakan kelas kemahiran dan bahasa isyarat.', en: 'Advocating for the deaf in Kelantan and providing skills and sign language classes.' } },
+                { id: 63, name: 'NASOM Cawangan Kota Bharu', category: 'autism', state: 'Kelantan', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Pusat intervensi dan pendidikan khas untuk kanak-kanak dan belia yang didiagnos dengan autisme di Kelantan.', en: 'Intervention and special education center for children and youth diagnosed with autism in Kelantan.' } },
+                { id: 64, name: 'Persatuan Orang Cacat Penglihatan Islam Malaysia (PERTIS) Kelantan', category: 'visual', state: 'Kelantan', website: 'https://pertis.org.my', icon: 'fas fa-quran', desc: { ms: 'Fokus kepada pembangunan rohani dan fardu ain OKU penglihatan menggunakan Al-Quran Braille.', en: 'Focuses on the spiritual development of the visually impaired using the Braille Quran.' } },
+                { id: 65, name: 'Persatuan Orang Kurang Upaya Anggota Kelantan (POKUAK)', category: 'physical', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-wheelchair', desc: { ms: 'Membantu ahli OKU fizikal dari segi peluang pekerjaan, bantuan perniagaan kecil, dan sukan rekreasi.', en: 'Assists physical PWD members in terms of job opportunities, small business aid, and recreational sports.' } },
+                { id: 66, name: 'Persatuan Sindrom Down Negeri Kelantan', category: 'learning', state: 'Kelantan', website: 'https://www.facebook.com/psd.kelantan/', icon: 'fas fa-child', desc: { ms: 'Menyediakan sokongan moral kepada ibu bapa dan program rangsangan minda untuk anak-anak Sindrom Down.', en: 'Provides moral support to parents and mind-stimulating programs for children with Down Syndrome.' } },
+                { id: 67, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kota Bharu', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-users-cog', desc: { ms: 'Pusat rujukan komuniti untuk latihan hidup berdikari dan intervensi awal kanak-kanak OKU di Kota Bharu.', en: 'Community reference center for independent living skills and early intervention for PWD children in Kota Bharu.' } },
+                { id: 68, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Pasir Mas', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands-helping', desc: { ms: 'Menawarkan perkhidmatan pemulihan asas dan sokongan sosial kepada pelbagai kategori OKU di Pasir Mas.', en: 'Offers basic rehabilitation services and social support to various categories of PWDs in Pasir Mas.' } },
+                { id: 69, name: 'Society of the Blind in Malaysia (SBM) Kelantan', category: 'visual', state: 'Kelantan', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Memperkasa golongan sasar melalui latihan urutan tradisional, teknologi maklumat, dan advokasi hak OKU.', en: 'Empowering the target group through traditional massage training, IT, and advocacy of PWD rights.' } },
+                { id: 70, name: 'Persatuan Kanak-Kanak Spastik Kelantan', category: 'physical', state: 'Kelantan', website: 'https://scasft.org', icon: 'fas fa-crutch', desc: { ms: 'Pusat pemulihan harian yang memfokuskan kepada rawatan fisioterapi kanak-kanak Cerebral Palsy.', en: 'Day rehabilitation center focusing on physiotherapy treatment for children with Cerebral Palsy.' } },
+                { id: 71, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Tumpat', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands', desc: { ms: 'Menyediakan latihan kemahiran asas dan pemulihan komuniti untuk OKU di sekitar Tumpat.', en: 'Provides basic skills training and community rehabilitation for PWDs around Tumpat.' } },
+                { id: 72, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Machang', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-users', desc: { ms: 'Pusat intervensi dan bimbingan harian untuk kanak-kanak dan dewasa OKU di daerah Machang.', en: 'Daily intervention and guidance center for PWD children and adults in the Machang district.' } },
+                { id: 73, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Tanah Merah', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-home', desc: { ms: 'Memberi sokongan moral dan pendedahan kemahiran hidup berdikari untuk warga OKU Tanah Merah.', en: 'Provides moral support and independent living skills exposure for PWDs in Tanah Merah.' } },
+                { id: 74, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Gua Musang', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Pusat rujukan dan pemulihan setempat bagi kemudahan komuniti OKU di kawasan pedalaman Gua Musang.', en: 'Local reference and rehabilitation center for the convenience of the PWD community in rural Gua Musang.' } },
+                { id: 75, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Krai', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands-helping', desc: { ms: 'Fokus kepada terapi fizikal asas dan aktiviti sosial bagi mengintegrasikan OKU ke dalam masyarakat Kuala Krai.', en: 'Focuses on basic physical therapy and social activities to integrate PWDs into the Kuala Krai society.' } },
+                { id: 76, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bachok', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-water', desc: { ms: 'Program pemulihan komuniti yang mendidik OKU dengan kemahiran kraftangan dan akademik asas di Bachok.', en: 'Community rehabilitation program educating PWDs with handicrafts and basic academics in Bachok.' } },
+                { id: 77, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Jeli', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Platform utama di Jeli untuk ibu bapa mendapatkan khidmat nasihat dan latihan pemulihan anak-anak OKU.', en: 'Main platform in Jeli for parents to get counseling and rehabilitation training for PWD children.' } },
+                { id: 78, name: 'Persatuan Kesihatan Mental Kelantan (PKMK)', category: 'mental', state: 'Kelantan', website: 'https://mmha.org.my', icon: 'fas fa-brain', desc: { ms: 'Menjalankan aktiviti advokasi kesedaran kesihatan mental dan sokongan kepada pesakit psikiatri di Kelantan.', en: 'Conducts mental health awareness advocacy and support activities for psychiatric patients in Kelantan.' } },
+                { id: 79, name: 'Persatuan Sukan dan Rekreasi OKU Negeri Kelantan (PESROK)', category: 'physical', state: 'Kelantan', website: 'https://www.facebook.com/pesrok/', icon: 'fas fa-running', desc: { ms: 'Melatih dan mencungkil bakat atlet para (OKU) Kelantan untuk bertanding di peringkat kebangsaan seperti SUKMA.', en: 'Trains and uncovers the talents of Kelantan para-athletes (PWDs) to compete at national levels like SUKMA.' } },
+                { id: 80, name: 'Pertubuhan Kebajikan Anak Yatim dan OKU Kelantan', category: 'all', state: 'Kelantan', website: 'https://www.jkm.gov.my', icon: 'fas fa-child', desc: { ms: 'Pusat penjagaan yang menggabungkan perlindungan anak yatim dan kanak-kanak berkeperluan khas yang asnaf.', en: 'A care center that combines the protection of orphans and underprivileged special needs children.' } },
+                // --- NEGERI MELAKA ---
+                { id: 81, name: 'WINGS Melaka', category: 'learning', state: 'Melaka', website: 'https://www.wingsmelaka.org.my', icon: 'fas fa-dove', desc: { ms: 'Pusat intervensi awal yang sangat aktif membantu kanak-kanak dan belia autisme serta masalah pembelajaran.', en: 'A highly active early intervention center helping children and youth with autism and learning disabilities.' } },
+                { id: 82, name: 'Persatuan Kanak-Kanak Spastik Melaka', category: 'physical', state: 'Melaka', website: 'https://www.facebook.com/spasticmelaka/', icon: 'fas fa-crutch', desc: { ms: 'Menyediakan rawatan fisioterapi, pendidikan khas dan latihan vokasional untuk kanak-kanak Cerebral Palsy.', en: 'Provides physiotherapy, special education, and vocational training for children with Cerebral Palsy.' } },
+                { id: 83, name: 'Persatuan Orang Pekak Melaka (POPM)', category: 'hearing', state: 'Melaka', website: 'https://www.facebook.com/popm.melaka', icon: 'fas fa-deaf', desc: { ms: 'Pusat komuniti untuk golongan pekak di Melaka, aktif menganjurkan kelas bahasa isyarat (BIM) dan program sosial.', en: 'Community center for the deaf in Melaka, actively organizing sign language (BIM) classes and social programs.' } },
+                { id: 84, name: 'Bengkel Khas Melaka (Joy Workshop)', category: 'learning', state: 'Melaka', website: 'https://www.facebook.com/joyworkshopmelaka/', icon: 'fas fa-tools', desc: { ms: 'Pusat latihan vokasional dan pekerjaan untuk belia OKU pembelajaran agar mereka boleh berdikari dan menjana pendapatan.', en: 'Vocational and employment training center for learning-disabled youth so they can be independent and earn income.' } },
+                { id: 85, name: 'NASOM Cawangan Melaka', category: 'autism', state: 'Melaka', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Pusat intervensi dan bimbingan khas untuk perkembangan tingkah laku dan akademik kanak-kanak autisme di Melaka.', en: 'Intervention and special guidance center for the behavioral and academic development of autistic children in Melaka.' } },
+                { id: 86, name: 'Society of the Blind in Malaysia (SBM) Melaka', category: 'visual', state: 'Melaka', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Cawangan yang memperjuangkan hak OKU penglihatan serta menyediakan latihan kemahiran seperti urutan tradisional.', en: 'Branch advocating for the rights of the visually impaired and providing skills training such as traditional massage.' } },
+                { id: 87, name: 'Pusat Penjagaan Kanak-Kanak Terencat Akal Melaka', category: 'mental', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-bed', desc: { ms: 'Rumah perlindungan dan penjagaan penuh untuk individu yang mengalami kecacatan mental yang teruk dan tiada waris.', en: 'Full shelter and care home for individuals with severe mental disabilities and no next of kin.' } },
+                { id: 88, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Melaka Tengah', category: 'all', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-users', desc: { ms: 'Pusat rujukan komuniti utama di bandar Melaka untuk latihan kemahiran dan integrasi pelbagai kategori OKU.', en: 'Main community reference center in Melaka city for skills training and integration of various PWD categories.' } },
+                { id: 89, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Alor Gajah', category: 'all', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands-helping', desc: { ms: 'Menyediakan program pemulihan harian dan sokongan kepada keluarga OKU di kawasan daerah Alor Gajah.', en: 'Provides daily rehabilitation programs and support to families of PWDs in the Alor Gajah district.' } },
+                { id: 90, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Jasin', category: 'all', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-home', desc: { ms: 'Fasiliti intervensi awal dan kelas kemahiran asas untuk memastikan OKU di Jasin tidak tercicir dari masyarakat.', en: 'Early intervention facility and basic skills classes to ensure PWDs in Jasin are not left behind by society.' } },
+                { id: 91, name: 'Persatuan Sindrom Down Negeri Melaka', category: 'learning', state: 'Melaka', website: 'https://www.facebook.com/psdmelaka', icon: 'fas fa-smile', desc: { ms: 'Menyediakan program pendidikan khas, terapi pertuturan, dan sokongan moral kepada keluarga anak-anak Sindrom Down.', en: 'Provides special education programs, speech therapy, and moral support to families of children with Down Syndrome.' } },
+                { id: 92, name: 'Persatuan Kesihatan Mental Melaka', category: 'mental', state: 'Melaka', website: 'https://mmha.org.my', icon: 'fas fa-brain', desc: { ms: 'Menjalankan kempen kesedaran kesihatan mental dan menyediakan khidmat sokongan untuk pemulihan psikiatri di Melaka.', en: 'Conducts mental health awareness campaigns and provides support services for psychiatric rehabilitation in Melaka.' } },
+                { id: 93, name: 'Pusat Jagaan Kasih Sayang Melaka', category: 'all', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-bed', desc: { ms: 'Rumah perlindungan swasta yang menjaga kebajikan golongan OKU terlantar dan warga emas yang tiada waris.', en: 'A private shelter caring for the welfare of bedridden PWDs and elderly with no next of kin.' } },
+                { id: 94, name: 'Persatuan Sukan Orang Kurang Upaya Melaka (PESRON)', category: 'physical', state: 'Melaka', website: 'https://www.facebook.com/pesronmelaka', icon: 'fas fa-running', desc: { ms: 'Memajukan pembangunan sukan para di Melaka dan melatih atlet OKU untuk kejohanan sukan peringkat kebangsaan.', en: 'Advancing para-sports development in Melaka and training PWD athletes for national level sports championships.' } },
+                { id: 95, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Ayer Keroh', category: 'all', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'PDK berpusat di Ayer Keroh yang memfokuskan kepada kemahiran vokasional ringkas dan kemandirian OKU.', en: 'PDK based in Ayer Keroh focusing on simple vocational skills and PWD independence.' } },
+                { id: 96, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Masjid Tanah', category: 'all', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-mosque', desc: { ms: 'Memberi pendedahan awal kepada kanak-kanak berkeperluan khas di kawasan Masjid Tanah dan sekitarnya.', en: 'Provides early exposure to children with special needs in the Masjid Tanah area and its surroundings.' } },
+                { id: 97, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Merlimau', category: 'all', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands', desc: { ms: 'Pusat komuniti tempatan di Merlimau untuk membantu OKU dari segi fisioterapi asas dan pergaulan sosial.', en: 'Local community center in Merlimau to help PWDs in terms of basic physiotherapy and social interaction.' } },
+                { id: 98, name: 'Pusat Penjagaan Kanak-Kanak Terencat Akal (Bukit Baru)', category: 'mental', state: 'Melaka', website: 'https://www.jkm.gov.my', icon: 'fas fa-child', desc: { ms: 'Pusat jagaan harian dan asrama bagi kanak-kanak serta belia yang mengalami masalah kecacatan mental (intelek).', en: 'Daycare and hostel for children and youth experiencing mental (intellectual) disabilities.' } },
+                { id: 99, name: 'Persatuan Ibu Bapa Anak-Anak Keperluan Khas Melaka', category: 'learning', state: 'Melaka', website: 'https://www.facebook.com/pibakkmelaka', icon: 'fas fa-users', desc: { ms: 'Kumpulan sokongan ibu bapa (support group) yang aktif berkongsi maklumat dan membela nasib anak-anak OKU.', en: 'An active parent support group sharing information and advocating for the fate of PWD children.' } },
+                { id: 100, name: 'Pertubuhan Membantu Pesakit Kusta Malaysia (MaLRA) Melaka', category: 'physical', state: 'Melaka', website: 'https://www.malra.org.my', icon: 'fas fa-hand-holding-medical', desc: { ms: 'Membantu golongan yang kehilangan upaya fizikal akibat komplikasi kusta dari segi bantuan sara hidup dan perubatan.', en: 'Assisting those who lost physical abilities due to leprosy complications in terms of living and medical aid.' } },
+                // --- NEGERI SEMBILAN ---
+                { id: 101, name: 'Kompleks MAB (Malaysian Association for the Blind) Seremban', category: 'visual', state: 'Negeri Sembilan', website: 'https://mab.org.my', icon: 'fas fa-blind', desc: { ms: 'Pusat latihan kemahiran, vokasional dan sukan yang besar untuk OKU penglihatan di Negeri Sembilan.', en: 'A large skills, vocational, and sports training center for the visually impaired in Negeri Sembilan.' } },
+                { id: 102, name: 'NASOM Cawangan Seremban', category: 'autism', state: 'Negeri Sembilan', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Menyediakan program pendidikan, intervensi awal dan vokasional untuk individu autisme di Seremban.', en: 'Provides educational, early intervention, and vocational programs for autistic individuals in Seremban.' } },
+                { id: 103, name: 'Persatuan Orang Pekak Negeri Sembilan (NESDA)', category: 'hearing', state: 'Negeri Sembilan', website: 'https://www.facebook.com/nesdaseremban/', icon: 'fas fa-deaf', desc: { ms: 'Persatuan rasmi yang mewakili komuniti pekak, menyediakan kelas bahasa isyarat (BIM) dan advokasi.', en: 'Official association representing the deaf community, providing sign language (BIM) classes and advocacy.' } },
+                { id: 104, name: 'Bengkel Seri Sembilan (Mambau)', category: 'learning', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-tools', desc: { ms: 'Bengkel terlindung (sheltered workshop) yang memberi peluang pekerjaan seperti pembuatan sampul surat kepada OKU.', en: 'A sheltered workshop providing employment opportunities such as envelope making for PWDs.' } },
+                { id: 105, name: 'Persatuan Kanak-Kanak Spastik (Cerebral Palsy) Negeri Sembilan', category: 'physical', state: 'Negeri Sembilan', website: 'https://www.facebook.com/spasticns/', icon: 'fas fa-crutch', desc: { ms: 'Fokus kepada rawatan pemulihan, fisioterapi dan sokongan sosial untuk kanak-kanak Cerebral Palsy.', en: 'Focuses on rehabilitation treatments, physiotherapy, and social support for children with Cerebral Palsy.' } },
+                { id: 106, name: 'Pusat Penjagaan Kanak-Kanak Cacat Taman Tuanku Jaafar', category: 'mental', state: 'Negeri Sembilan', website: 'https://www.facebook.com/ppkkcttj/', icon: 'fas fa-bed', desc: { ms: 'Rumah jagaan yang menempatkan kanak-kanak dan remaja OKU mental dan fizikal yang teruk serta memerlukan jagaan rapi.', en: 'A care home housing children and teenagers with severe mental and physical disabilities requiring intensive care.' } },
+                { id: 107, name: 'Persatuan Sindrom Down Negeri Sembilan', category: 'learning', state: 'Negeri Sembilan', website: 'https://downsyndromemalaysia.com', icon: 'fas fa-smile', desc: { ms: 'Menyokong ahli keluarga dan menyediakan program rangsangan perkembangan untuk anak-anak Sindrom Down.', en: 'Supports family members and provides developmental stimulation programs for Down Syndrome children.' } },
+                { id: 108, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Port Dickson', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-umbrella-beach', desc: { ms: 'Pusat komuniti harian yang membantu proses pemulihan dan interaksi sosial OKU di sekitar Port Dickson.', en: 'Daily community center assisting in the rehabilitation process and social interaction of PWDs around Port Dickson.' } },
+                { id: 109, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Pilah', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-users-cog', desc: { ms: 'Menyediakan latihan kemahiran hidup dan pendidikan asas bagi kanak-kanak berkeperluan khas di Kuala Pilah.', en: 'Provides life skills training and basic education for children with special needs in Kuala Pilah.' } },
+                { id: 110, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Jempol', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands-helping', desc: { ms: 'Pusat sokongan intervensi awal di daerah Jempol untuk memastikan OKU di luar bandar tidak tercicir.', en: 'Early intervention support center in the Jempol district to ensure rural PWDs are not left behind.' } },
+                { id: 111, name: 'Taman Sinar Harapan Tengku Ampuan Najihah (Seremban)', category: 'mental', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-hospital-user', desc: { ms: 'Institusi utama JKM yang memberi penjagaan, perlindungan dan pemulihan kepada OKU masalah pembelajaran yang teruk.', en: 'Main JKM institution providing care, protection, and rehabilitation for PWDs with severe learning disabilities.' } },
+                { id: 112, name: 'Persatuan Pemulihan Orang Cacat Negeri Sembilan', category: 'physical', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-wheelchair', desc: { ms: 'Menjaga kebajikan, hak dan menyediakan sokongan alat ganti serta bantuan kerusi roda untuk OKU fizikal.', en: 'Looks after welfare, rights, and provides spare parts support and wheelchair assistance for physical PWDs.' } },
+                { id: 113, name: 'Persatuan Sukan Orang Kurang Upaya Negeri Sembilan (PESRON NS)', category: 'physical', state: 'Negeri Sembilan', website: 'https://www.facebook.com/pesronns', icon: 'fas fa-running', desc: { ms: 'Menggilap bakat sukan dan menyediakan platform untuk atlet para Negeri Sembilan bersaing di peringkat kebangsaan.', en: 'Polishing sports talent and providing a platform for Negeri Sembilan para-athletes to compete at the national level.' } },
+                { id: 114, name: 'Persatuan Kesihatan Mental Negeri Sembilan', category: 'mental', state: 'Negeri Sembilan', website: 'https://mmha.org.my', icon: 'fas fa-brain', desc: { ms: 'Memberi sokongan kepada pesakit mental, menganjurkan kempen kesedaran, dan bimbingan kaunseling kepada keluarga.', en: 'Provides support to mental patients, organizes awareness campaigns, and counseling guidance to families.' } },
+                { id: 115, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Rembau', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands', desc: { ms: 'Program komuniti yang melatih OKU dengan kemahiran mengurus diri dan bergaul dengan masyarakat di Rembau.', en: 'Community program training PWDs with self-management skills and socializing with the community in Rembau.' } },
+                { id: 116, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Tampin', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Fokus kepada pembangunan asas kanak-kanak istimewa dan menyediakan sokongan pemulihan fisioterapi di Tampin.', en: 'Focuses on the basic development of special children and provides physiotherapy rehabilitation support in Tampin.' } },
+                { id: 117, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Jelebu', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Pusat intervensi awal setempat bagi komuniti luar bandar di Jelebu untuk mengelakkan keciciran pendidikan OKU.', en: 'Local early intervention center for the rural community in Jelebu to prevent educational dropout among PWDs.' } },
+                { id: 118, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Nilai', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-city', desc: { ms: 'Membantu golongan OKU di kawasan bandar membangun Nilai dengan program akademik dan kemahiran vokasional.', en: 'Helping PWDs in the developing urban area of Nilai with academic programs and vocational skills.' } },
+                { id: 119, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bahau', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-store', desc: { ms: 'Pusat jagaan harian yang melatih belia OKU dengan asas perniagaan kecil dan kraftangan.', en: 'Daycare center training PWD youth with basics in small business and handicrafts.' } },
+                { id: 120, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Mantin', category: 'all', state: 'Negeri Sembilan', website: 'https://www.jkm.gov.my', icon: 'fas fa-users', desc: { ms: 'Pusat sehenti bagi ibu bapa mendapatkan khidmat nasihat, pendaftaran OKU, dan bimbingan khas di Mantin.', en: 'One-stop center for parents to get advice, PWD registration, and special guidance in Mantin.' } },
+                // --- NEGERI PAHANG ---
+                { id: 121, name: 'Persatuan Kanak-Kanak Spastik Kuantan', category: 'physical', state: 'Pahang', website: 'https://www.facebook.com/spastikkuantan/', icon: 'fas fa-crutch', desc: { ms: 'Pusat intervensi dan penjagaan harian yang menyediakan rawatan fisioterapi untuk kanak-kanak Cerebral Palsy di Kuantan.', en: 'Intervention and daycare center providing physiotherapy for children with Cerebral Palsy in Kuantan.' } },
+                { id: 122, name: 'NASOM Cawangan Kuantan', category: 'autism', state: 'Pahang', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Memberi pendidikan khas, terapi tingkah laku, dan intervensi awal kepada individu autisme di Pahang.', en: 'Provides special education, behavioral therapy, and early intervention to autistic individuals in Pahang.' } },
+                { id: 123, name: 'Persatuan Orang Pekak Pahang (POPP)', category: 'hearing', state: 'Pahang', website: 'https://www.facebook.com/popp.pahang', icon: 'fas fa-deaf', desc: { ms: 'Memperjuangkan kebajikan, hak, dan mempromosikan Bahasa Isyarat Malaysia (BIM) dalam kalangan masyarakat Pahang.', en: 'Advocates for welfare, rights, and promotes Malaysian Sign Language (BIM) among the Pahang community.' } },
+                { id: 124, name: 'Society of the Blind in Malaysia (SBM) Cawangan Pahang', category: 'visual', state: 'Pahang', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Cawangan aktif yang membela nasib OKU penglihatan serta menguruskan kelas kemahiran, orientasi dan mobiliti.', en: 'Active branch defending the visually impaired and managing skills, orientation, and mobility classes.' } },
+                { id: 125, name: 'Pusat Jagaan Kanak-Kanak Terencat Akal Kuantan', category: 'mental', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-bed', desc: { ms: 'Pusat perlindungan yang memberi asuhan dan penjagaan harian kepada kanak-kanak bermasalah pembelajaran (intelektual) yang teruk.', en: 'A shelter providing care and daycare to children with severe learning (intellectual) disabilities.' } },
+                { id: 126, name: 'Persatuan Sukan Orang Kurang Upaya Pahang (PESRON Pahang)', category: 'physical', state: 'Pahang', website: 'https://www.facebook.com/pesronpahang', icon: 'fas fa-running', desc: { ms: 'Membina potensi dan melatih atlet OKU Pahang dalam pelbagai acara sukan para di peringkat kebangsaan.', en: 'Building potential and training Pahang PWD athletes in various para-sports events at the national level.' } },
+                { id: 127, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Temerloh', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-users-cog', desc: { ms: 'Pusat tumpuan OKU di zon tengah Pahang untuk mendapatkan latihan hidup berdikari dan pendedahan sosial.', en: 'Focus center for PWDs in the central zone of Pahang to gain independent living skills and social exposure.' } },
+                { id: 128, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Pekan', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-landmark', desc: { ms: 'Menyokong pemulihan fizikal dan pendidikan asas untuk kanak-kanak berkeperluan khas di Bandar Diraja Pekan.', en: 'Supports physical rehabilitation and basic education for special needs children in the Royal Town of Pekan.' } },
+                { id: 129, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bentong', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-leaf', desc: { ms: 'Membantu OKU di pedalaman Bentong dengan bimbingan kemahiran kerja tangan dan pertanian kecil-kecilan.', en: 'Assisting PWDs in rural Bentong with guidance in handicraft skills and small-scale agriculture.' } },
+                { id: 130, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Cameron Highlands', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Pusat setempat di kawasan tanah tinggi untuk intervensi awal, bantuan mobiliti, dan pendaftaran OKU bersama JKM.', en: 'Local center in the highlands for early intervention, mobility assistance, and PWD registration with JKM.' } },
+                { id: 131, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Jerantut', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Menyediakan latihan kemahiran asas dan pemulihan untuk OKU di sekitar Jerantut dan Taman Negara.', en: 'Provides basic skills training and rehabilitation for PWDs around Jerantut and Taman Negara.' } },
+                { id: 132, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Lipis', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-train', desc: { ms: 'Pusat intervensi awal yang membantu kanak-kanak berkeperluan khas di Kuala Lipis.', en: 'Early intervention center helping children with special needs in Kuala Lipis.' } },
+                { id: 133, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bera', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands', desc: { ms: 'Memberi pendedahan kemahiran hidup dan penjagaan harian kepada warga OKU di daerah Bera.', en: 'Provides life skills exposure and daycare to PWDs in the Bera district.' } },
+                { id: 134, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Raub', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Pusat rujukan komuniti bagi terapi fizikal dan program pendidikan asas untuk OKU di Raub.', en: 'Community reference center for physical therapy and basic education programs for PWDs in Raub.' } },
+                { id: 135, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Maran', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-users', desc: { ms: 'Menyokong ahli komuniti OKU di Maran untuk berdikari menerusi latihan pertanian dan kraftangan.', en: 'Supports the PWD community in Maran to be independent through agriculture and handicraft training.' } },
+                { id: 136, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Rompin', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-fish', desc: { ms: 'Membantu proses pemulihan dan memastikan kebajikan anak-anak OKU di daerah pesisir pantai Rompin terjaga.', en: 'Assisting the rehabilitation process and ensuring the welfare of PWD children in the coastal district of Rompin.' } },
+                { id: 137, name: 'Persatuan Sindrom Down Negeri Pahang', category: 'learning', state: 'Pahang', website: 'https://downsyndromemalaysia.com', icon: 'fas fa-smile', desc: { ms: 'Menyediakan sokongan moral dan rangkaian maklumat untuk ibu bapa yang mempunyai anak Sindrom Down di Pahang.', en: 'Provides moral support and information network for parents of children with Down Syndrome in Pahang.' } },
+                { id: 138, name: 'Persatuan Kebajikan Orang Kurang Upaya Pahang', category: 'physical', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-wheelchair', desc: { ms: 'Persatuan yang aktif memperjuangkan hak OKU fizikal, bantuan kerusi roda dan kebolehcapaian fasiliti di Kuantan.', en: 'Active association advocating for physical PWD rights, wheelchair assistance, and facility accessibility in Kuantan.' } },
+                { id: 139, name: 'Taman Sinar Harapan Jubli (Kuantan)', category: 'mental', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-hospital', desc: { ms: 'Institusi perlindungan utama bawah JKM di Pahang untuk jagaan rapi OKU masalah pembelajaran yang teruk.', en: 'Main JKM shelter institution in Pahang for intensive care of PWDs with severe learning disabilities.' } },
+                { id: 140, name: 'Pertubuhan Kebajikan Anak Yatim dan OKU Pahang', category: 'all', state: 'Pahang', website: 'https://www.jkm.gov.my', icon: 'fas fa-home', desc: { ms: 'Pusat jagaan yang menyediakan tempat perlindungan dan pendidikan untuk anak-anak yatim serta OKU miskin.', en: 'Care center providing shelter and education for orphans and underprivileged PWDs.' } },
+                // --- NEGERI PERAK ---
+                { id: 141, name: 'Yayasan Sultan Idris Shah (YSIS)', category: 'all', state: 'Perak', website: 'https://ysis.org.my', icon: 'fas fa-heartbeat', desc: { ms: 'Yayasan terkenal di Perak yang menyediakan perkhidmatan terapi, pemulihan komprehensif dan hidroterapi untuk OKU.', en: 'Famous foundation in Perak providing therapy, comprehensive rehabilitation, and hydrotherapy services for PWDs.' } },
+                { id: 142, name: 'Perak Association for the Intellectually Disabled (PAFID)', category: 'learning', state: 'Perak', website: 'http://www.pafid.org.my', icon: 'fas fa-brain', desc: { ms: 'Sangat aktif mengendalikan Sekolah Semangat Maju dan bengkel terlindung untuk melatih kemahiran OKU masalah pembelajaran.', en: 'Very active in running Semangat Maju Schools and sheltered workshops to train PWDs with learning disabilities.' } },
+                { id: 143, name: 'Persatuan Kanak-Kanak Spastik (Cerebral Palsy) Perak', category: 'physical', state: 'Perak', website: 'https://www.facebook.com/PerakSpastic/', icon: 'fas fa-crutch', desc: { ms: 'Pusat intervensi awal dan penjagaan harian khusus untuk rawatan pemulihan kanak-kanak Cerebral Palsy di Ipoh.', en: 'Early intervention and daycare center specifically for the rehabilitation treatment of Cerebral Palsy children in Ipoh.' } },
+                { id: 144, name: 'Persatuan Orang Pekak Perak (POPPk)', category: 'hearing', state: 'Perak', website: 'https://www.facebook.com/poppk1988/', icon: 'fas fa-deaf', desc: { ms: 'Berperanan membela nasib komuniti pekak Perak, menganjurkan kelas bahasa isyarat dan program pembangunan kerjaya.', en: 'Plays a role in defending the Perak deaf community, organizing sign language classes and career development programs.' } },
+                { id: 145, name: 'NASOM Cawangan Ipoh', category: 'autism', state: 'Perak', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Menyediakan program pendidikan autisme, intervensi awal, dan terapi tingkah laku untuk keluarga di sekitar Ipoh.', en: 'Provides autism education programs, early intervention, and behavioral therapy for families around Ipoh.' } },
+                { id: 146, name: 'Society of the Blind in Malaysia (SBM) Perak', category: 'visual', state: 'Perak', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Memperkasa kemahiran OKU penglihatan di Perak melalui kelas komputer beradaptasi, sokongan sukan dan latihan vokasional.', en: 'Empowering the visually impaired in Perak through adaptive computer classes, sports support, and vocational training.' } },
+                { id: 147, name: 'Rumah Kebajikan Kanak-Kanak Cacat (Batu Gajah)', category: 'mental', state: 'Perak', website: 'https://www.hchbg.com.my', icon: 'fas fa-home', desc: { ms: 'Rumah perlindungan bersejarah di Perak yang menjaga golongan OKU mental dan fizikal yang teruk serta tiada waris.', en: 'Historical shelter in Perak caring for severe mental and physical PWDs with no next of kin.' } },
+                { id: 148, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Taiping', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-umbrella', desc: { ms: 'Menawarkan perkhidmatan pemulihan dalam komuniti dan pendidikan khas asas untuk warga OKU di Taiping.', en: 'Offers community-based rehabilitation services and basic special education for PWDs in Taiping.' } },
+                { id: 149, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Manjung', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-ship', desc: { ms: 'Pusat tumpuan OKU di daerah pesisir Manjung untuk merangsang kemahiran motor dan kemandirian harian.', en: 'Focus center for PWDs in the coastal district of Manjung to stimulate motor skills and daily independence.' } },
+                { id: 150, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Teluk Intan', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-building', desc: { ms: 'Platform utama di Teluk Intan bagi membantu OKU luar bandar mendapatkan khidmat terapi tanpa perlu ke Ipoh.', en: 'Main platform in Teluk Intan helping rural PWDs get therapy services without needing to go to Ipoh.' } },
+                { id: 151, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Kangsar', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-mosque', desc: { ms: 'Menyediakan latihan kemahiran hidup dan pendidikan asas bagi kanak-kanak berkeperluan khas di Bandar Diraja.', en: 'Provides life skills training and basic education for special needs children in the Royal Town.' } },
+                { id: 152, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kampar', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-graduation-cap', desc: { ms: 'Menyokong pemulihan fizikal dan intervensi awal kanak-kanak OKU di sekitar daerah Kampar.', en: 'Supports physical rehabilitation and early intervention for PWD children around the Kampar district.' } },
+                { id: 153, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Gerik (Hulu Perak)', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Pusat rujukan komuniti bagi terapi asas dan program pendidikan untuk OKU di kawasan pedalaman Hulu Perak.', en: 'Community reference center for basic therapy and educational programs for PWDs in the rural Hulu Perak area.' } },
+                { id: 154, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Tanjung Malim', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-book', desc: { ms: 'Memberi pendedahan kemahiran hidup dan penjagaan harian kepada warga OKU di daerah Muallim.', en: 'Provides life skills exposure and daycare to PWDs in the Muallim district.' } },
+                { id: 155, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Tapah', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-water', desc: { ms: 'Program komuniti yang melatih OKU dengan kemahiran mengurus diri dan kraftangan di kawasan Batang Padang.', en: 'Community program training PWDs with self-management skills and handicrafts in the Batang Padang area.' } },
+                { id: 156, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Parit Buntar', category: 'all', state: 'Perak', website: 'https://www.jkm.gov.my', icon: 'fas fa-tractor', desc: { ms: 'Membantu proses pemulihan dan memastikan kebajikan anak-anak OKU di daerah Kerian terjaga dengan baik.', en: 'Assists the rehabilitation process and ensures the welfare of PWD children in the Kerian district is well-maintained.' } },
+                { id: 157, name: 'Bethany Home Teluk Intan', category: 'learning', state: 'Perak', website: 'https://bethanyhome.org.my', icon: 'fas fa-house-user', desc: { ms: 'Pusat latihan dan penjagaan yang sangat aktif dan terkenal untuk kanak-kanak dan dewasa OKU masalah pembelajaran.', en: 'A highly active and famous training and care center for children and adults with learning disabilities.' } },
+                { id: 158, name: 'Persatuan Kesihatan Mental Perak', category: 'mental', state: 'Perak', website: 'https://mmha.org.my', icon: 'fas fa-brain', desc: { ms: 'Memberi sokongan kaunseling, kempen kesedaran, dan bimbingan penjagaan psikiatri komuniti di sekitar Perak.', en: 'Provides counseling support, awareness campaigns, and community psychiatric care guidance around Perak.' } },
+                { id: 159, name: 'Persatuan Sukan Orang Kurang Upaya Perak (PESRON Perak)', category: 'physical', state: 'Perak', website: 'https://www.facebook.com/pesronperak', icon: 'fas fa-running', desc: { ms: 'Melahirkan dan melatih atlet para (OKU) Perak untuk bersaing di sukan peringkat kebangsaan seperti Para SUKMA.', en: 'Produces and trains Perak para-athletes (PWDs) to compete in national-level sports like Para SUKMA.' } },
+                { id: 160, name: 'Persatuan Sindrom Down Negeri Perak', category: 'learning', state: 'Perak', website: 'https://downsyndromemalaysia.com', icon: 'fas fa-smile', desc: { ms: 'Menyediakan kelas intervensi, terapi pertuturan, dan sokongan moral untuk ibu bapa anak Sindrom Down di Perak.', en: 'Provides intervention classes, speech therapy, and moral support for parents of Down Syndrome children in Perak.' } },
+                // --- NEGERI PERLIS ---
+                { id: 161, name: 'Persatuan Kanak-Kanak Spastik Perlis', category: 'physical', state: 'Perlis', website: 'https://www.facebook.com/spastikperlis', icon: 'fas fa-crutch', desc: { ms: 'Menyediakan rawatan fisioterapi dan sokongan pendidikan awal untuk kanak-kanak Cerebral Palsy di Perlis.', en: 'Provides physiotherapy treatment and early educational support for Cerebral Palsy children in Perlis.' } },
+                { id: 162, name: 'NASOM Cawangan Perlis', category: 'autism', state: 'Perlis', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Menawarkan kelas intervensi awal dan terapi tingkah laku khusus untuk kanak-kanak autisme di utara tanah air.', en: 'Offers early intervention classes and specialized behavioral therapy for autistic children in the northern region.' } },
+                { id: 163, name: 'Persatuan Orang Pekak Perlis (POPPs)', category: 'hearing', state: 'Perlis', website: 'https://www.facebook.com/poppsperlis', icon: 'fas fa-deaf', desc: { ms: 'Mewakili komuniti pekak Perlis dengan menganjurkan program pemerkasaan dan kelas Bahasa Isyarat Malaysia (BIM).', en: 'Represents the Perlis deaf community by organizing empowerment programs and Malaysian Sign Language (BIM) classes.' } },
+                { id: 164, name: 'Society of the Blind in Malaysia (SBM) Perlis', category: 'visual', state: 'Perlis', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Menjaga kebajikan dan menyediakan kemahiran vokasional serta sokongan mobiliti untuk OKU penglihatan di Perlis.', en: 'Cares for the welfare and provides vocational skills and mobility support for the visually impaired in Perlis.' } },
+                { id: 165, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kangar', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-city', desc: { ms: 'Pusat komuniti harian di ibu negeri Perlis untuk membantu proses pemulihan dan interaksi sosial OKU.', en: 'Daily community center in the Perlis state capital assisting in the rehabilitation process and social interaction of PWDs.' } },
+                { id: 166, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Arau', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-graduation-cap', desc: { ms: 'Fokus kepada pembangunan asas kanak-kanak istimewa dan menyediakan sokongan kemahiran di Bandar Diraja Arau.', en: 'Focuses on the basic development of special children and provides skills support in the Royal Town of Arau.' } },
+                { id: 167, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Padang Besar', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-train', desc: { ms: 'Membantu golongan OKU di kawasan sempadan dengan program pendidikan khas dan kemahiran vokasional.', en: 'Helping PWDs in the border area with special education programs and vocational skills.' } },
+                { id: 168, name: 'Persatuan Sukan Orang Kurang Upaya Perlis (PESRON Perlis)', category: 'physical', state: 'Perlis', website: 'https://www.facebook.com/pesronperlis', icon: 'fas fa-running', desc: { ms: 'Menggilap bakat sukan dan menyediakan platform untuk atlet para Perlis bersaing di peringkat kebangsaan.', en: 'Polishing sports talent and providing a platform for Perlis para-athletes to compete at the national level.' } },
+                { id: 169, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Perlis', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-ship', desc: { ms: 'Pusat tumpuan OKU di pesisir pantai untuk mendapatkan pendedahan kemahiran asas dan bimbingan JKM.', en: 'Focus center for PWDs on the coast to gain basic skills exposure and JKM guidance.' } },
+                { id: 170, name: 'Persatuan Sindrom Down Perlis', category: 'learning', state: 'Perlis', website: 'https://downsyndromemalaysia.com', icon: 'fas fa-smile', desc: { ms: 'Kumpulan sokongan tempatan untuk keluarga dan anak-anak Sindrom Down mendapatkan khidmat nasihat dan terapi.', en: 'Local support group for families and Down Syndrome children to get advice and therapy.' } },
+                { id: 171, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Beseri', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Menyediakan latihan vokasional asas dan intervensi untuk anak-anak OKU di sekitar kawasan mukim Beseri.', en: 'Provides basic vocational training and intervention for PWD children around the Beseri sub-district.' } },
+                { id: 172, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Simpang Empat', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-road', desc: { ms: 'Pusat intervensi awal yang membantu kanak-kanak berkeperluan khas di kawasan Simpang Empat, Perlis.', en: 'Early intervention center helping children with special needs in the Simpang Empat area, Perlis.' } },
+                { id: 173, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Mata Ayer', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-water', desc: { ms: 'Memberi pendedahan kemahiran mengurus diri dan penjagaan harian kepada warga OKU di Mata Ayer.', en: 'Provides self-management skills exposure and daycare to PWDs in Mata Ayer.' } },
+                { id: 174, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bintong', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-home', desc: { ms: 'Pusat rujukan komuniti bagi terapi fizikal dan program pendidikan asas untuk OKU di sekitar Bintong.', en: 'Community reference center for physical therapy and basic education programs for PWDs around Bintong.' } },
+                { id: 175, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Chuping', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-leaf', desc: { ms: 'Menyokong ahli komuniti OKU di kawasan pertanian Chuping untuk berdikari menerusi pelbagai latihan.', en: 'Supports the PWD community in the Chuping agricultural area to be independent through various training.' } },
+                { id: 176, name: 'Persatuan Kesihatan Mental Perlis', category: 'mental', state: 'Perlis', website: 'https://mmha.org.my', icon: 'fas fa-brain', desc: { ms: 'Menganjurkan kempen kesedaran kesihatan mental dan menyediakan khidmat sokongan komuniti di Perlis.', en: 'Organizes mental health awareness campaigns and provides community support services in Perlis.' } },
+                { id: 177, name: 'Persatuan Kebajikan Orang Cacat Perlis', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands-helping', desc: { ms: 'Membela kebajikan pelbagai kategori OKU dari segi bantuan kerusi roda, kewangan dan pendaftaran JKM.', en: 'Defends the welfare of various PWD categories in terms of wheelchair assistance, finance, and JKM registration.' } },
+                { id: 178, name: 'Pusat Perkhidmatan Pendidikan Khas (3PK) Perlis', category: 'learning', state: 'Perlis', website: 'https://www.moe.gov.my', icon: 'fas fa-school', desc: { ms: 'Pusat di bawah KPM yang menawarkan saringan audiologi, terapi pertuturan dan intervensi untuk murid OKU.', en: 'A center under MOE offering audiology screening, speech therapy, and intervention for PWD students.' } },
+                { id: 179, name: 'Persatuan Pemulihan Orang Cacat Perlis', category: 'physical', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-wheelchair', desc: { ms: 'Fokus kepada sokongan pasca-rawatan fizikal dan fisioterapi untuk golongan yang kehilangan upaya.', en: 'Focuses on post-physical treatment support and physiotherapy for those who have lost mobility.' } },
+                { id: 180, name: 'Jabatan Kebajikan Masyarakat (JKM) Negeri Perlis', category: 'all', state: 'Perlis', website: 'https://www.jkm.gov.my', icon: 'fas fa-building', desc: { ms: 'Pusat urus setia utama bagi pendaftaran Kad OKU, bantuan bulanan (EPC), dan perlindungan am di Perlis.', en: 'Main secretariat center for PWD Card registration, monthly assistance (EPC), and general protection in Perlis.' } },
+                // --- PULAU PINANG ---
+                { id: 181, name: 'St. Nicholas\' Home, Penang', category: 'visual', state: 'Pulau Pinang', website: 'https://snh.org.my', icon: 'fas fa-blind', desc: { ms: 'Institusi terkenal yang menyediakan latihan kemahiran, pendidikan dan penjagaan untuk OKU penglihatan sejak 1926.', en: 'A famous institution providing skills training, education, and care for the visually impaired since 1926.' } },
+                { id: 182, name: 'Eden Handicap Service Centre Berhad', category: 'physical', state: 'Pulau Pinang', website: 'https://edenhandicap.org', icon: 'fas fa-wheelchair', desc: { ms: 'Pusat perkhidmatan komuniti yang aktif melatih kemahiran bebas, kerja kilang ringan dan kitar semula untuk OKU.', en: 'Community service center actively training independent skills, light factory work, and recycling for PWDs.' } },
+                { id: 183, name: 'Persatuan Kanak-Kanak Spastik Pulau Pinang (SCAP)', category: 'physical', state: 'Pulau Pinang', website: 'https://scap.org.my', icon: 'fas fa-crutch', desc: { ms: 'Menyediakan rawatan intervensi awal, fisioterapi, dan pendidikan khas bagi kanak-kanak Cerebral Palsy di Penang.', en: 'Provides early intervention treatments, physiotherapy, and special education for Cerebral Palsy children in Penang.' } },
+                { id: 184, name: 'Lions REACh (Resource and Education for Autistic Children)', category: 'autism', state: 'Pulau Pinang', website: 'https://www.lionsreach.net', icon: 'fas fa-puzzle-piece', desc: { ms: 'Pusat utama yang menawarkan intervensi percuma, diagnostik dan latihan pra-vokasional untuk anak-anak autisme.', en: 'A premier center offering free intervention, diagnostics, and pre-vocational training for autistic children.' } },
+                { id: 185, name: 'Penang Deaf Association (PDA)', category: 'hearing', state: 'Pulau Pinang', website: 'https://www.pda.org.my', icon: 'fas fa-deaf', desc: { ms: 'Mewakili dan membela hak komuniti pekak, menyediakan kelas Bahasa Isyarat (BIM) dan sokongan kerjaya.', en: 'Represents and defends the rights of the deaf community, providing Sign Language (BIM) classes and career support.' } },
+                { id: 186, name: 'Asia Community Service (Stepping Stone Centre)', category: 'learning', state: 'Pulau Pinang', website: 'https://asiacommunityservice.org', icon: 'fas fa-seedling', desc: { ms: 'Pusat kerja terlindung yang melatih belia OKU pembelajaran menghasilkan kraftangan, sabun, dan pastri.', en: 'A sheltered workshop training learning-disabled youth to produce handicrafts, soap, and pastries.' } },
+                { id: 187, name: 'D\'Home Mental Health Association', category: 'mental', state: 'Pulau Pinang', website: 'https://dhome.org.my', icon: 'fas fa-brain', desc: { ms: 'Menyokong pesakit mental dan penjaga melalui kumpulan sokongan, kaunseling dan bengkel kesedaran psikiatri.', en: 'Supports mental patients and caregivers through support groups, counseling, and psychiatric awareness workshops.' } },
+                { id: 188, name: 'Persatuan Kanak-Kanak Sindrom Down Pulau Pinang', category: 'learning', state: 'Pulau Pinang', website: 'https://www.facebook.com/DownSyndromePenang/', icon: 'fas fa-smile', desc: { ms: 'Kumpulan sokongan tempatan yang memberi terapi, maklumat dan aktiviti sosial untuk individu Sindrom Down.', en: 'Local support group providing therapy, information, and social activities for individuals with Down Syndrome.' } },
+                { id: 189, name: 'Joblink Centre Penang', category: 'all', state: 'Pulau Pinang', website: 'https://www.facebook.com/joblinkpenang/', icon: 'fas fa-tools', desc: { ms: 'Pusat bimbingan kerjaya dan bengkel vokasional untuk membantu pelbagai kategori OKU mendapatkan pekerjaan.', en: 'Career guidance center and vocational workshop to help various categories of PWDs secure employment.' } },
+                { id: 190, name: 'BOLD Association for Children with Special Needs', category: 'learning', state: 'Pulau Pinang', website: 'https://boldspecial.com', icon: 'fas fa-child', desc: { ms: 'Menawarkan terapi pertuturan, fisioterapi dan kumpulan main (playgroup) bagi kanak-kanak berkeperluan khas.', en: 'Offers speech therapy, physiotherapy, and playgroups for children with special needs.' } },
+                { id: 191, name: 'Penang Cheshire Home', category: 'physical', state: 'Pulau Pinang', website: 'https://cheshirepg.org.my', icon: 'fas fa-home', desc: { ms: 'Menyediakan penjagaan kediaman, latihan hidup berdikari dan sokongan untuk OKU fizikal yang tiada waris.', en: 'Provides residential care, independent living training, and support for physical PWDs with no next of kin.' } },
+                { id: 192, name: 'Society of Disabled Persons Penang (SDPP)', category: 'physical', state: 'Pulau Pinang', website: 'https://sdpp.org.my', icon: 'fas fa-wheelchair', desc: { ms: 'Persatuan yang diuruskan oleh OKU sendiri untuk memperjuangkan kebolehcapaian fasiliti dan hak saksama di Pulau Pinang.', en: 'Association managed by PWDs themselves to advocate for facility accessibility and equal rights in Penang.' } },
+                { id: 193, name: 'Persatuan Kebajikan Kanak-Kanak Cacat Yee Ran Jing Sheh (Bukit Mertajam)', category: 'all', state: 'Pulau Pinang', website: 'https://www.facebook.com/yeeranjingsheh', icon: 'fas fa-hand-holding-heart', desc: { ms: 'Pusat jagaan di Seberang Perai yang melindungi kanak-kanak dan dewasa OKU pelbagai kategori yang terbiar.', en: 'Care center in Seberang Perai sheltering abandoned children and adults of various PWD categories.' } },
+                { id: 194, name: 'Persatuan Disleksia Malaysia (Cawangan Pulau Pinang)', category: 'learning', state: 'Pulau Pinang', website: 'http://www.dyslexiamalaysia.org.my', icon: 'fas fa-book-reader', desc: { ms: 'Menyediakan kelas intervensi literasi dan bimbingan khas untuk murid disleksia merapatkan jurang pembelajaran.', en: 'Provides literacy intervention classes and special guidance for dyslexic students to bridge the learning gap.' } },
+                { id: 195, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Seberang Perai Utara (Kepala Batas)', category: 'all', state: 'Pulau Pinang', website: 'https://www.jkm.gov.my', icon: 'fas fa-users-cog', desc: { ms: 'Pusat rujukan komuniti bagi terapi asas dan program pendidikan untuk OKU di sekitar Kepala Batas dan Butterworth.', en: 'Community reference center for basic therapy and educational programs for PWDs around Kepala Batas and Butterworth.' } },
+                { id: 196, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Seberang Perai Tengah (Bukit Mertajam)', category: 'all', state: 'Pulau Pinang', website: 'https://www.jkm.gov.my', icon: 'fas fa-store', desc: { ms: 'Membantu golongan OKU di kawasan Bukit Mertajam dengan program kemahiran vokasional dan intervensi awal.', en: 'Helping PWDs in the Bukit Mertajam area with vocational skills programs and early intervention.' } },
+                { id: 197, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Seberang Perai Selatan (Nibong Tebal)', category: 'all', state: 'Pulau Pinang', website: 'https://www.jkm.gov.my', icon: 'fas fa-hands-helping', desc: { ms: 'Menyokong ahli komuniti OKU di Nibong Tebal untuk berdikari menerusi pendedahan sosial dan kemahiran asas.', en: 'Supports the PWD community in Nibong Tebal to be independent through social exposure and basic skills.' } },
+                { id: 198, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Barat Daya (Balik Pulau)', category: 'all', state: 'Pulau Pinang', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Menyediakan khidmat pemulihan harian dan pendaftaran OKU untuk kemudahan penduduk sekitar Balik Pulau.', en: 'Provides daily rehabilitation services and PWD registration for the convenience of Balik Pulau residents.' } },
+                { id: 199, name: 'NASOM Cawangan Butterworth', category: 'autism', state: 'Pulau Pinang', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Cawangan NASOM di sebelah tanah besar (Seberang Perai) untuk terapi tingkah laku dan pendidikan autisme.', en: 'NASOM branch on the mainland (Seberang Perai) for behavioral therapy and autism education.' } },
+                { id: 200, name: 'Pusat Perkhidmatan Pendidikan Khas (3PK) Pulau Pinang', category: 'learning', state: 'Pulau Pinang', website: 'https://www.moe.gov.my', icon: 'fas fa-school', desc: { ms: 'Pusat di bawah KPM yang menawarkan saringan audiologi, terapi pertuturan, dan intervensi untuk pelajar OKU.', en: 'A center under MOE offering audiology screening, speech therapy, and intervention for PWD students.' } },
+                // --- NEGERI SABAH ---
+                { id: 201, name: 'Seri Mengasih Centre (Kota Kinabalu)', category: 'learning', state: 'Sabah', website: 'https://serimengasih.org', icon: 'fas fa-book-reader', desc: { ms: 'Sekolah khas dan pusat latihan vokasional perintis di Sabah untuk kanak-kanak dan belia OKU masalah pembelajaran.', en: 'Pioneer special school and vocational training center in Sabah for children and youth with learning disabilities.' } },
+                { id: 202, name: 'Sabah Cheshire Home (Kota Kinabalu & Sandakan)', category: 'physical', state: 'Sabah', website: 'https://sabahcheshirehome.org', icon: 'fas fa-home', desc: { ms: 'Menyediakan penjagaan kediaman, pemulihan dan latihan kemahiran hidup berdikari untuk OKU fizikal teruk di Sabah.', en: 'Provides residential care, rehabilitation, and independent living skills training for severely physically disabled in Sabah.' } },
+                { id: 203, name: 'Sabah Society for the Deaf (SSD)', category: 'hearing', state: 'Sabah', website: 'https://www.facebook.com/SabahSocietyForTheDeaf/', icon: 'fas fa-deaf', desc: { ms: 'Mempunyai pusat di KK, Sandakan, Tawau dan Tenom; menyediakan pendidikan prasekolah dan kemahiran untuk OKU pendengaran.', en: 'Has centers in KK, Sandakan, Tawau, and Tenom; providing preschool education and skills for the hearing impaired.' } },
+                { id: 204, name: 'Persatuan Orang Buta Sabah (Wallace Blind Centre, Tuaran)', category: 'visual', state: 'Sabah', website: 'https://www.facebook.com/sabahblindsociety/', icon: 'fas fa-blind', desc: { ms: 'Pusat tumpuan OKU penglihatan Sabah untuk belajar membaca Braille, kemahiran vokasional (mengurut/kraf) dan pertanian.', en: 'Focus center for the Sabah visually impaired to learn Braille, vocational skills (massage/crafts), and agriculture.' } },
+                { id: 205, name: 'Bukit Harapan (Inanam)', category: 'all', state: 'Sabah', website: 'https://bukitharapan.org', icon: 'fas fa-hand-holding-heart', desc: { ms: 'Rumah perlindungan terkenal yang membela nasib OKU pelbagai kategori, mangsa dera dan anak yatim piatu di Sabah.', en: 'Famous shelter defending the fate of various PWD categories, abuse victims, and orphans in Sabah.' } },
+                { id: 206, name: 'NASOM Cawangan Kota Kinabalu', category: 'autism', state: 'Sabah', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Satu-satunya cawangan NASOM di Sabah yang menyediakan terapi, kelas intervensi awal, dan sokongan ibu bapa autisme.', en: 'The only NASOM branch in Sabah providing therapy, early intervention classes, and autism parent support.' } },
+                { id: 207, name: 'Pusat Latihan Orang Cacat Sabah (Kimanis, Papar)', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-tools', desc: { ms: 'Institusi rasmi JKM yang melatih belia OKU Sabah dalam bidang jahitan, pembuatan perabot dan pertanian komersial.', en: 'Official JKM institution training Sabah PWD youth in tailoring, furniture making, and commercial agriculture.' } },
+                { id: 208, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Tawau', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-users', desc: { ms: 'Pusat sokongan intervensi utama bagi penduduk sekitar Tawau untuk rawatan pemulihan harian dan pendaftaran OKU.', en: 'Main intervention support center for residents around Tawau for daily rehabilitation treatment and PWD registration.' } },
+                { id: 209, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Sandakan', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-ship', desc: { ms: 'Membantu golongan OKU di kawasan pantai timur Sandakan dengan program kemahiran asas dan pendedahan sosial.', en: 'Helping PWDs in the Sandakan east coast area with basic skills programs and social exposure.' } },
+                { id: 210, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Keningau', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Platform utama di pedalaman Keningau bagi membantu OKU mendapatkan khidmat terapi tanpa perlu turun ke Kota Kinabalu.', en: 'Main platform in rural Keningau helping PWDs get therapy services without needing to go down to Kota Kinabalu.' } },
+                { id: 211, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Lahad Datu', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Menyediakan kemudahan terapi fizikal asas dan pendidikan intervensi awal untuk OKU di sekitar Lahad Datu.', en: 'Provides basic physical therapy facilities and early intervention education for PWDs around Lahad Datu.' } },
+                { id: 212, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Semporna', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-water', desc: { ms: 'Membantu golongan OKU di pesisir pantai Semporna dengan program kemahiran dan pendedahan komuniti.', en: 'Helping PWDs on the Semporna coast with skills programs and community exposure.' } },
+                { id: 213, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Ranau', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Pusat komuniti di kaki Gunung Kinabalu yang melatih kemahiran hidup dan asas pertanian bagi belia OKU.', en: 'Community center at the foot of Mount Kinabalu training life skills and basic agriculture for PWD youth.' } },
+                { id: 214, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kudat', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-ship', desc: { ms: 'Pusat rujukan utama di utara Sabah untuk ibu bapa mendapatkan bimbingan penjagaan anak-anak berkeperluan khas.', en: 'Main reference center in northern Sabah for parents to get guidance on caring for special needs children.' } },
+                { id: 215, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Beaufort', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-train', desc: { ms: 'Menawarkan perkhidmatan pemulihan harian dan pendaftaran OKU JKM bagi kemudahan penduduk zon pedalaman bawah.', en: 'Offers daily rehabilitation services and JKM PWD registration for the convenience of lower interior zone residents.' } },
+                { id: 216, name: 'Persatuan Ibu Bapa Kanak-Kanak Berkeperluan Khas (PIBKS) Sabah', category: 'learning', state: 'Sabah', website: 'https://www.facebook.com/PIBKSSabah/', icon: 'fas fa-users', desc: { ms: 'Kumpulan sokongan ibu bapa (support group) yang sangat aktif memperjuangkan hak pendidikan inklusif di Sabah.', en: 'A highly active parent support group advocating for inclusive education rights in Sabah.' } },
+                { id: 217, name: 'Sabah Mental Health Association (SMHA)', category: 'mental', state: 'Sabah', website: 'https://www.facebook.com/SabahMentalHealthAssociation/', icon: 'fas fa-brain', desc: { ms: 'Memperkasa kempen kesedaran kesihatan mental dan menyediakan perkhidmatan kaunseling sokongan di Kota Kinabalu.', en: 'Empowering mental health awareness campaigns and providing support counseling services in Kota Kinabalu.' } },
+                { id: 218, name: 'Persatuan Sukan dan Rekreasi OKU Negeri Sabah (PESRON Sabah)', category: 'physical', state: 'Sabah', website: 'https://www.facebook.com/pesronsabah', icon: 'fas fa-running', desc: { ms: 'Mencungkil bakat dan melatih atlet para Sabah untuk bertanding membawa nama negeri di kejohanan kebangsaan.', en: 'Unearthing talents and training Sabah para-athletes to compete and represent the state in national championships.' } },
+                { id: 219, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kota Belud', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-horse', desc: { ms: 'Program komuniti yang melatih OKU dengan kemahiran mengurus diri dan kraftangan di daerah Kota Belud.', en: 'Community program training PWDs with self-management skills and handicrafts in the Kota Belud district.' } },
+                { id: 220, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Tuaran', category: 'all', state: 'Sabah', website: 'https://www.jkm.gov.my', icon: 'fas fa-store', desc: { ms: 'Menyokong ahli komuniti OKU di Tuaran untuk berdikari menerusi pendedahan sosial dan kemahiran asas harian.', en: 'Supports the PWD community in Tuaran to be independent through social exposure and basic daily skills.' } },
+                // --- NEGERI SARAWAK ---
+                { id: 221, name: 'PIBAKAT (Persatuan Ibu Bapa Kanak-Kanak Istimewa Sarawak)', category: 'all', state: 'Sarawak', website: 'https://pibakat.org.my', icon: 'fas fa-users', desc: { ms: 'Menyediakan perkhidmatan intervensi awal, jagaan harian, dan terapi untuk kanak-kanak berkeperluan khas di Kuching.', en: 'Provides early intervention services, daycare, and therapy for children with special needs in Kuching.' } },
+                { id: 222, name: 'Sarawak Society for the Blind', category: 'visual', state: 'Sarawak', website: 'https://www.facebook.com/SSBKuching/', icon: 'fas fa-blind', desc: { ms: 'Pusat tumpuan di Sarawak yang melatih kemahiran mobiliti, Braille, dan vokasional untuk OKU penglihatan.', en: 'Focus center in Sarawak training mobility, Braille, and vocational skills for the visually impaired.' } },
+                { id: 223, name: 'Sarawak Society for the Deaf (SSD)', category: 'hearing', state: 'Sarawak', website: 'https://www.facebook.com/ssdkuching/', icon: 'fas fa-deaf', desc: { ms: 'Menganjurkan kelas bahasa isyarat dan program pemerkasaan komuniti pekak untuk pasaran kerja di Sarawak.', en: 'Organizes sign language classes and empowerment programs for the deaf community for the job market in Sarawak.' } },
+                { id: 224, name: 'PERKATA Sarawak', category: 'learning', state: 'Sarawak', website: 'https://www.perkata.org.my', icon: 'fas fa-school', desc: { ms: 'Sekolah khas yang ditubuhkan untuk memberi pendidikan khas dan latihan kepada kanak-kanak masalah pembelajaran.', en: 'A special school established to provide special education and training for children with learning disabilities.' } },
+                { id: 225, name: 'Methodist Care Centre (Sibu)', category: 'autism', state: 'Sarawak', website: 'https://www.facebook.com/methodistcarecentresibu/', icon: 'fas fa-puzzle-piece', desc: { ms: 'Menawarkan terapi tingkah laku, intervensi awal, dan program sokongan bagi anak-anak autisme di Sibu.', en: 'Offers behavioral therapy, early intervention, and support programs for autistic children in Sibu.' } },
+                { id: 226, name: 'Sarawak Cheshire Home', category: 'physical', state: 'Sarawak', website: 'https://www.facebook.com/sarawakcheshirehome/', icon: 'fas fa-wheelchair', desc: { ms: 'Rumah perlindungan dan penjagaan kediaman yang membela pesakit OKU fizikal yang kronik dan tiada waris di Kuching.', en: 'Shelter and residential care home defending chronically physically disabled patients with no next of kin in Kuching.' } },
+                { id: 227, name: 'MRCS Sunflower Centre (Miri)', category: 'all', state: 'Sarawak', website: 'https://www.facebook.com/mrcssunflowercentre/', icon: 'fas fa-sun', desc: { ms: 'Pusat di bawah Bulan Sabit Merah Miri yang melatih remaja dan dewasa OKU dengan kemahiran kemandirian hidup.', en: 'A center under Miri Red Crescent training PWD teens and adults with independent life skills.' } },
+                { id: 228, name: 'Sibu Autistic Association (SAA)', category: 'autism', state: 'Sarawak', website: 'https://www.sibuautistic.org.my', icon: 'fas fa-child', desc: { ms: 'Satu-satunya pusat khusus di kawasan Sibu tengah yang mendedikasikan rawatan holistik untuk individu autisme.', en: 'The only dedicated center in the central Sibu area providing holistic treatment for autistic individuals.' } },
+                { id: 229, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bintulu', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-industry', desc: { ms: 'Pusat rujukan komuniti bagi terapi asas dan program pendidikan khas untuk warga OKU di kawasan industri Bintulu.', en: 'Community reference center for basic therapy and special education programs for PWDs in the Bintulu industrial area.' } },
+                { id: 230, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Petra Jaya', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-mosque', desc: { ms: 'Menyokong pemulihan fizikal, sosial dan penjagaan harian anak-anak istimewa di sekitar bandar raya Kuching.', en: 'Supports the physical, social rehabilitation, and daycare of special children around Kuching city.' } },
+                { id: 231, name: 'Persatuan Disleksia Sarawak', category: 'learning', state: 'Sarawak', website: 'https://www.facebook.com/DyslexiaSarawak/', icon: 'fas fa-book-reader', desc: { ms: 'Menyediakan pentaksiran, kelas intervensi khas dan latihan untuk guru serta ibu bapa bagi mengendalikan murid disleksia.', en: 'Provides assessment, special intervention classes, and training for teachers and parents to handle dyslexic students.' } },
+                { id: 232, name: 'Mental Health Association of Sarawak (MHAS)', category: 'mental', state: 'Sarawak', website: 'https://mhasarawak.com', icon: 'fas fa-brain', desc: { ms: 'Pusat utama yang memperjuangkan kesedaran kesihatan mental, rawatan pemulihan, dan sokongan psikiatri di Sarawak.', en: 'Main center advocating for mental health awareness, rehabilitation treatment, and psychiatric support in Sarawak.' } },
+                { id: 233, name: 'Persatuan Sukan Orang Kurang Upaya Sarawak (PESRON Sarawak)', category: 'physical', state: 'Sarawak', website: 'https://www.facebook.com/pesronsarawak/', icon: 'fas fa-running', desc: { ms: 'Mencari bakat baharu dan melatih atlet para (OKU) Sarawak untuk menguasai kejohanan sukan seperti Para SUKMA.', en: 'Finding new talents and training Sarawak para-athletes (PWDs) to dominate sports championships like Para SUKMA.' } },
+                { id: 234, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Sri Aman', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-dove', desc: { ms: 'Pusat intervensi awal yang membantu kanak-kanak berkeperluan khas di kawasan Sri Aman dan sekitarnya.', en: 'Early intervention center helping children with special needs in the Sri Aman area and its surroundings.' } },
+                { id: 235, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kapit', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-water', desc: { ms: 'Membantu golongan OKU di kawasan pedalaman yang sukar diakses dengan bot ekspres untuk mendapatkan terapi.', en: 'Helping PWDs in interior areas difficult to access by express boats to get therapy.' } },
+                { id: 236, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Mukah', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-fish', desc: { ms: 'Menyokong komuniti OKU di kawasan pesisir pantai Mukah dengan kemahiran asas dan pendaftaran JKM.', en: 'Supports the PWD community in the Mukah coastal area with basic skills and JKM registration.' } },
+                { id: 237, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Limbang', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-map', desc: { ms: 'Menyediakan perkhidmatan pemulihan harian bagi kemudahan penduduk OKU di zon utara yang bersempadan dengan Brunei.', en: 'Provides daily rehabilitation services for the convenience of PWD residents in the northern zone bordering Brunei.' } },
+                { id: 238, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Sarikei', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-lemon', desc: { ms: 'Pusat tumpuan OKU di kawasan tengah Sarawak untuk mendapatkan latihan hidup berdikari dan pendedahan sosial.', en: 'Focus center for PWDs in central Sarawak to get independent living training and social exposure.' } },
+                { id: 239, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Serian', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Program komuniti yang melatih OKU dengan kemahiran mengurus diri dan asas pertanian di daerah Serian.', en: 'Community program training PWDs with self-management skills and basic agriculture in the Serian district.' } },
+                { id: 240, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kota Samarahan', category: 'all', state: 'Sarawak', website: 'https://www.jkm.gov.my', icon: 'fas fa-university', desc: { ms: 'Pusat intervensi dan latihan di pusat pendidikan Sarawak bagi memastikan belia OKU tidak tercicir dari arus perdana.', en: 'Intervention and training center in the educational hub of Sarawak to ensure PWD youth are not left behind from the mainstream.' } },
+                { id: 251, name: 'Society of the Blind in Malaysia (SBM) HQ', category: 'visual', state: 'Kuala Lumpur', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Ibu pejabat SBM yang menggerakkan advokasi, kelas komputer beradaptasi, dan sukan khas untuk OKU penglihatan seluruh negara.', en: 'SBM HQ driving advocacy, adaptive computer classes, and special sports for the visually impaired nationwide.' } },
+                { id: 252, name: 'National Council for the Blind Malaysia (NCBM)', category: 'visual', state: 'Kuala Lumpur', website: 'https://ncbm.org.my', icon: 'fas fa-eye-slash', desc: { ms: 'Majlis kebangsaan yang menyelaras dasar, kajian, dan penerbitan bahan Braille untuk komuniti OKU penglihatan di Malaysia.', en: 'National council coordinating policies, research, and Braille material publication for the visually impaired community in Malaysia.' } },
+                { id: 253, name: 'Malaysian Federation of the Deaf (MFD)', category: 'hearing', state: 'Kuala Lumpur', website: 'https://www.mymfd.org.my', icon: 'fas fa-deaf', desc: { ms: 'Persekutuan rasmi yang mengiktiraf penterjemah Bahasa Isyarat Malaysia (BIM) dan membela hak kesamarataan komuniti pekak.', en: 'Official federation recognizing Malaysian Sign Language (BIM) interpreters and advocating equal rights for the deaf community.' } },
+                { id: 254, name: 'Malaysian Care (Special Needs Services)', category: 'learning', state: 'Kuala Lumpur', website: 'https://www.malaysiancare.org', icon: 'fas fa-hands-helping', desc: { ms: 'Menawarkan perkhidmatan sokongan komuniti, intervensi awal, dan latihan kemahiran vokasional untuk OKU masalah pembelajaran.', en: 'Offers community support services, early intervention, and vocational skills training for PWDs with learning disabilities.' } },
+                { id: 255, name: 'Persatuan Sindrom Down Malaysia (PSDM) HQ', category: 'learning', state: 'Kuala Lumpur', website: 'https://downsyndromemalaysia.com', icon: 'fas fa-smile', desc: { ms: 'Pusat tumpuan kebangsaan untuk khidmat nasihat, intervensi, dan bengkel terlindung bagi golongan Sindrom Down.', en: 'National focal point for advisory services, intervention, and sheltered workshops for the Down Syndrome group.' } },
+                { id: 256, name: 'Persatuan Disleksia Malaysia (PDM) HQ', category: 'learning', state: 'Kuala Lumpur', website: 'http://www.dyslexiamalaysia.org.my', icon: 'fas fa-book-reader', desc: { ms: 'Ibu pejabat kebangsaan yang aktif menjalankan kelas tuisyen khas dan saringan untuk murid yang mengalami disleksia.', en: 'National HQ actively conducting special tuition classes and screenings for students experiencing dyslexia.' } },
+                { id: 257, name: 'RC Deaf Missions Malaysia', category: 'hearing', state: 'Kuala Lumpur', website: 'https://www.rcdeafmissionsmalaysia.com', icon: 'fas fa-sign-language', desc: { ms: 'Perusahaan sosial di KL yang menyediakan peluang pekerjaan dan latihan kerjaya khas untuk golongan pekak dan bisu.', en: 'Social enterprise in KL providing employment opportunities and specialized career training for the deaf and mute.' } },
+                { id: 258, name: 'Befrienders Kuala Lumpur', category: 'mental', state: 'Kuala Lumpur', website: 'https://www.befrienders.org.my', icon: 'fas fa-phone-alt', desc: { ms: 'Pusat panggilan krisis 24 jam yang memberikan sokongan emosi percuma dan sulit kepada individu yang mengalami kemurungan.', en: '24-hour crisis call center providing free and confidential emotional support to individuals experiencing depression.' } },
+                { id: 259, name: 'Malaysian Parkinson\'s Disease Association (MPDA)', category: 'physical', state: 'Kuala Lumpur', website: 'https://www.mpda.org.my', icon: 'fas fa-walking', desc: { ms: 'Kumpulan sokongan perubatan yang menyediakan sesi fisioterapi dan senaman khas untuk pesakit Parkinson.', en: 'Medical support group providing physiotherapy and special exercise sessions for Parkinson\'s patients.' } },
+                { id: 260, name: 'Alzheimer\'s Disease Foundation Malaysia (ADFM)', category: 'mental', state: 'Kuala Lumpur', website: 'https://adfm.org.my', icon: 'fas fa-brain', desc: { ms: 'Membantu pesakit Demensia/Alzheimer dan penjaga mereka melalui jagaan harian, kaunseling dan terapi memori.', en: 'Assists Dementia/Alzheimer\'s patients and their caregivers through daycare, counseling, and memory therapy.' } },
+                { id: 261, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Cheras', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-users', desc: { ms: 'Pusat rawatan harian komuniti yang melatih kemahiran motor dan interaksi sosial OKU di kawasan perumahan Cheras.', en: 'Community daily treatment center training motor skills and social interaction for PWDs in the Cheras residential area.' } },
+                { id: 262, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Wangsa Maju', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-building', desc: { ms: 'Menyediakan program pendidikan khas asas dan sokongan JKM untuk keluarga OKU di sekitar Wangsa Maju.', en: 'Provides basic special education programs and JKM support for PWD families around Wangsa Maju.' } },
+                { id: 263, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Setapak', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-store', desc: { ms: 'Platform utama di Setapak bagi membantu anak-anak istimewa mendapatkan khidmat terapi awal sebelum masuk ke sekolah.', en: 'Main platform in Setapak helping special children get early therapy services before entering school.' } },
+                { id: 264, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Pantai Dalam', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-home', desc: { ms: 'Menyokong ahli komuniti OKU di kawasan Pantai Dalam untuk berdikari menerusi pendedahan kemahiran vokasional.', en: 'Supports the PWD community in the Pantai Dalam area to be independent through vocational skills exposure.' } },
+                { id: 265, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bandar Tun Razak', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-city', desc: { ms: 'Pusat rujukan intervensi komuniti bagi penduduk BTR untuk proses pemulihan fizikal dan mental OKU.', en: 'Community intervention reference center for BTR residents for the physical and mental rehabilitation process of PWDs.' } },
+                { id: 266, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kepong', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Memberi pendedahan kemahiran hidup dan penjagaan harian kepada warga OKU di zon utara Kuala Lumpur (Kepong).', en: 'Provides life skills exposure and daycare to PWDs in the northern zone of Kuala Lumpur (Kepong).' } },
+                { id: 267, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Titiwangsa', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-leaf', desc: { ms: 'Membantu proses pemulihan dan memastikan kebajikan anak-anak OKU di daerah Titiwangsa terjaga dengan baik.', en: 'Assists the rehabilitation process and ensures the welfare of PWD children in the Titiwangsa district is well-maintained.' } },
+                { id: 268, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kampung Bharu', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-mosque', desc: { ms: 'Pusat komuniti di tengah bandar raya yang menawarkan bimbingan penjagaan anak-anak berkeperluan khas.', en: 'Community center in the middle of the city offering guidance on caring for special needs children.' } },
+                { id: 269, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Segambut', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-road', desc: { ms: 'Menawarkan perkhidmatan sokongan dan latihan berdikari untuk pelbagai kategori OKU di sekitar Segambut.', en: 'Offers support services and independent training for various PWD categories around Segambut.' } },
+                { id: 270, name: 'Pusat Latihan Perindustrian dan Pemulihan (PLPP) JKM', category: 'all', state: 'Kuala Lumpur', website: 'https://www.jkm.gov.my', icon: 'fas fa-industry', desc: { ms: 'Pusat latihan vokasional rasmi di bawah kerajaan untuk menyediakan belia OKU masuk ke alam pekerjaan sebenar.', en: 'Official vocational training center under the government to prepare PWD youth to enter the real working world.' } },
+                // --- NEGERI SELANGOR ---
+                { id: 271, name: 'Spastic Children\'s Association of Selangor & FT (SCASFT)', category: 'physical', state: 'Selangor', website: 'https://scasft.org', icon: 'fas fa-crutch', desc: { ms: 'Pusat rawatan mega di Petaling Jaya yang khusus untuk rawatan intervensi, terapi, dan pendidikan Cerebral Palsy.', en: 'Mega treatment center in Petaling Jaya dedicated to intervention, therapy, and education for Cerebral Palsy.' } },
+                { id: 272, name: 'Beautiful Gate Foundation for the Disabled (HQ)', category: 'physical', state: 'Selangor', website: 'https://beautifulgate.org.my', icon: 'fas fa-wheelchair', desc: { ms: 'Ibu pejabat di PJ yang melatih OKU fizikal dengan kemahiran bebas, kitar semula, dan advokasi hak asasi.', en: 'HQ in PJ training the physically disabled with independent skills, recycling, and human rights advocacy.' } },
+                { id: 273, name: 'Persatuan Kanak-Kanak Istimewa Kajang (PKIK)', category: 'learning', state: 'Selangor', website: 'https://pkik.org', icon: 'fas fa-book-reader', desc: { ms: 'Menawarkan latihan kemahiran hidup dan vokasional bagi belia dan kanak-kanak masalah pembelajaran di Kajang.', en: 'Offers life and vocational skills training for youth and children with learning disabilities in Kajang.' } },
+                { id: 274, name: 'Pusat Jagaan Kanak-Kanak Cacat Taman Megah (PPKKCTM)', category: 'all', state: 'Selangor', website: 'https://www.ppkkctm.info', icon: 'fas fa-home', desc: { ms: 'Rumah perlindungan terkenal yang menempatkan kanak-kanak OKU pelbagai kategori, anak yatim, dan terbiar.', en: 'Famous shelter housing children of various PWD categories, orphans, and the abandoned.' } },
+                { id: 275, name: 'MIASA (Mental Illness Awareness & Support Association) HQ', category: 'mental', state: 'Selangor', website: 'https://miasa.org.my', icon: 'fas fa-brain', desc: { ms: 'Pusat rawatan alternatif di PJ yang diterajui oleh rakan sebaya untuk sokongan emosi dan pengurusan krisis psikiatri.', en: 'Peer-led alternative treatment center in PJ for emotional support and psychiatric crisis management.' } },
+                { id: 276, name: 'NASOM Cawangan Shah Alam', category: 'autism', state: 'Selangor', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Pusat intervensi autisme yang padat dengan program vokasional seperti bakeri dan dobi untuk belia autisme.', en: 'Autism intervention center packed with vocational programs like bakery and laundry for autistic youth.' } },
+                { id: 277, name: 'Persatuan Orang Pekak Selangor (POPS)', category: 'hearing', state: 'Selangor', website: 'https://www.facebook.com/popselangor', icon: 'fas fa-deaf', desc: { ms: 'NGO rasmi peringkat negeri yang membela nasib OKU pendengaran, merangkumi kelas isyarat dan penempatan kerja.', en: 'Official state-level NGO defending the hearing impaired, including sign language classes and job placements.' } },
+                { id: 278, name: 'Society for the Severely Mentally Handicapped (SSMH)', category: 'learning', state: 'Selangor', website: 'https://www.ssmh.org.my', icon: 'fas fa-hands-helping', desc: { ms: 'Menyediakan penjagaan harian, fisioterapi, dan terapi cara kerja bagi kanak-kanak yang cacat mental teruk di PJ.', en: 'Provides daycare, physiotherapy, and occupational therapy for severely mentally handicapped children in PJ.' } },
+                { id: 279, name: 'Persatuan Autisme Muslim Malaysia (PAMM)', category: 'autism', state: 'Selangor', website: 'https://www.facebook.com/PAMM.MY/', icon: 'fas fa-mosque', desc: { ms: 'Kumpulan sokongan di Bangi yang menerapkan pendidikan Islam, terapi, dan sokongan keluarga anak-anak autisme.', en: 'Support group in Bangi integrating Islamic education, therapy, and family support for autistic children.' } },
+                { id: 280, name: 'Yayasan Sindrom Down Prihatin (YSDP)', category: 'learning', state: 'Selangor', website: 'https://www.facebook.com/ysdpklang/', icon: 'fas fa-smile', desc: { ms: 'Berpusat di Klang, membantu anak-anak Sindrom Down dalam perkembangan motor, komunikasi, dan pendidikan.', en: 'Based in Klang, helping Down Syndrome children in motor development, communication, and education.' } },
+                { id: 281, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Petaling Jaya', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-city', desc: { ms: 'Platform utama di Petaling Jaya untuk intervensi awal, latihan pra-sekolah, dan sokongan komuniti OKU bandar.', en: 'Main platform in Petaling Jaya for early intervention, pre-school training, and urban PWD community support.' } },
+                { id: 282, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Shah Alam', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-building', desc: { ms: 'Pusat tumpuan di ibu negeri Selangor bagi pendedahan kemahiran mengurus diri dan pendaftaran bantuan JKM.', en: 'Focus center in the Selangor state capital for self-management skills exposure and JKM assistance registration.' } },
+                { id: 283, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Klang', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-ship', desc: { ms: 'Menyokong kanak-kanak dan belia istimewa di daerah Klang dengan program pemulihan cara kerja.', en: 'Supports special children and youth in the Klang district with occupational rehabilitation programs.' } },
+                { id: 284, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Subang Jaya', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-store', desc: { ms: 'Pusat harian komuniti yang aktif menyediakan terapi tingkah laku bagi anak-anak di kawasan Subang dan Puchong.', en: 'Community day center active in providing behavioral therapy for children in the Subang and Puchong areas.' } },
+                { id: 285, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Gombak', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Membantu golongan OKU di pinggir KL (Gombak) dengan latihan hidup berdikari dan pendedahan interaksi sosial.', en: 'Helping PWDs in the KL outskirts (Gombak) with independent living training and social interaction exposure.' } },
+                { id: 286, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Selayang', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-leaf', desc: { ms: 'Fokus kepada rawatan motor halus dan kasar bagi kanak-kanak istimewa sebelum melangkah ke pendidikan khas KPM.', en: 'Focuses on fine and gross motor treatments for special children before stepping into MOE special education.' } },
+                { id: 287, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Ampang', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-map', desc: { ms: 'Pusat rujukan intervensi setempat untuk memudahkan ibu bapa sekitar Ampang menghantar anak-anak untuk terapi.', en: 'Local intervention reference center to facilitate parents around Ampang sending children for therapy.' } },
+                { id: 288, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kajang / Hulu Langat', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-users-cog', desc: { ms: 'Sokongan holistik di daerah Hulu Langat yang menawarkan latihan vokasional seperti jahitan dan asas masakan.', en: 'Holistic support in the Hulu Langat district offering vocational training such as tailoring and basic cooking.' } },
+                { id: 289, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Bangi', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-graduation-cap', desc: { ms: 'Menjadi hab pemulihan mesra OKU yang bekerjasama rapat dengan universiti sekitar (UKM) untuk program intervensi.', en: 'A PWD-friendly rehab hub working closely with nearby universities (UKM) for intervention programs.' } },
+                { id: 290, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Sepang', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-plane', desc: { ms: 'Membantu ahli komuniti OKU di kawasan Sepang/KLIA untuk berdikari menerusi pendedahan kemahiran asas.', en: 'Helping PWD community members in the Sepang/KLIA area to be independent through basic skills exposure.' } },
+                { id: 291, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Cyberjaya', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-laptop', desc: { ms: 'Fasiliti moden di Cyberjaya yang mendedahkan warga OKU kepada kemahiran asas IT dan program sensori.', en: 'Modern facility in Cyberjaya exposing PWDs to basic IT skills and sensory programs.' } },
+                { id: 292, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Banting (Kuala Langat)', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-water', desc: { ms: 'Pusat jagaan di kawasan Kuala Langat yang memberi penekanan kepada terapi fizikal luar dan penjagaan asas.', en: 'Care center in the Kuala Langat area emphasizing outdoor physical therapy and basic care.' } },
+                { id: 293, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Selangor', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-fish', desc: { ms: 'Memudahkan akses rawatan dan latihan kemahiran bagi keluarga OKU di pesisir pantai Kuala Selangor.', en: 'Facilitating treatment access and skills training for PWD families on the Kuala Selangor coast.' } },
+                { id: 294, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Sabak Bernam', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-tractor', desc: { ms: 'Pusat sokongan utama di utara Selangor bagi anak-anak OKU kawasan pertanian mendapatkan pendidikan inklusif.', en: 'Main support center in northern Selangor for PWD children in agricultural areas to get inclusive education.' } },
+                { id: 295, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Kubu Bharu (Hulu Selangor)', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Berada di daerah Hulu Selangor, melatih golongan OKU dengan asas berkebun, kraftangan dan jati diri.', en: 'Located in the Hulu Selangor district, training PWDs in basic gardening, handicrafts, and self-identity.' } },
+                { id: 296, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Rawang', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-train', desc: { ms: 'Pusat pemulihan harian yang sangat aktif di zon Rawang untuk terapi motor, pertuturan dan kemahiran kognitif.', en: 'Highly active daily rehab center in the Rawang zone for motor, speech, and cognitive skills therapy.' } },
+                { id: 297, name: 'Pusat Latihan Perindustrian dan Pemulihan (PLPP) JKM Bangi', category: 'all', state: 'Selangor', website: 'https://www.jkm.gov.my', icon: 'fas fa-industry', desc: { ms: 'Pusat latihan vokasional terbesar kerajaan, menyediakan OKU sijil kemahiran seperti IT, jahitan dan mekanik.', en: 'The government\'s largest vocational training center, providing PWDs with skills certificates like IT, tailoring, and mechanics.' } },
+                { id: 298, name: 'Pusat Perkhidmatan Pendidikan Khas (3PK) Selangor', category: 'learning', state: 'Selangor', website: 'https://www.moe.gov.my', icon: 'fas fa-school', desc: { ms: 'Fasiliti KPM di Selangor yang menyediakan pakar audiologi dan terapi pertuturan untuk pelajar berkeperluan khas.', en: 'MOE facility in Selangor providing audiologists and speech therapy for special needs students.' } },
+                { id: 299, name: 'Pertubuhan Kebajikan Mental Selangor (PKMS)', category: 'mental', state: 'Selangor', website: 'https://www.facebook.com/pkmselangor/', icon: 'fas fa-user-md', desc: { ms: 'Menjalankan program turun padang mempromosi penjagaan kesihatan mental dan saringan awal depresi di Selangor.', en: 'Conducts outreach programs promoting mental healthcare and early depression screening in Selangor.' } },
+                { id: 300, name: 'Persatuan Sukan Orang Kurang Upaya Selangor (PESRON Selangor)', category: 'physical', state: 'Selangor', website: 'https://www.facebook.com/pesronselangor', icon: 'fas fa-running', desc: { ms: 'Nadi utama pembangunan sukan OKU di Selangor, melahirkan jaguh kebangsaan dan antarabangsa.', en: 'The main pulse of PWD sports development in Selangor, producing national and international champions.' } },
+                // --- NEGERI TERENGGANU ---
+                { id: 301, name: 'Persatuan Orang Cacat Terengganu (POCT)', category: 'physical', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-wheelchair', desc: { ms: 'Persatuan induk yang memperjuangkan hak dan kebajikan golongan OKU fizikal di seluruh negeri Terengganu.', en: 'The main association advocating for the rights and welfare of the physically disabled across Terengganu.' } },
+                { id: 302, name: 'Persatuan Kanak-Kanak Spastik Terengganu', category: 'physical', state: 'Terengganu', website: 'https://www.facebook.com/SpastikTerengganu/', icon: 'fas fa-crutch', desc: { ms: 'Menyediakan rawatan fisioterapi intensif dan pendidikan khas bagi kanak-kanak Cerebral Palsy di Kuala Terengganu.', en: 'Provides intensive physiotherapy and special education for Cerebral Palsy children in Kuala Terengganu.' } },
+                { id: 303, name: 'Persatuan Orang Pekak Terengganu (POPT)', category: 'hearing', state: 'Terengganu', website: 'https://www.facebook.com/popt.terengganu/', icon: 'fas fa-deaf', desc: { ms: 'Platform utama komuniti pekak Terengganu untuk kelas Bahasa Isyarat Malaysia (BIM) dan pembangunan kerjaya.', en: 'Main platform for the Terengganu deaf community for Malaysian Sign Language (BIM) classes and career development.' } },
+                { id: 304, name: 'Society of the Blind in Malaysia (SBM) Terengganu', category: 'visual', state: 'Terengganu', website: 'https://www.sbm.org.my', icon: 'fas fa-blind', desc: { ms: 'Menjaga kebajikan dan menyediakan kemahiran vokasional seperti urutan tradisional untuk OKU penglihatan.', en: 'Cares for the welfare and provides vocational skills like traditional massage for the visually impaired.' } },
+                { id: 305, name: 'Persatuan Sindrom Down Negeri Terengganu', category: 'learning', state: 'Terengganu', website: 'https://downsyndromemalaysia.com', icon: 'fas fa-smile', desc: { ms: 'Memberi sokongan moral, terapi intervensi dan panduan kepada ibu bapa yang mempunyai anak Sindrom Down.', en: 'Provides moral support, intervention therapy, and guidance to parents with Down Syndrome children.' } },
+                { id: 306, name: 'NASOM Cawangan Kuala Terengganu', category: 'autism', state: 'Terengganu', website: 'https://www.nasom.org.my', icon: 'fas fa-puzzle-piece', desc: { ms: 'Menawarkan program intervensi awal, terapi tingkah laku dan persediaan ke sekolah untuk anak-anak autisme.', en: 'Offers early intervention programs, behavioral therapy, and school preparation for autistic children.' } },
+                { id: 307, name: 'Taman Sinar Harapan (Kuala Terengganu)', category: 'mental', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-hospital', desc: { ms: 'Institusi perlindungan utama bawah JKM di Pantai Timur untuk jagaan rapi OKU masalah pembelajaran yang teruk.', en: 'Main JKM shelter institution in the East Coast for intensive care of PWDs with severe learning disabilities.' } },
+                { id: 308, name: 'Persatuan Sukan Orang Kurang Upaya Terengganu (PESRON Terengganu)', category: 'physical', state: 'Terengganu', website: 'https://www.facebook.com/pesron.terengganu', icon: 'fas fa-running', desc: { ms: 'Menggilap potensi atlet para Terengganu untuk bersaing di peringkat kebangsaan seperti Para SUKMA.', en: 'Polishing the potential of Terengganu para-athletes to compete at the national level like Para SUKMA.' } },
+                { id: 309, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Terengganu', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-city', desc: { ms: 'Pusat tumpuan OKU di bandar raya untuk mendapatkan latihan hidup berdikari, intervensi awal dan pendedahan sosial.', en: 'Focus center for PWDs in the city to gain independent living skills, early intervention, and social exposure.' } },
+                { id: 310, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kemaman', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-industry', desc: { ms: 'Menyokong pemulihan fizikal dan pendidikan asas untuk kanak-kanak berkeperluan khas di daerah pesat Kemaman.', en: 'Supports physical rehabilitation and basic education for special needs children in the rapidly developing Kemaman district.' } },
+                { id: 311, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Dungun', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-water', desc: { ms: 'Membantu OKU di daerah Dungun dengan bimbingan kemahiran kerja tangan, terapi motor dan asas masakan.', en: 'Assisting PWDs in the Dungun district with guidance in handicraft skills, motor therapy, and basic cooking.' } },
+                { id: 312, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Besut', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-umbrella-beach', desc: { ms: 'Pusat rujukan utama di sempadan Kelantan-Terengganu bagi pendaftaran OKU dan rawatan pemulihan harian.', en: 'Main reference center at the Kelantan-Terengganu border for PWD registration and daily rehabilitation treatments.' } },
+                { id: 313, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Marang', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-fish', desc: { ms: 'Menyediakan perkhidmatan terapi dan kemahiran vokasional bagi memastikan kelangsungan hidup belia OKU di Marang.', en: 'Provides therapy services and vocational skills to ensure the survival of PWD youth in Marang.' } },
+                { id: 314, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Hulu Terengganu (Kuala Berang)', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-mountain', desc: { ms: 'Membantu golongan OKU di kawasan pedalaman Hulu Terengganu untuk mendapatkan akses kepada pendidikan khas.', en: 'Helping PWDs in the rural areas of Hulu Terengganu to get access to special education.' } },
+                { id: 315, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Setiu', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-leaf', desc: { ms: 'Program komuniti yang melatih OKU dengan kemahiran mengurus diri dan asas pertanian di sekitar daerah Setiu.', en: 'Community program training PWDs with self-management skills and basic agriculture around the Setiu district.' } },
+                { id: 316, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kuala Nerus', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-university', desc: { ms: 'Menjadi hab pemulihan mesra OKU yang bekerjasama rapat dengan institusi pendidikan di daerah Kuala Nerus.', en: 'A PWD-friendly rehab hub working closely with educational institutions in the Kuala Nerus district.' } },
+                { id: 317, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Wakaf Tapai', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-store', desc: { ms: 'Pusat intervensi dan penjagaan harian bagi kanak-kanak dan dewasa berkeperluan khas di kawasan Wakaf Tapai.', en: 'Intervention and daycare center for special needs children and adults in the Wakaf Tapai area.' } },
+                { id: 318, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Kijal', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-tree', desc: { ms: 'Menawarkan perkhidmatan sokongan dan latihan berdikari untuk pelbagai kategori OKU di sekitar zon Kijal.', en: 'Offers support services and independent training for various PWD categories around the Kijal zone.' } },
+                { id: 319, name: 'Pusat Pemulihan Dalam Komuniti (PDK) Paka', category: 'all', state: 'Terengganu', website: 'https://www.jkm.gov.my', icon: 'fas fa-bolt', desc: { ms: 'Platform sokongan bagi keluarga OKU di kawasan industri Paka untuk mendapatkan khidmat bimbingan JKM.', en: 'Support platform for PWD families in the Paka industrial area to get JKM guidance services.' } },
+                { id: 320, name: 'Yayasan Kebajikan OKU Terengganu (YKOT)', category: 'all', state: 'Terengganu', website: 'https://www.facebook.com/YKOTerengganu/', icon: 'fas fa-hands-helping', desc: { ms: 'Yayasan aktif yang menyalurkan bantuan kewangan, peralatan perubatan dan kerusi roda untuk OKU asnaf di Terengganu.', en: 'Active foundation distributing financial aid, medical equipment, and wheelchairs for underprivileged PWDs in Terengganu.' } }
+
+
+
+                ],
+
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+                
+                resetFilter() {
+                    this.filterName = '';
+                    this.filterState = '';
+                    this.filterCat = '';
+                },
+
+                get filteredNGOs() {
+                    return this.ngos.filter(item => {
+                        const nameMatch = item.name.toLowerCase().includes(this.filterName.toLowerCase());
+                        const stateMatch = this.filterState === '' || item.state === this.filterState;
+                        const catMatch = this.filterCat === '' || item.category === this.filterCat;
+                        return nameMatch && stateMatch && catMatch;
+                    });
+                },
+                
+                getCatLabel(catCode) {
+                    const dict = {
+                        'physical': {ms: 'Fizikal', en: 'Physical'},
+                        'visual': {ms: 'Penglihatan', en: 'Visual'},
+                        'hearing': {ms: 'Pendengaran', en: 'Hearing'},
+                        'mental': {ms: 'Mental', en: 'Mental'},
+                        'learning': {ms: 'Pembelajaran', en: 'Learning'},
+                        'autism': {ms: 'Autisme', en: 'Autism'},
+                        'all': {ms: 'Umum', en: 'General'}
+                    };
+                    return dict[catCode] ? dict[catCode][this.lang] : catCode;
+                },
+
+                getBadgeColor(catCode) {
+                    const colors = {
+                        'physical': 'bg-blue-100 text-blue-700',
+                        'visual': 'bg-yellow-100 text-yellow-700',
+                        'hearing': 'bg-green-100 text-green-700',
+                        'mental': 'bg-purple-100 text-purple-700',
+                        'learning': 'bg-pink-100 text-pink-700',
+                        'autism': 'bg-red-100 text-red-700',
+                        'all': 'bg-gray-100 text-gray-700'
+                    };
+                    return colors[catCode] || 'bg-gray-100';
+                },
+
+                sendMessage() {
+                    if(!this.userMsg.trim()) return;
+                    
+                    this.messages.push({ id: Date.now(), text: this.userMsg, sender: 'user' });
+                    
+                    const query = this.userMsg.toLowerCase();
+                    let botResponse = this.lang === 'ms' 
+                        ? 'Maaf, saya masih belajar. Sila cuba cari di bahagian Direktori di atas.' 
+                        : 'Sorry, I am still learning. Please try searching in the Directory above.';
+
+                    if(query.includes('ngo') || query.includes('bantuan')) {
+                        botResponse = this.lang === 'ms' 
+                            ? 'Anda boleh mencari NGO menggunakan kotak carian di atas. Pilih Negeri dan Kategori untuk hasil lebih tepat.'
+                            : 'You can search for NGOs using the search box above. Select State and Category for better results.';
+                    }
+
+                    this.userMsg = '';
+
+                    setTimeout(() => {
+                        this.messages.push({ id: Date.now() + 1, text: botResponse, sender: 'bot' });
+                        this.$nextTick(() => {
+                            const container = document.getElementById('chat-messages');
+                            if (container) container.scrollTop = container.scrollHeight;
+                        });
+                    }, 1000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

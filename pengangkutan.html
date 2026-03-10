@@ -1,0 +1,3922 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengangkutan & Mobiliti - MY OKU SENTRAL</title>
+    <meta name="description" content="Panduan lengkap diskaun pengangkutan awam, lesen memandu, dan cukai jalan untuk OKU.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        transport: { 500: '#10B981', 600: '#059669' }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slow': 'bounce 2s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0284c7; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="transportPage()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+            <div class="flex items-center gap-3 md:gap-6">
+                <a href="index.html" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_home">Utama</a>
+                <a href="#senarai" class="font-bold hover:text-brand-600 transition text-brand-600" x-text="txt[lang].menu_list">Senarai Bantuan</a>
+                <a href="#hubungi" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_contact">Hubungi</a>
+                
+                 <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 px-4 bg-gradient-to-b from-brand-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+        <div class="absolute top-20 left-0 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-green-400/20 rounded-full blur-3xl"></div>
+
+        <div class="container mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 bg-white dark:bg-gray-700 px-4 py-2 rounded-full shadow-md mb-6 border border-gray-100 dark:border-gray-600">
+                <i class="fas fa-bus text-brand-600"></i>
+                <span class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-300" x-text="txt[lang].hero_tag">Mobiliti & Pengangkutan</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight text-gray-900 dark:text-white">
+                <span x-text="txt[lang].hero_title_1">Perjalanan Anda,</span><br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-green-500" x-text="txt[lang].hero_title_2">Lebih Mudah & Jimat.</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10" x-text="txt[lang].hero_desc">
+                Kompilasi lengkap diskaun pengangkutan awam (LRT, MRT, Bas), pengecualian cukai jalan JPJ, dan kemudahan e-hailing untuk pemegang kad OKU.
+            </p>
+        </div>
+    </header>
+
+    <section id="senarai" class="py-16 bg-white dark:bg-gray-900 min-h-screen">
+        <div class="container mx-auto px-4">
+            
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <template x-for="cat in categories">
+                    <button @click="activeCat = cat.id" 
+                            class="px-6 py-3 rounded-full font-bold text-sm transition-all border-2 flex items-center gap-2"
+                            :class="activeCat === cat.id ? 'bg-brand-600 border-brand-600 text-white shadow-xl scale-105' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-brand-400'">
+                        <i :class="cat.icon"></i> <span x-text="cat.label[lang]"></span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <template x-for="item in filteredTransport" :key="item.id">
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-2xl hover:-translate-y-2 transition duration-300 relative overflow-hidden flex flex-col h-full">
+                        
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-brand-50 dark:bg-gray-700 rounded-bl-[100px] -mr-8 -mt-8 transition group-hover:bg-brand-100 dark:group-hover:bg-gray-600"></div>
+                        
+                        <div class="relative z-10 mb-6 flex justify-between items-start">
+                            <div class="w-14 h-14 rounded-2xl bg-white dark:bg-gray-700 shadow-md flex items-center justify-center text-2xl text-brand-600 border border-gray-100 dark:border-gray-600">
+                                <i :class="item.icon"></i>
+                            </div>
+                            <span class="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wide" x-text="item.discount[lang]"></span>
+                        </div>
+
+                        <div class="flex-1 relative z-10">
+                            <h3 class="text-xl font-black mb-2 text-gray-900 dark:text-white" x-text="item.name[lang]"></h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 leading-relaxed" x-text="item.desc[lang]"></p>
+                            
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-6">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase mb-2" x-text="txt[lang].lbl_benefits">Manfaat Utama:</p>
+                                <ul class="space-y-2">
+                                    <template x-for="benefit in item.benefits">
+                                        <li class="flex items-start gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200">
+                                            <i class="fas fa-check-circle text-brand-500 mt-0.5"></i>
+                                            <span x-text="benefit[lang]"></span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <a :href="item.link" target="_blank" class="relative z-10 w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-bold text-center transition flex items-center justify-center gap-2 group-hover:shadow-lg">
+                            <span x-text="txt[lang].btn_visit">Laman Web Rasmi</span> <i class="fas fa-external-link-alt"></i>
+                        </a>
+
+                    </div>
+                </template>
+            </div>
+            
+            <div x-show="filteredTransport.length === 0" class="text-center py-20">
+                <div class="inline-block p-6 rounded-full bg-gray-100 dark:bg-gray-800 mb-4 text-gray-400 text-4xl">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-500" x-text="txt[lang].no_data">Tiada data dijumpai.</h3>
+            </div>
+            
+            <div class="mt-20 bg-gradient-to-r from-blue-900 to-brand-900 rounded-3xl p-8 md:p-12 text-white text-center relative overflow-hidden shadow-2xl">
+                <i class="fas fa-id-card absolute -left-10 -bottom-10 text-9xl text-white/10 rotate-12"></i>
+                <div class="relative z-10 max-w-3xl mx-auto">
+                    <h2 class="text-3xl font-black mb-4" x-text="txt[lang].reminder_title">Peringatan Penting!</h2>
+                    <p class="text-blue-100 text-lg mb-8" x-text="txt[lang].reminder_desc">Pastikan anda sentiasa membawa Kad OKU JKM yang sah (Original) semasa menggunakan perkhidmatan pengangkutan awam untuk pengesahan oleh pegawai bertugas.</p>
+                    <a href="daftar.html" class="bg-white text-brand-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg inline-flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i> <span x-text="txt[lang].btn_check_card">Semak Info Kad OKU</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer id="hubungi" class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400">Halaman Utama</a></li>
+                    <li><a href="daftar.html" class="hover:text-brand-400">Pendaftaran JKM</a></li>
+                    <li><a href="kewangan.html" class="hover:text-brand-400">Bantuan Kewangan</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> info@jkm.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">OKU Transport Bot</h4>
+                        <span class="text-[10px] opacity-80 block">Online</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dots text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function transportPage() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+                activeCat: 'all',
+                
+                // Chat Data
+                chatOpen: false,
+                userMsg: '',
+                messages: [
+                    { id: 1, text: 'Hai! 🚆 Nak tahu pasal diskaun <b>RapidKL</b>, <b>KTMB</b> atau <b>Cukai Jalan Percuma</b>?', sender: 'bot' }
+                ],
+
+                // Data Text UI
+                 txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        menu_home: 'Utama',
+                        menu_list: 'Senarai Bantuan',
+                        menu_contact: 'Hubungi',
+                        btn_settings: 'Akses',
+                        hero_tag: 'Mobiliti & Pengangkutan',
+                        hero_title_1: 'Perjalanan Anda,',
+                        hero_title_2: 'Lebih Mudah & Jimat.',
+                        hero_desc: 'Kompilasi lengkap diskaun pengangkutan awam (LRT, MRT, Bas), pengecualian cukai jalan JPJ, dan kemudahan e-hailing untuk pemegang kad OKU.',
+                        lbl_benefits: 'MANFAAT UTAMA:',
+                        btn_visit: 'Laman Web Rasmi',
+                        no_data: 'Tiada data dalam kategori ini.',
+                        reminder_title: 'Peringatan Penting!',
+                        reminder_desc: 'Pastikan anda sentiasa membawa Kad OKU JKM yang sah (Original) semasa menggunakan perkhidmatan pengangkutan awam untuk pengesahan oleh pegawai bertugas.',
+                        btn_check_card: 'Semak Info Kad OKU',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Taip soalan anda...',
+                        cat_all: 'Semua',
+                        cat_land: 'Awam Darat',
+                        cat_road: 'Kenderaan',
+                        cat_air: 'Udara',
+                        cat_ehailing: 'E-Hailing'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        menu_home: 'Home',
+                        menu_list: 'Aid List',
+                        menu_contact: 'Contact',
+                        btn_settings: 'Access',
+                        hero_tag: 'Mobility & Transport',
+                        hero_title_1: 'Your Journey,',
+                        hero_title_2: 'Easier & Cheaper.',
+                        hero_desc: 'Complete compilation of public transport discounts (LRT, MRT, Bus), JPJ road tax exemptions, and e-hailing facilities for PWD cardholders.',
+                        lbl_benefits: 'KEY BENEFITS:',
+                        btn_visit: 'Official Website',
+                        no_data: 'No data in this category.',
+                        reminder_title: 'Important Reminder!',
+                        reminder_desc: 'Please ensure you always carry your valid JKM PWD Card (Original) when using public transport services for verification by officers.',
+                        btn_check_card: 'Check Card Info',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Type your question...',
+                        cat_all: 'All',
+                        cat_land: 'Public Transport',
+                        cat_road: 'Vehicle & JPJ',
+                        cat_air: 'Airlines',
+                        cat_ehailing: 'E-Hailing'
+                    }
+                },
+
+                // Categories
+                categories: [
+                    { id: 'all', icon: 'fas fa-th', label: { ms: 'Semua', en: 'All' } },
+                    { id: 'land', icon: 'fas fa-train', label: { ms: 'Awam Darat (Rel/Bas)', en: 'Public Transport' } },
+                    { id: 'road', icon: 'fas fa-car', label: { ms: 'JPJ & Kenderaan', en: 'JPJ & Vehicle' } },
+                    { id: 'ehailing', icon: 'fas fa-mobile-alt', label: { ms: 'E-Hailing', en: 'E-Hailing' } },
+                    { id: 'air', icon: 'fas fa-plane', label: { ms: 'Penerbangan', en: 'Airlines' } },
+                ],
+
+                // DATABASE TRANSPORT
+              // DATABASE TRANSPORT (UPDATED - AWAM DARAT MASSIVE)
+transportData: [
+  // =========================
+  // LAND (AWAM DARAT)
+  // =========================
+  {
+    id: 1,
+    cat: 'land',
+    icon: 'fas fa-train',
+    name: { ms: 'Prasarana (MyRapid) - Kad Konsesi OKU', en: 'Prasarana (MyRapid) - PWD Concession Card' },
+    desc: { ms: 'Kad konsesi untuk menikmati tambang diskaun Rapid KL (LRT, MRT, Monorel, BRT & bas).', en: 'Concession card for discounted Rapid KL fares (LRT, MRT, Monorail, BRT & buses).' },
+    discount: { ms: 'Diskaun Konsesi', en: 'Concession Discount' },
+    benefits: [
+      { ms: 'Diskaun tambang untuk rangkaian Rapid KL', en: 'Discounted fares across Rapid KL network' },
+      { ms: 'Boleh digunakan pada LRT/MRT/Monorel/BRT/Bas RapidKL', en: 'Usable on LRT/MRT/Monorail/BRT/RapidKL buses' },
+      { ms: 'Perlu Kad OKU JKM untuk pendaftaran', en: 'JKM PWD Card required for registration' }
+    ],
+    link: 'https://myrapid.com.my/pass/myrapid-concession-card/'
+  },
+  {
+    id: 2,
+    cat: 'land',
+    icon: 'fas fa-subway',
+    name: { ms: 'Rapid KL - LRT', en: 'Rapid KL - LRT' },
+    desc: { ms: 'Perkhidmatan LRT dengan kemudahan mesra OKU di kebanyakan stesen utama.', en: 'LRT service with PWD-friendly facilities at most major stations.' },
+    discount: { ms: 'Ikut Kad Konsesi', en: 'Via Concession Card' },
+    benefits: [
+      { ms: 'Lif/eskalator & laluan akses OKU', en: 'Lifts/escalators & accessible routes' },
+      { ms: 'Kaunter/staf bantuan di stesen terpilih', en: 'Counter/staff assistance at selected stations' },
+      { ms: 'Pengumuman audio & papan info', en: 'Audio announcements & info displays' }
+    ],
+    link: 'https://myrapid.com.my/'
+  },
+  {
+    id: 3,
+    cat: 'land',
+    icon: 'fas fa-subway',
+    name: { ms: 'Rapid KL - MRT', en: 'Rapid KL - MRT' },
+    desc: { ms: 'Rangkaian MRT dengan akses OKU (lif, ramp) dan ruang khas pengguna kerusi roda.', en: 'MRT network with PWD access (lifts, ramps) and wheelchair spaces.' },
+    discount: { ms: 'Ikut Kad Konsesi', en: 'Via Concession Card' },
+    benefits: [
+      { ms: 'Lif & ramp di stesen', en: 'Lifts & ramps at stations' },
+      { ms: 'Ruang kerusi roda dalam tren', en: 'Wheelchair spaces inside trains' },
+      { ms: 'Pintu automatik & platform luas', en: 'Automatic doors & wide platforms' }
+    ],
+    link: 'https://myrapid.com.my/'
+  },
+  {
+    id: 4,
+    cat: 'land',
+    icon: 'fas fa-train-tram',
+    name: { ms: 'Rapid KL - Monorel', en: 'Rapid KL - Monorail' },
+    desc: { ms: 'Monorel dalam bandar dengan stesen mesra OKU di lokasi tertentu.', en: 'City monorail with PWD-friendly stations at certain locations.' },
+    discount: { ms: 'Ikut Kad Konsesi', en: 'Via Concession Card' },
+    benefits: [
+      { ms: 'Akses lif di stesen terpilih', en: 'Lift access at selected stations' },
+      { ms: 'Kaunter bantuan', en: 'Assistance counter' },
+      { ms: 'Sesuai perjalanan dalam pusat bandar', en: 'Suitable for city-center travel' }
+    ],
+    link: 'https://myrapid.com.my/'
+  },
+  {
+    id: 5,
+    cat: 'land',
+    icon: 'fas fa-bus',
+    name: { ms: 'Rapid KL - Bas Bandar', en: 'Rapid KL - City Bus' },
+    desc: { ms: 'Bas bandar RapidKL di kawasan Lembah Klang dengan kemudahan akses di laluan tertentu.', en: 'RapidKL city buses in Klang Valley with accessibility on certain routes.' },
+    discount: { ms: 'Ikut Kad Konsesi', en: 'Via Concession Card' },
+    benefits: [
+      { ms: 'Boleh gunakan kad konsesi Rapid', en: 'Use Rapid concession card' },
+      { ms: 'Sambungan ke LRT/MRT/Monorel', en: 'Connections to LRT/MRT/Monorail' },
+      { ms: 'Sesetengah bas ada ruang OKU', en: 'Some buses have PWD space' }
+    ],
+    link: 'https://myrapid.com.my/'
+  },
+  {
+    id: 6,
+    cat: 'land',
+    icon: 'fas fa-bus-alt',
+    name: { ms: 'Rapid KL - BRT Sunway', en: 'Rapid KL - BRT Sunway' },
+    desc: { ms: 'BRT (Bus Rapid Transit) dengan stesen bertingkat dan akses OKU.', en: 'BRT (Bus Rapid Transit) with elevated stations and PWD access.' },
+    discount: { ms: 'Ikut Kad Konsesi', en: 'Via Concession Card' },
+    benefits: [
+      { ms: 'Akses lif di stesen', en: 'Lift access at stations' },
+      { ms: 'Sambungan ke rangkaian Rapid', en: 'Connects to Rapid network' },
+      { ms: 'Perjalanan lebih cepat di laluan khusus', en: 'Faster travel via dedicated lanes' }
+    ],
+    link: 'https://myrapid.com.my/'
+  },
+  {
+    id: 7,
+    cat: 'land',
+    icon: 'fas fa-subway',
+    name: { ms: 'KTMB - Komuter', en: 'KTMB - Komuter' },
+    desc: { ms: 'Perkhidmatan komuter di Lembah Klang & beberapa laluan lain.', en: 'Commuter train service in Klang Valley & some other routes.' },
+    discount: { ms: 'Diskaun OKU', en: 'PWD Discount' },
+    benefits: [
+      { ms: 'Diskaun tambang untuk OKU (tertakluk syarat)', en: 'Discounted fares for PWD (terms apply)' },
+      { ms: 'Perlu kad OKU untuk pengesahan', en: 'PWD card required for verification' },
+      { ms: 'Sesuai ulang-alik harian', en: 'Suitable for daily commuting' }
+    ],
+    link: 'https://online.ktmb.com.my/'
+  },
+  {
+    id: 8,
+    cat: 'land',
+    icon: 'fas fa-train',
+    name: { ms: 'KTMB - ETS', en: 'KTMB - ETS' },
+    desc: { ms: 'Keretapi laju antara bandar (ETS) untuk perjalanan jauh.', en: 'Intercity high-speed train (ETS) for long-distance travel.' },
+    discount: { ms: 'Diskaun OKU', en: 'PWD Discount' },
+    benefits: [
+      { ms: 'Diskaun tiket ETS (tertakluk syarat)', en: 'ETS ticket discount (terms apply)' },
+      { ms: 'Tempahan online & kaunter', en: 'Booking online & at counters' },
+      { ms: 'Bantuan khas boleh diminta awal', en: 'Special assistance can be requested early' }
+    ],
+    link: 'https://online.ktmb.com.my/'
+  },
+  {
+    id: 9,
+    cat: 'land',
+    icon: 'fas fa-train',
+    name: { ms: 'KTMB - Intercity', en: 'KTMB - Intercity' },
+    desc: { ms: 'Perkhidmatan keretapi antara bandar untuk laluan tertentu.', en: 'Intercity train service for selected routes.' },
+    discount: { ms: 'Diskaun OKU', en: 'PWD Discount' },
+    benefits: [
+      { ms: 'Sesuai untuk perjalanan rentas negeri', en: 'Suitable for interstate travel' },
+      { ms: 'Semak jadual di portal KTMB', en: 'Check schedules on KTMB portal' },
+      { ms: 'Tunjuk kad OKU semasa pembelian', en: 'Show PWD card during purchase' }
+    ],
+    link: 'https://online.ktmb.com.my/'
+  },
+  {
+    id: 10,
+    cat: 'land',
+    icon: 'fas fa-bus-alt',
+    name: { ms: 'Bas Ekspres - Terminal Bersepadu Selatan (TBS)', en: 'Express Bus - Terminal Bersepadu Selatan (TBS)' },
+    desc: { ms: 'Terminal utama bas ekspres dengan kemudahan akses & kaunter tiket.', en: 'Major express bus terminal with accessibility facilities & ticket counters.' },
+    discount: { ms: 'Bergantung Operator', en: 'Depends on Operator' },
+    benefits: [
+      { ms: 'Kemudahan lif/ramp di terminal', en: 'Lifts/ramps at terminal' },
+      { ms: 'Kaunter tiket pelbagai syarikat', en: 'Multiple operators ticket counters' },
+      { ms: 'Semak diskaun OKU di kaunter', en: 'Check PWD discount at counter' }
+    ],
+    link: 'https://www.tbsbts.com.my/'
+  },
+  {
+    id: 11,
+    cat: 'land',
+    icon: 'fas fa-bus',
+    name: { ms: 'Bas Bandar - Pihak Berkuasa Tempatan (PBT)', en: 'City Bus - Local Authorities (PBT)' },
+    desc: { ms: 'Sesetengah bandar ada bas bandar/percuma PBT dengan kemudahan tertentu.', en: 'Some cities have local/ free buses by authorities with certain facilities.' },
+    discount: { ms: 'Ikut Negeri/Bandar', en: 'By State/City' },
+    benefits: [
+      { ms: 'Ada laluan bas percuma di bandar tertentu', en: 'Free bus routes in some cities' },
+      { ms: 'Semak syarat di laman PBT setempat', en: 'Check terms on local authority website' },
+      { ms: 'Sesuai untuk urusan dalam bandar', en: 'Good for intra-city errands' }
+    ],
+    link: 'https://www.malaysia.gov.my/portal/index'
+  },
+  {
+    id: 12,
+    cat: 'land',
+    icon: 'fas fa-ship',
+    name: { ms: 'Feri - Terminal Jeti (Pulau/Antara Bandar)', en: 'Ferry - Jetty Terminals (Island/Intercity)' },
+    desc: { ms: 'Perjalanan feri untuk laluan tertentu (contoh: pulau/penyeberangan).', en: 'Ferry services for certain routes (e.g., islands/crossings).' },
+    discount: { ms: 'Bergantung Operator', en: 'Depends on Operator' },
+    benefits: [
+      { ms: 'Semak polisi OKU di kaunter/laman operator', en: 'Check PWD policy at counter/operator site' },
+      { ms: 'Ruang duduk & akses naik feri berbeza ikut jeti', en: 'Seating/boarding access varies by jetty' },
+      { ms: 'Datang awal untuk bantuan staf', en: 'Arrive early for staff assistance' }
+    ],
+    link: 'https://www.malaysia.gov.my/portal/index'
+  },
+  {
+    id: 13,
+    cat: 'land',
+    icon: 'fas fa-bus',
+    name: { ms: 'Bas Pengantara (Feeder) ke Stesen Rel', en: 'Feeder Bus to Rail Stations' },
+    desc: { ms: 'Bas pengantara untuk sambungan dari kawasan perumahan ke stesen rel.', en: 'Feeder buses connecting residential areas to rail stations.' },
+    discount: { ms: 'Ikut Kad Konsesi', en: 'Via Concession Card' },
+    benefits: [
+      { ms: 'Mudahkan sambungan “last mile”', en: 'Helps with last-mile connectivity' },
+      { ms: 'Sebahagian laluan terintegrasi dengan Rapid', en: 'Some routes integrated with Rapid' },
+      { ms: 'Semak laluan & jadual operator', en: 'Check routes & operator schedules' }
+    ],
+    link: 'https://myrapid.com.my/'
+  },
+  {
+    id: 14,
+    cat: 'land',
+    icon: 'fas fa-taxi',
+    name: { ms: 'Teksi (Kaunter/Telefon)', en: 'Taxi (Counter/Call)' },
+    desc: { ms: 'Teksi biasa untuk perjalanan yang memerlukan bantuan pintu-ke-pintu.', en: 'Regular taxis for door-to-door trips needing assistance.' },
+    discount: { ms: 'Ikut Operator', en: 'By Operator' },
+    benefits: [
+      { ms: 'Boleh minta bantuan pemandu (ikut kesesuaian)', en: 'May request driver assistance (subject to suitability)' },
+      { ms: 'Sesuai untuk lokasi tanpa e-hailing', en: 'Useful where e-hailing is limited' },
+      { ms: 'Bincang kadar sebelum bergerak', en: 'Confirm fare before departure' }
+    ],
+    link: 'https://www.malaysia.gov.my/portal/index'
+  },
+
+  // =========================
+  // ROAD (JPJ & VEHICLE)
+  // =========================
+  {
+    id: 15,
+    cat: 'road',
+    icon: 'fas fa-file-invoice',
+    name: { ms: 'JPJ - Pengecualian Cukai Jalan (LKM)', en: 'JPJ - Road Tax (LKM) Exemption' },
+    desc: { ms: 'Pengecualian bayaran Cukai Jalan untuk kenderaan milik OKU yang layak.', en: 'Road tax payment exemption for eligible PWD-owned vehicles.' },
+    discount: { ms: 'Percuma (100%)', en: 'Free (100%)' },
+    benefits: [
+      { ms: 'Pengecualian 100% LKM', en: '100% LKM exemption' },
+      { ms: 'Tertakluk syarat & dokumen sokongan', en: 'Subject to terms & supporting documents' },
+      { ms: 'Permohonan di kaunter JPJ', en: 'Apply at JPJ counter' }
+    ],
+    link: 'https://www.jpj.gov.my/'
+  },
+  {
+    id: 16,
+    cat: 'road',
+    icon: 'fas fa-id-card-clip',
+    name: { ms: 'JPJ - Lesen Memandu (Kadar Khas)', en: 'JPJ - Driving License (Special Rate)' },
+    desc: { ms: 'Kemudahan kadar/yuran tertentu untuk kategori OKU tertentu (tertakluk pekeliling/garis panduan).', en: 'Special fee/rate facilities for certain PWD categories (subject to guidelines).' },
+    discount: { ms: 'Yuran Khas', en: 'Special Fees' },
+    benefits: [
+      { ms: 'Semakan kelayakan di JPJ', en: 'Eligibility check at JPJ' },
+      { ms: 'Dokumen perubatan mungkin diperlukan', en: 'Medical documents may be required' },
+      { ms: 'Kaunter JPJ untuk pengesahan', en: 'JPJ counter verification' }
+    ],
+    link: 'https://www.jpj.gov.my/'
+  },
+  {
+    id: 17,
+    cat: 'road',
+    icon: 'fas fa-car',
+    name: { ms: 'Pengecualian Duti Eksais (Pembelian Kenderaan)', en: 'Excise Duty Exemption (Vehicle Purchase)' },
+    desc: { ms: 'Kemudahan pengecualian duti eksais untuk pembelian kenderaan pertama (tertakluk syarat).', en: 'Excise duty exemption facility for first vehicle purchase (terms apply).' },
+    discount: { ms: 'Pengecualian', en: 'Exemption' },
+    benefits: [
+      { ms: 'Tertakluk syarat MOF/agensi berkaitan', en: 'Subject to MOF/related agency terms' },
+      { ms: 'Dokumen OKU & sokongan diperlukan', en: 'PWD and supporting documents required' },
+      { ms: 'Rujuk info rasmi sebelum memohon', en: 'Refer to official info before applying' }
+    ],
+    link: 'https://www.mof.gov.my/ms/'
+  },
+
+  // =========================
+  // E-HAILING
+  // =========================
+  {
+    id: 18,
+    cat: 'ehailing',
+    icon: 'fab fa-grab',
+    name: { ms: 'Grab (GrabAssist)', en: 'Grab (GrabAssist)' },
+    desc: { ms: 'Perkhidmatan e-hailing dengan pilihan bantuan untuk OKU (ikut ketersediaan kawasan).', en: 'E-hailing service with assistance option for PWD (availability depends on area).' },
+    discount: { ms: 'Kadar/Promo', en: 'Rates/Promos' },
+    benefits: [
+      { ms: 'Boleh maklumkan keperluan bantuan dalam app', en: 'You can state assistance needs in the app' },
+      { ms: 'Sesuai untuk perjalanan pintu-ke-pintu', en: 'Good for door-to-door trips' },
+      { ms: 'Semak promo kod berkala', en: 'Check periodic promo codes' }
+    ],
+    link: 'https://www.grab.com/my/transport/assist/'
+  },
+  {
+    id: 19,
+    cat: 'ehailing',
+    icon: 'fas fa-mobile-alt',
+    name: { ms: 'E-Hailing - Nota Keperluan OKU', en: 'E-Hailing - PWD Notes & Needs' },
+    desc: { ms: 'Tip penting semasa tempahan e-hailing: maklumkan keperluan, lokasi pickup jelas, dan bawa kad OKU jika perlu.', en: 'Important tips when booking: state needs, clear pickup location, and carry PWD card if required.' },
+    discount: { ms: 'Tips', en: 'Tips' },
+    benefits: [
+      { ms: 'Tulis “nota pemandu” untuk bantuan', en: 'Use “driver notes” for assistance' },
+      { ms: 'Pilih lokasi pickup yang mudah akses', en: 'Choose accessible pickup points' },
+      { ms: 'Tempah awal untuk waktu puncak', en: 'Book earlier during peak hours' }
+    ],
+    link: 'https://www.apad.gov.my/'
+  },
+
+  // =========================
+  // AIRLINES
+  // =========================
+  {
+    id: 20,
+    cat: 'air',
+    icon: 'fas fa-plane-departure',
+    name: { ms: 'Malaysia Airlines - Bantuan Khas', en: 'Malaysia Airlines - Special Assistance' },
+    desc: { ms: 'Permohonan bantuan khas (kerusi roda/boarding) untuk perjalanan udara.', en: 'Request special assistance (wheelchair/boarding) for air travel.' },
+    discount: { ms: 'Bantuan', en: 'Assistance' },
+    benefits: [
+      { ms: 'Boleh mohon bantuan kerusi roda', en: 'Wheelchair assistance available' },
+      { ms: 'Datang awal untuk check-in', en: 'Arrive early for check-in' },
+      { ms: 'Maklumkan keperluan semasa tempahan', en: 'State needs during booking' }
+    ],
+    link: 'https://www.malaysiaairlines.com/my/en.html'
+  },
+  {
+    id: 21,
+    cat: 'air',
+    icon: 'fas fa-plane-up',
+    name: { ms: 'AirAsia - Bantuan Khas (Wheelchair/Assist)', en: 'AirAsia - Special Assistance (Wheelchair/Assist)' },
+    desc: { ms: 'Info bantuan khas untuk penumpang yang perlukan kerusi roda/assist.', en: 'Special assistance info for passengers needing wheelchair/assist.' },
+    discount: { ms: 'Bantuan', en: 'Assistance' },
+    benefits: [
+      { ms: 'Prosedur bantuan boleh disemak di laman sokongan', en: 'Procedures available on support site' },
+      { ms: 'Boarding awal (ikut keadaan)', en: 'Priority boarding (subject to conditions)' },
+      { ms: 'Maklumkan awal semasa tempahan', en: 'Inform early during booking' }
+    ],
+    link: 'https://support.airasia.com/'
+  },
+  // =========================
+// EXTRA MASTER DATA (22-90)
+// FOCUS: LAND (AWAM DARAT)
+// =========================
+{
+  id: 22,
+  cat: 'land',
+  icon: 'fas fa-id-card',
+  name: { ms: 'MyRapid - Proses Pendaftaran Kad Konsesi OKU', en: 'MyRapid - PWD Concession Registration Process' },
+  desc: { ms: 'Rujukan langkah umum untuk daftar kad konsesi: dokumen, lokasi kaunter, dan semakan status.', en: 'General guide to register: required documents, counter locations, and status checking.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Senarai dokumen asas (Kad OKU, IC)', en: 'Basic documents list (PWD card, ID)' },
+    { ms: 'Semak lokasi kaunter perkhidmatan', en: 'Check service counter locations' },
+    { ms: 'Elak tersalah prosedur semasa daftar', en: 'Avoid registration mistakes' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 23,
+  cat: 'land',
+  icon: 'fas fa-person-walking',
+  name: { ms: 'Akses Stesen - Lif, Ramp & Laluan OKU', en: 'Station Access - Lifts, Ramps & PWD Routes' },
+  desc: { ms: 'Panduan ringkas kemudahan akses di stesen rel: lif, ramp, pintu masuk, dan bantuan staf.', en: 'Quick guide on station accessibility: lifts, ramps, entrances, and staff assistance.' },
+  discount: { ms: 'Kemudahan', en: 'Facility' },
+  benefits: [
+    { ms: 'Kurangkan risiko tersesat dalam stesen', en: 'Reduce chances of getting lost in stations' },
+    { ms: 'Cari laluan paling mudah untuk pengguna OKU', en: 'Find easier routes for PWD users' },
+    { ms: 'Boleh minta bantuan di kaunter', en: 'Request help at counters' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 24,
+  cat: 'land',
+  icon: 'fas fa-volume-up',
+  name: { ms: 'Pengumuman Audio & Visual (Rel Awam)', en: 'Audio & Visual Announcements (Public Rail)' },
+  desc: { ms: 'Maklumat untuk pengguna kurang penglihatan/pendengaran: papan info, audio, dan petunjuk arah.', en: 'Info for visually/hearing-impaired users: displays, audio prompts, and wayfinding.' },
+  discount: { ms: 'Akses', en: 'Accessibility' },
+  benefits: [
+    { ms: 'Memudahkan pengguna kurang penglihatan', en: 'Helps visually impaired users' },
+    { ms: 'Paparan destinasi & stesen seterusnya', en: 'Shows destination & next station' },
+    { ms: 'Kurangkan salah turun stesen', en: 'Reduces wrong-stop exits' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 25,
+  cat: 'land',
+  icon: 'fas fa-wheelchair',
+  name: { ms: 'Ruang Kerusi Roda Dalam Tren', en: 'Wheelchair Spaces Inside Trains' },
+  desc: { ms: 'Sesetengah tren ada ruang khas kerusi roda & kawasan berdiri yang lebih luas.', en: 'Some trains have wheelchair spaces and wider standing areas.' },
+  discount: { ms: 'Kemudahan', en: 'Facility' },
+  benefits: [
+    { ms: 'Lebih selamat untuk pengguna kerusi roda', en: 'Safer for wheelchair users' },
+    { ms: 'Mudah masuk/keluar ketika pintu dibuka', en: 'Easier boarding/alighting' },
+    { ms: 'Kurangkan kesesakan di pintu', en: 'Reduces door congestion' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 26,
+  cat: 'land',
+  icon: 'fas fa-person-shelter',
+  name: { ms: 'Keutamaan Tempat Duduk (Awam Darat)', en: 'Priority Seating (Public Transport)' },
+  desc: { ms: 'Amalan tempat duduk keutamaan untuk OKU, warga emas, ibu mengandung (ikut keadaan).', en: 'Priority seating practice for PWD, elderly, pregnant passengers (subject to situation).' },
+  discount: { ms: 'Etika', en: 'Etiquette' },
+  benefits: [
+    { ms: 'Bantu perjalanan lebih selesa', en: 'Makes travel more comfortable' },
+    { ms: 'Kurangkan risiko jatuh ketika tren/bus bergerak', en: 'Reduces fall risk while moving' },
+    { ms: 'Boleh minta bantuan staf jika perlu', en: 'Ask staff help if needed' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+{
+  id: 27,
+  cat: 'land',
+  icon: 'fas fa-clock',
+  name: { ms: 'Tip Waktu Perjalanan - Elak Waktu Puncak', en: 'Travel Timing Tips - Avoid Peak Hours' },
+  desc: { ms: 'Cadangan untuk OKU: pilih waktu kurang sesak untuk pengalaman lebih selamat.', en: 'Suggestion for PWD: travel during off-peak for safer experience.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurang kesesakan & tolak-menolak', en: 'Less crowding & pushing' },
+    { ms: 'Lebih mudah minta bantuan staf', en: 'Easier to get staff help' },
+    { ms: 'Lebih ruang untuk kerusi roda', en: 'More space for wheelchair' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 28,
+  cat: 'land',
+  icon: 'fas fa-map-location-dot',
+  name: { ms: 'Rancang Laluan - Peta & Pertukaran Laluan', en: 'Route Planning - Maps & Interchanges' },
+  desc: { ms: 'Gunakan perancang laluan untuk kurangkan pertukaran (transfer) dan jarak berjalan.', en: 'Use route planner to reduce transfers and walking distance.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Kurangkan keletihan', en: 'Reduces fatigue' },
+    { ms: 'Elak pertukaran laluan yang jauh', en: 'Avoid long interchanges' },
+    { ms: 'Lebih mudah sampai destinasi', en: 'Easier arrival to destination' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 29,
+  cat: 'land',
+  icon: 'fas fa-ticket',
+  name: { ms: 'Beli Tiket di Kaunter (OKU)', en: 'Counter Ticket Purchase (PWD)' },
+  desc: { ms: 'Untuk laluan tertentu, pembelian di kaunter memudahkan pengesahan & bantuan.', en: 'For some routes, counter purchase helps verification & assistance.' },
+  discount: { ms: 'Ikut Polisi Semasa', en: 'Subject to Policy' },
+  benefits: [
+    { ms: 'Staf boleh bantu semak kelayakan', en: 'Staff can help verify eligibility' },
+    { ms: 'Kurangkan masalah pembayaran digital', en: 'Reduces digital payment issues' },
+    { ms: 'Boleh tanya laluan paling mesra OKU', en: 'Ask for most accessible route' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+{
+  id: 30,
+  cat: 'land',
+  icon: 'fas fa-person-circle-question',
+  name: { ms: 'Khidmat Bantuan Stesen (Rel)', en: 'Station Assistance Service (Rail)' },
+  desc: { ms: 'Jika perlukan bantuan, maklumkan staf lebih awal (terutama waktu puncak).', en: 'If you need help, notify staff earlier (especially peak hours).' },
+  discount: { ms: 'Bantuan', en: 'Assistance' },
+  benefits: [
+    { ms: 'Bantu proses masuk/keluar stesen', en: 'Helps with entering/exiting stations' },
+    { ms: 'Bantu arah & pertukaran laluan', en: 'Helps directions & transfers' },
+    { ms: 'Lebih selamat untuk pengguna OKU', en: 'Safer for PWD users' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+
+// --- BUS & TERMINAL (GENERAL) ---
+{
+  id: 31,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas Henti-Henti (Bandar/Pinggir Bandar)', en: 'Stage Buses (City/Suburban)' },
+  desc: { ms: 'Bas biasa yang berhenti banyak lokasi. Polisi diskaun OKU bergantung operator/negeri.', en: 'Regular buses with frequent stops. PWD discounts depend on operator/state.' },
+  discount: { ms: 'Tertakluk Polisi Semasa', en: 'Subject to Current Policy' },
+  benefits: [
+    { ms: 'Liputan luas dalam bandar', en: 'Wide coverage in city areas' },
+    { ms: 'Sesuai perjalanan jarak dekat', en: 'Good for short trips' },
+    { ms: 'Semak operator bas setempat', en: 'Check local bus operator' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 32,
+  cat: 'land',
+  icon: 'fas fa-bus-simple',
+  name: { ms: 'Bas Komuniti / Smart Bus (Bandar)', en: 'Community / Smart Bus (City)' },
+  desc: { ms: 'Sebahagian bandar ada bas komuniti/smart bus. Ada yang percuma/berkadar rendah.', en: 'Some cities provide community/smart buses. Some are free/low-cost.' },
+  discount: { ms: 'Ikut Bandar', en: 'By City' },
+  benefits: [
+    { ms: 'Kos rendah untuk urusan harian', en: 'Low cost for daily errands' },
+    { ms: 'Laluan dekat pusat bandar', en: 'Routes near city center' },
+    { ms: 'Semak laman PBT/majlis bandaraya', en: 'Check local council website' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 33,
+  cat: 'land',
+  icon: 'fas fa-building',
+  name: { ms: 'Terminal Bas - Kemudahan OKU', en: 'Bus Terminals - PWD Facilities' },
+  desc: { ms: 'Kemudahan terminal seperti ramp, lif, tandas OKU dan kaunter bantuan (ikut terminal).', en: 'Terminal facilities like ramps, lifts, accessible toilets and help counters (varies by terminal).' },
+  discount: { ms: 'Kemudahan', en: 'Facility' },
+  benefits: [
+    { ms: 'Rancang lokasi tunggu yang selesa', en: 'Plan comfortable waiting spots' },
+    { ms: 'Kurangkan risiko akses yang sukar', en: 'Reduces access difficulty' },
+    { ms: 'Boleh minta bantuan staf terminal', en: 'Terminal staff can assist' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 34,
+  cat: 'land',
+  icon: 'fas fa-hand-holding-heart',
+  name: { ms: 'Hak Penumpang OKU (Pengangkutan Awam)', en: 'PWD Passenger Rights (Public Transport)' },
+  desc: { ms: 'Ringkasan am: layanan adil, bantuan munasabah, dan akses tanpa diskriminasi.', en: 'General summary: fair treatment, reasonable assistance, and non-discriminatory access.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Tahu hak sebelum guna perkhidmatan', en: 'Know your rights before traveling' },
+    { ms: 'Mudah buat aduan jika perlu', en: 'Easier to lodge complaints if needed' },
+    { ms: 'Boleh rujuk agensi berkaitan', en: 'Refer to relevant agencies' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- RAIL SUB-SERVICES (DETAIL) ---
+{
+  id: 35,
+  cat: 'land',
+  icon: 'fas fa-route',
+  name: { ms: 'Pertukaran Laluan (Interchange) - Tip OKU', en: 'Interchange Transfers - PWD Tips' },
+  desc: { ms: 'Cadangan untuk pertukaran: pilih interchange paling dekat, guna lif, dan minta bantuan.', en: 'Transfer tips: choose closest interchange, use lifts, and request assistance.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan jarak berjalan', en: 'Reduces walking distance' },
+    { ms: 'Lebih selamat untuk pengguna mobiliti terhad', en: 'Safer for limited mobility users' },
+    { ms: 'Kurangkan tekanan masa', en: 'Less time pressure' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 36,
+  cat: 'land',
+  icon: 'fas fa-train',
+  name: { ms: 'KTMB - Tempahan Awal untuk Bantuan', en: 'KTMB - Early Request for Assistance' },
+  desc: { ms: 'Untuk perjalanan jauh, buat tempahan awal & maklumkan keperluan bantuan (ikut servis).', en: 'For long trips, book early and state assistance needs (service-dependent).' },
+  discount: { ms: 'Bantuan', en: 'Assistance' },
+  benefits: [
+    { ms: 'Kurangkan risiko kesulitan hari perjalanan', en: 'Reduces day-of-travel issues' },
+    { ms: 'Staf boleh sedia lebih awal', en: 'Staff can prepare earlier' },
+    { ms: 'Lebih tenang untuk penumpang OKU', en: 'More peace of mind for PWD passengers' }
+  ],
+  link: 'https://online.ktmb.com.my/'
+},
+{
+  id: 37,
+  cat: 'land',
+  icon: 'fas fa-person-walking-with-cane',
+  name: { ms: 'OKU Penglihatan - Tip Navigasi Stesen', en: 'Visual Impairment - Station Navigation Tips' },
+  desc: { ms: 'Tip: ikut tactile paving jika ada, guna audio, dan minta bantuan staf jika perlu.', en: 'Tips: follow tactile paving where available, use audio prompts, and ask staff if needed.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko tersalah laluan', en: 'Reduces wrong-route risk' },
+    { ms: 'Lebih yakin ketika bergerak', en: 'More confident movement' },
+    { ms: 'Sesuai untuk stesen sesak', en: 'Useful in crowded stations' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+{
+  id: 38,
+  cat: 'land',
+  icon: 'fas fa-ear-listen',
+  name: { ms: 'OKU Pendengaran - Tip Komunikasi', en: 'Hearing Impairment - Communication Tips' },
+  desc: { ms: 'Tip: guna nota telefon, tunjuk destinasi, dan guna papan info visual.', en: 'Tips: use phone notes, show destination, and rely on visual information boards.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Mudah berkomunikasi dengan staf', en: 'Easier to communicate with staff' },
+    { ms: 'Kurangkan salah faham', en: 'Reduces misunderstandings' },
+    { ms: 'Bantu semasa kecemasan', en: 'Helpful in emergencies' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- ACCESSIBILITY SERVICES / COMPLAINTS ---
+{
+  id: 39,
+  cat: 'land',
+  icon: 'fas fa-comment-medical',
+  name: { ms: 'Saluran Aduan Pengangkutan Awam', en: 'Public Transport Complaint Channels' },
+  desc: { ms: 'Jika berlaku diskriminasi/masalah akses, simpan bukti & buat aduan melalui saluran rasmi.', en: 'If discrimination/access issues happen, keep evidence and report via official channels.' },
+  discount: { ms: 'Aduan', en: 'Complaint' },
+  benefits: [
+    { ms: 'Bantu tingkatkan kualiti perkhidmatan', en: 'Helps improve service quality' },
+    { ms: 'Rekodkan insiden untuk tindakan susulan', en: 'Records incidents for follow-up' },
+    { ms: 'Rujuk agensi berkaitan', en: 'Refer to relevant agencies' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 40,
+  cat: 'land',
+  icon: 'fas fa-triangle-exclamation',
+  name: { ms: 'Kecemasan Dalam Pengangkutan Awam', en: 'Emergency on Public Transport' },
+  desc: { ms: 'Tip keselamatan: kenal pasti butang kecemasan, maklumkan staf, dan kekal tenang.', en: 'Safety tips: know emergency buttons, inform staff, and stay calm.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan panik semasa kecemasan', en: 'Reduces panic during emergencies' },
+    { ms: 'Mudah dapat bantuan', en: 'Get help faster' },
+    { ms: 'Sesuai untuk semua kategori OKU', en: 'Suitable for all PWD categories' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+
+// --- MORE LAND OPTIONS (GENERIC BUT USEFUL) ---
+{
+  id: 41,
+  cat: 'land',
+  icon: 'fas fa-people-group',
+  name: { ms: 'Perjalanan Berkumpulan - Tips OKU', en: 'Group Travel - PWD Tips' },
+  desc: { ms: 'Jika OKU bergerak beramai-ramai, buat perancangan: waktu, akses, dan “meeting point”.', en: 'If traveling in groups, plan time, accessibility, and meeting points.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko tertinggal', en: 'Reduces getting separated' },
+    { ms: 'Lebih mudah dapat bantuan rakan', en: 'Easier to get help from friends' },
+    { ms: 'Sesuai untuk aktiviti komuniti', en: 'Good for community activities' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 42,
+  cat: 'land',
+  icon: 'fas fa-briefcase-medical',
+  name: { ms: 'Bawa Ubat/Alat Sokongan Semasa Travel', en: 'Carry Medication/Support Equipment While Traveling' },
+  desc: { ms: 'Pastikan ubat/alatan (tongkat, brace, dll) mudah dicapai semasa perjalanan.', en: 'Keep meds/equipment (cane, brace, etc.) easily accessible during travel.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko kecemasan kesihatan', en: 'Reduces health emergency risk' },
+    { ms: 'Lebih bersedia jika penat', en: 'Better prepared when fatigued' },
+    { ms: 'Sesuai untuk perjalanan jauh', en: 'Useful for long trips' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 43,
+  cat: 'land',
+  icon: 'fas fa-location-crosshairs',
+  name: { ms: 'Lokasi Pickup Mesra OKU (Bas/Rel)', en: 'Accessible Pickup Points (Bus/Rail)' },
+  desc: { ms: 'Pilih lokasi yang ada ramp/ruang luas dan kurang trafik untuk memudahkan naik turun.', en: 'Choose ramps/wide areas with less traffic for easier boarding.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Lebih selamat semasa naik turun', en: 'Safer boarding/alighting' },
+    { ms: 'Kurang risiko dilanggar kenderaan', en: 'Lower traffic collision risk' },
+    { ms: 'Sesuai untuk kerusi roda', en: 'Wheelchair-friendly' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+
+// --- ADD MANY “CITY SMART BUS” TEMPLATES (CAN BE KEPT GENERAL) ---
+{
+  id: 44,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas Komuniti - Semak Laluan di Negeri Anda', en: 'Community Bus - Check Routes in Your State' },
+  desc: { ms: 'Setiap negeri/bandar ada inisiatif bas komuniti. Semak laman rasmi kerajaan tempatan.', en: 'Each state/city has community bus initiatives. Check local government websites.' },
+  discount: { ms: 'Ikut Negeri', en: 'By State' },
+  benefits: [
+    { ms: 'Boleh jadi percuma/berkadar rendah', en: 'May be free/low-cost' },
+    { ms: 'Sesuai untuk urusan pejabat/klinik', en: 'Good for office/clinic trips' },
+    { ms: 'Bergantung jadual kawasan', en: 'Depends on local schedules' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 45,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas ke Hospital/Klinik - Tip OKU', en: 'Hospital/Clinic Bus Routes - PWD Tips' },
+  desc: { ms: 'Cari laluan bas yang berhenti dekat hospital/klinik untuk mudahkan rawatan berkala.', en: 'Find bus routes stopping near hospitals/clinics for regular treatments.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan kos pengangkutan rawatan', en: 'Reduces medical travel cost' },
+    { ms: 'Mudah rancang masa temujanji', en: 'Easier appointment planning' },
+    { ms: 'Kurangkan keletihan perjalanan', en: 'Less travel fatigue' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+
+// --- MORE TERMINALS / INTERCITY ---
+{
+  id: 46,
+  cat: 'land',
+  icon: 'fas fa-building-columns',
+  name: { ms: 'Terminal Bas - Minta Bantuan Staf', en: 'Bus Terminal - Request Staff Assistance' },
+  desc: { ms: 'Jika perlukan bantuan (kerusi roda/naik tangga), minta bantuan staf terminal awal.', en: 'If you need help (wheelchair/stairs), request terminal staff early.' },
+  discount: { ms: 'Bantuan', en: 'Assistance' },
+  benefits: [
+    { ms: 'Kurangkan risiko terjatuh', en: 'Reduces fall risk' },
+    { ms: 'Lebih cepat cari platform betul', en: 'Faster to find correct platform' },
+    { ms: 'Sesuai untuk perjalanan jarak jauh', en: 'Good for long-distance travel' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 47,
+  cat: 'land',
+  icon: 'fas fa-suitcase-rolling',
+  name: { ms: 'Perjalanan Jauh (Bas Ekspres) - Tip OKU', en: 'Long Trips (Express Bus) - PWD Tips' },
+  desc: { ms: 'Tempah awal, pilih tempat duduk sesuai, dan maklumkan operator jika perlukan bantuan.', en: 'Book early, choose suitable seats, and inform operator if assistance is needed.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Lebih selesa untuk perjalanan lama', en: 'More comfort for long journeys' },
+    { ms: 'Kurangkan tekanan semasa boarding', en: 'Less stress during boarding' },
+    { ms: 'Lebih selamat untuk OKU mobiliti', en: 'Safer for mobility-related PWD' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+
+// --- MASS “LAND” ITEMS FOR SEARCH (KEYWORDS USERS TYPE) ---
+{
+  id: 48,
+  cat: 'land',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: LRT', en: 'Quick Search: LRT' },
+  desc: { ms: 'Kata kunci untuk carian cepat di page ini: LRT, RapidKL, kad konsesi, stesen mesra OKU.', en: 'Quick keywords for this page: LRT, RapidKL, concession card, accessible stations.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Memudahkan pengguna cari info', en: 'Makes it easier to find info' },
+    { ms: 'Sesuai untuk pengguna baru', en: 'Great for new users' },
+    { ms: 'Kurangkan masa mencari', en: 'Saves time searching' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 49,
+  cat: 'land',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: MRT', en: 'Quick Search: MRT' },
+  desc: { ms: 'Kata kunci: MRT, stesen, lif, ramp, kad konsesi, pertukaran laluan.', en: 'Keywords: MRT, station, lift, ramp, concession card, interchange.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Senang jumpa data berkaitan', en: 'Easier to find related data' },
+    { ms: 'Bantu rancang perjalanan', en: 'Helps plan trips' },
+    { ms: 'Sesuai untuk OKU mobiliti', en: 'Useful for mobility PWD' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 50,
+  cat: 'land',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: Bas', en: 'Quick Search: Bus' },
+  desc: { ms: 'Kata kunci: bas bandar, bas komuniti, terminal bas, bas ekspres, diskaun OKU.', en: 'Keywords: city bus, community bus, bus terminal, express bus, PWD discount.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Cepat cari info bas', en: 'Quickly find bus-related info' },
+    { ms: 'Bantu pilih terminal dan operator', en: 'Helps choose terminal and operator' },
+    { ms: 'Kurangkan kekeliruan', en: 'Reduces confusion' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+
+// --- MORE LAND (FERRY CROSSINGS / WALKABILITY) ---
+{
+  id: 51,
+  cat: 'land',
+  icon: 'fas fa-ship',
+  name: { ms: 'Penyeberangan Feri - Tip Akses OKU', en: 'Ferry Crossings - PWD Accessibility Tips' },
+  desc: { ms: 'Semak akses jeti, ramp, dan bantuan staf. Datang awal untuk urusan boarding.', en: 'Check jetty access, ramps, and staff assistance. Arrive early for boarding.' },
+  discount: { ms: 'Tertakluk Operator', en: 'Operator Dependent' },
+  benefits: [
+    { ms: 'Kurangkan risiko akses sempit', en: 'Reduces narrow-access risk' },
+    { ms: 'Lebih selamat untuk kerusi roda', en: 'Safer for wheelchair users' },
+    { ms: 'Boleh minta bantuan awal', en: 'Request assistance earlier' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 52,
+  cat: 'land',
+  icon: 'fas fa-road',
+  name: { ms: 'Laluan Pejalan Kaki ke Stesen - Tip OKU', en: 'Walkways to Stations - PWD Tips' },
+  desc: { ms: 'Gunakan laluan yang ada ramp dan pencahayaan baik. Elak kawasan gelap/berlubang.', en: 'Use routes with ramps and good lighting. Avoid dark/uneven areas.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko jatuh', en: 'Reduces fall risk' },
+    { ms: 'Lebih yakin untuk bergerak', en: 'More confident mobility' },
+    { ms: 'Sesuai untuk semua pengguna', en: 'Suitable for all users' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+
+// --- ACCESSIBLE TOILET / REST POINTS ---
+{
+  id: 53,
+  cat: 'land',
+  icon: 'fas fa-restroom',
+  name: { ms: 'Tandas OKU di Stesen/Terminal', en: 'Accessible Toilets at Stations/Terminals' },
+  desc: { ms: 'Sebahagian stesen/terminal menyediakan tandas OKU. Semak lokasi sebelum perjalanan jauh.', en: 'Some stations/terminals have accessible toilets. Check locations before long trips.' },
+  discount: { ms: 'Kemudahan', en: 'Facility' },
+  benefits: [
+    { ms: 'Selesa untuk perjalanan panjang', en: 'Comfortable for long trips' },
+    { ms: 'Kurangkan kecemasan ketika travel', en: 'Reduces travel emergencies' },
+    { ms: 'Mudah rancang hentian', en: 'Easier stop planning' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 54,
+  cat: 'land',
+  icon: 'fas fa-chair',
+  name: { ms: 'Ruang Rehat & Tempat Menunggu (Awam Darat)', en: 'Rest Areas & Waiting Zones (Public Transport)' },
+  desc: { ms: 'Cari tempat menunggu yang selamat, tidak menghalang laluan, dan dekat kaunter bantuan.', en: 'Choose safe waiting zones that do not block paths and are near help counters.' },
+  discount: { ms: 'Kemudahan', en: 'Facility' },
+  benefits: [
+    { ms: 'Kurangkan kepenatan', en: 'Reduces fatigue' },
+    { ms: 'Lebih selamat menunggu', en: 'Safer waiting' },
+    { ms: 'Mudah minta bantuan jika perlu', en: 'Easier to get help' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+
+// --- KEEP ADDING MORE “LAND” TO BE REALLY BIG (TEMPLATED BUT USEFUL) ---
+{
+  id: 55,
+  cat: 'land',
+  icon: 'fas fa-shield-heart',
+  name: { ms: 'Keselamatan Escalator & Lif (OKU)', en: 'Escalator & Lift Safety (PWD)' },
+  desc: { ms: 'Tip keselamatan: guna lif jika perlu, pegang pemegang, dan elak rushing.', en: 'Safety tips: use lift when needed, hold handrails, avoid rushing.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko tergelincir', en: 'Reduces slipping risk' },
+    { ms: 'Sesuai untuk OKU fizikal', en: 'Suitable for physical PWD' },
+    { ms: 'Bantu pengguna warga emas juga', en: 'Also helps elderly users' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+{
+  id: 56,
+  cat: 'land',
+  icon: 'fas fa-baby-carriage',
+  name: { ms: 'OKU + Stroller / Anak Kecil (Tips)', en: 'PWD + Stroller/Small Kids (Tips)' },
+  desc: { ms: 'Jika OKU bergerak dengan anak kecil, pilih lif, waktu kurang sesak, dan rancang pertukaran.', en: 'If traveling with kids, use lifts, off-peak hours, and plan transfers.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Lebih selamat untuk anak & OKU', en: 'Safer for kids & PWD' },
+    { ms: 'Kurangkan stress semasa pertukaran', en: 'Less stress during transfers' },
+    { ms: 'Mudah urus perjalanan', en: 'Easier trip management' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 57,
+  cat: 'land',
+  icon: 'fas fa-person-cane',
+  name: { ms: 'OKU Mobiliti - Pilih Platform yang Mudah', en: 'Mobility PWD - Choose Easier Platforms' },
+  desc: { ms: 'Pilih platform yang ada lif dekat pintu masuk dan elak tangga panjang jika boleh.', en: 'Choose platforms with lifts near entrances and avoid long stairs if possible.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan keletihan', en: 'Reduces fatigue' },
+    { ms: 'Lebih selamat', en: 'Safer travel' },
+    { ms: 'Lebih cepat sampai platform', en: 'Faster platform access' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 58,
+  cat: 'land',
+  icon: 'fas fa-cloud-sun-rain',
+  name: { ms: 'Cuaca Buruk - Strategi Travel OKU', en: 'Bad Weather - PWD Travel Strategy' },
+  desc: { ms: 'Bila hujan, lantai licin. Gunakan lif, pegang rail, dan pilih laluan berbumbung.', en: 'During rain, floors are slippery. Use lifts, hold rails, and choose covered routes.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko tergelincir', en: 'Reduces slipping risk' },
+    { ms: 'Lebih selesa untuk pengguna OKU', en: 'More comfortable for PWD' },
+    { ms: 'Mudah rancang laluan alternatif', en: 'Easier alternative planning' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 59,
+  cat: 'land',
+  icon: 'fas fa-bell',
+  name: { ms: 'Maklumkan Keperluan Bantuan Awal (Rel/Bas)', en: 'Inform Assistance Needs Early (Rail/Bus)' },
+  desc: { ms: 'Jika perlukan bantuan khas, maklumkan lebih awal untuk elak masalah ketika boarding.', en: 'If you need special help, inform earlier to avoid boarding issues.' },
+  discount: { ms: 'Bantuan', en: 'Assistance' },
+  benefits: [
+    { ms: 'Staf boleh bersedia', en: 'Staff can prepare' },
+    { ms: 'Kurangkan risiko tertinggal', en: 'Less chance of missing' },
+    { ms: 'Lebih lancar perjalanan', en: 'Smoother trip' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+
+// --- MORE “LAND” ITEMS: DOCUMENTS / PREP ---
+{
+  id: 60,
+  cat: 'land',
+  icon: 'fas fa-folder-open',
+  name: { ms: 'Dokumen Penting Semasa Naik Pengangkutan Awam', en: 'Important Documents When Using Public Transport' },
+  desc: { ms: 'Bawa Kad OKU, IC, dan bukti tempahan (jika ada) untuk memudahkan pengesahan.', en: 'Carry PWD card, ID, and booking proof (if any) for easier verification.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Kurangkan masalah semasa semakan', en: 'Fewer issues during checks' },
+    { ms: 'Mudah minta bantuan di kaunter', en: 'Easier assistance at counters' },
+    { ms: 'Sesuai untuk perjalanan jauh', en: 'Useful for long trips' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- KEYWORD ITEMS FOR SEARCH (MORE) ---
+{
+  id: 61,
+  cat: 'land',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: KTMB', en: 'Quick Search: KTMB' },
+  desc: { ms: 'Kata kunci: KTMB, Komuter, ETS, tiket OKU, bantuan stesen.', en: 'Keywords: KTMB, Komuter, ETS, PWD ticket, station assistance.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Senang cari info berkaitan keretapi', en: 'Easier to find train info' },
+    { ms: 'Bantu rancang trip rentas negeri', en: 'Helps plan interstate trips' },
+    { ms: 'Kurangkan masa google', en: 'Saves time searching' }
+  ],
+  link: 'https://online.ktmb.com.my/'
+},
+{
+  id: 62,
+  cat: 'land',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: Terminal Bas', en: 'Quick Search: Bus Terminal' },
+  desc: { ms: 'Kata kunci: terminal bas, TBS, kaunter tiket, akses OKU, bas ekspres.', en: 'Keywords: bus terminal, TBS, ticket counter, accessibility, express bus.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Senang cari operator & terminal', en: 'Find operators & terminals faster' },
+    { ms: 'Bantu semak polisi diskaun', en: 'Helps check discount policy' },
+    { ms: 'Kurangkan kekeliruan', en: 'Reduces confusion' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+
+// --- “LAND” ITEM: SUPPORT HOTLINES (GENERIC) ---
+{
+  id: 63,
+  cat: 'land',
+  icon: 'fas fa-phone',
+  name: { ms: 'Hubungi Operator Pengangkutan (Rel/Bas)', en: 'Contact Transport Operators (Rail/Bus)' },
+  desc: { ms: 'Jika perlukan bantuan khas, hubungi operator lebih awal untuk semak kemudahan & prosedur.', en: 'If you need special assistance, contact operators earlier to confirm facilities & procedures.' },
+  discount: { ms: 'Bantuan', en: 'Assistance' },
+  benefits: [
+    { ms: 'Elak kejutan hari perjalanan', en: 'Avoid last-minute surprises' },
+    { ms: 'Mudah rancang laluan paling mesra OKU', en: 'Plan most accessible routes' },
+    { ms: 'Boleh semak perubahan jadual', en: 'Check schedule changes' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+
+// --- ADD MORE LAND ITEMS (SAFE, USEFUL, NON-MISLEADING) ---
+{
+  id: 64,
+  cat: 'land',
+  icon: 'fas fa-person-circle-check',
+  name: { ms: 'Etika Staf: Bantuan Munasabah untuk OKU', en: 'Staff Etiquette: Reasonable Assistance for PWD' },
+  desc: { ms: 'Perkhidmatan yang baik termasuk bantuan munasabah tanpa memalukan pengguna OKU.', en: 'Good service includes reasonable help without embarrassing PWD users.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Wujudkan suasana inklusif', en: 'Creates inclusive environment' },
+    { ms: 'Kurangkan stigma', en: 'Reduces stigma' },
+    { ms: 'Bantu pengguna OKU rasa selamat', en: 'Helps PWD users feel safe' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 65,
+  cat: 'land',
+  icon: 'fas fa-user-friends',
+  name: { ms: 'Rakan/Peneman Perjalanan (OKU)', en: 'Travel Companion (PWD)' },
+  desc: { ms: 'Jika anda perlukan peneman, rancang “meeting point” dan kongsi lokasi secara selamat.', en: 'If you need a companion, plan meeting points and share location safely.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko sesat', en: 'Lower risk of getting lost' },
+    { ms: 'Lebih mudah urus pertukaran laluan', en: 'Easier transfers' },
+    { ms: 'Bantu ketika kecemasan', en: 'Helpful in emergencies' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 66,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas Sekolah/Institusi (Khas) - Rujukan Umum', en: 'School/Institution Buses (Special) - General Reference' },
+  desc: { ms: 'Sesetengah institusi menyediakan bas khas/akses. Semak dengan sekolah/agensi.', en: 'Some institutions provide special/accessible buses. Confirm with the institution.' },
+  discount: { ms: 'Ikut Institusi', en: 'By Institution' },
+  benefits: [
+    { ms: 'Sesuai untuk pelajar OKU', en: 'Suitable for PWD students' },
+    { ms: 'Kurangkan kos perjalanan', en: 'Reduces travel cost' },
+    { ms: 'Lebih teratur ikut jadual', en: 'More structured schedules' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- BIG “LAND” EXTENSIONS: repeatable but unique & searchable ---
+{
+  id: 67,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas Bandar - Semak “Low-Floor Bus” (Jika Ada)', en: 'City Bus - Check “Low-Floor Bus” (If Available)' },
+  desc: { ms: 'Sesetengah operator gunakan bas “low-floor” yang lebih mudah untuk naik turun.', en: 'Some operators use low-floor buses that are easier to board/alight.' },
+  discount: { ms: 'Tertakluk Operator', en: 'Operator Dependent' },
+  benefits: [
+    { ms: 'Mudah untuk OKU mobiliti', en: 'Easier for mobility PWD' },
+    { ms: 'Kurangkan perlukan tangga tinggi', en: 'Reduces need for high steps' },
+    { ms: 'Lebih selamat ketika boarding', en: 'Safer boarding' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 68,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas Bandar - Tip Naik Turun Selamat', en: 'City Bus - Safe Boarding/Alighting Tips' },
+  desc: { ms: 'Pastikan bas berhenti sepenuhnya, pegang pemegang, dan minta pemandu tunggu jika perlu.', en: 'Ensure bus fully stops, hold handrails, and ask driver to wait if needed.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko jatuh', en: 'Reduces fall risk' },
+    { ms: 'Lebih yakin ketika naik turun', en: 'More confident boarding' },
+    { ms: 'Sesuai untuk warga emas & OKU', en: 'Useful for elderly & PWD' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 69,
+  cat: 'land',
+  icon: 'fas fa-train',
+  name: { ms: 'Rel Awam - Tip Cari Pintu Masuk Mesra OKU', en: 'Rail - Find Accessible Entrances Tips' },
+  desc: { ms: 'Sesetengah stesen ada pintu masuk tertentu lebih mesra OKU. Semak papan tanda/lif.', en: 'Some stations have more accessible entrances. Look for signage/lifts.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan jarak berjalan', en: 'Reduces walking distance' },
+    { ms: 'Elak tangga yang jauh', en: 'Avoid long stairs' },
+    { ms: 'Lebih cepat ke platform', en: 'Faster platform access' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+
+// --- ADD MORE “LAND” ITEMS (TO REACH 90) ---
+{
+  id: 70,
+  cat: 'land',
+  icon: 'fas fa-signs-post',
+  name: { ms: 'Papan Tanda Arah - Cara Baca “Wayfinding”', en: 'Signage - How to Read Wayfinding' },
+  desc: { ms: 'Ikut warna laluan, nombor platform, dan tanda arah untuk elak tersalah platform.', en: 'Follow line colors, platform numbers, and signage to avoid wrong platforms.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Kurangkan salah naik laluan', en: 'Reduces wrong line boarding' },
+    { ms: 'Mudah cari “interchange”', en: 'Easier interchange finding' },
+    { ms: 'Bantu pengguna baru', en: 'Helps new users' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 71,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas Ekspres - Minta Tempat Duduk Sesuai', en: 'Express Bus - Request Suitable Seating' },
+  desc: { ms: 'Jika ada keperluan OKU, minta tempat duduk lebih sesuai semasa beli tiket (jika operator benarkan).', en: 'If you have PWD needs, request suitable seats when buying tickets (if operator allows).' },
+  discount: { ms: 'Tertakluk Operator', en: 'Operator Dependent' },
+  benefits: [
+    { ms: 'Lebih selesa untuk perjalanan jauh', en: 'More comfort for long trips' },
+    { ms: 'Kurangkan sakit/kejang otot', en: 'Reduces pain/cramps' },
+    { ms: 'Kurangkan risiko jatuh ketika berhenti', en: 'Less fall risk during stops' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 72,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas Ekspres - Polisi Bagasi & Alat Sokongan', en: 'Express Bus - Luggage & Support Equipment Policy' },
+  desc: { ms: 'Semak polisi bagasi, ubat, dan alatan sokongan. Beritahu operator jika perlu bantuan.', en: 'Check luggage, meds, and support equipment policies. Inform operator if assistance needed.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Elak masalah di kaunter', en: 'Avoid counter issues' },
+    { ms: 'Lebih cepat proses boarding', en: 'Faster boarding' },
+    { ms: 'Lebih selamat untuk pengguna OKU', en: 'Safer for PWD users' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 73,
+  cat: 'land',
+  icon: 'fas fa-train',
+  name: { ms: 'Rel Awam - Tip “Boarding Gap” (Jarak Platform)', en: 'Rail - Boarding Gap Tips (Platform Gap)' },
+  desc: { ms: 'Jika ada jarak antara platform dan tren, minta bantuan staf untuk keselamatan.', en: 'If there is a platform gap, ask staff assistance for safety.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko tersangkut/terjatuh', en: 'Reduces snag/fall risk' },
+    { ms: 'Lebih sesuai untuk kerusi roda', en: 'More suitable for wheelchair users' },
+    { ms: 'Boleh dibantu oleh staf stesen', en: 'Station staff can assist' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 74,
+  cat: 'land',
+  icon: 'fas fa-people-carry-box',
+  name: { ms: 'Bantuan Angkat Barang (Jika Perlu)', en: 'Help Carrying Items (If Needed)' },
+  desc: { ms: 'Jika anda membawa barang berat, minta bantuan rakan/staf untuk elak kecederaan.', en: 'If carrying heavy items, ask friends/staff help to avoid injuries.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko kecederaan', en: 'Reduces injury risk' },
+    { ms: 'Lebih selamat ketika naik turun', en: 'Safer boarding/alighting' },
+    { ms: 'Sesuai untuk perjalanan jauh', en: 'Useful for long trips' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 75,
+  cat: 'land',
+  icon: 'fas fa-train',
+  name: { ms: 'Rel Awam - Tip Untuk OKU Kognitif/Autisme', en: 'Rail - Tips for Cognitive/Autism PWD' },
+  desc: { ms: 'Rancang awal, elak waktu puncak, bawa “comfort item”, dan pilih laluan mudah.', en: 'Plan ahead, avoid peak hours, bring comfort items, and choose simpler routes.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan overstimulation', en: 'Reduces overstimulation' },
+    { ms: 'Lebih tenang ketika perjalanan', en: 'Calmer travel experience' },
+    { ms: 'Mudah ikut rutin perjalanan', en: 'Easier routine' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 76,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas - Tip Untuk OKU Kognitif/Autisme', en: 'Bus - Tips for Cognitive/Autism PWD' },
+  desc: { ms: 'Pilih laluan pendek, duduk dekat pintu, dan minta bantuan pemandu/staf jika perlu.', en: 'Choose short routes, sit near doors, and ask driver/staff help if needed.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan rasa cemas', en: 'Reduces anxiety' },
+    { ms: 'Lebih mudah turun bila sampai', en: 'Easier to alight' },
+    { ms: 'Lebih selamat ketika sesak', en: 'Safer when crowded' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 77,
+  cat: 'land',
+  icon: 'fas fa-train',
+  name: { ms: 'Rel Awam - Tip Untuk OKU Sakit Kronik', en: 'Rail - Tips for Chronic Illness PWD' },
+  desc: { ms: 'Bawa ubat, pilih tempat duduk, dan rancang hentian rehat jika perlu.', en: 'Carry meds, choose seating, and plan rest stops if needed.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Lebih bersedia jika simptom datang', en: 'Better prepared if symptoms occur' },
+    { ms: 'Kurangkan keletihan', en: 'Reduces fatigue' },
+    { ms: 'Lebih selamat semasa perjalanan', en: 'Safer trips' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 78,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas - Tip Untuk OKU Sakit Kronik', en: 'Bus - Tips for Chronic Illness PWD' },
+  desc: { ms: 'Pilih tempat duduk stabil, elak berdiri lama, dan turun jika perlu rehat.', en: 'Choose stable seats, avoid long standing, and alight to rest if needed.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan pening/loya', en: 'Reduces dizziness/nausea' },
+    { ms: 'Lebih selesa', en: 'More comfort' },
+    { ms: 'Elak keletihan melampau', en: 'Avoid extreme fatigue' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 79,
+  cat: 'land',
+  icon: 'fas fa-train',
+  name: { ms: 'Rel Awam - Simpan “Emergency Contact”', en: 'Rail - Keep Emergency Contact' },
+  desc: { ms: 'Simpan nombor kecemasan keluarga/penjaga dan lokasi terakhir untuk keselamatan.', en: 'Keep caregiver/family emergency contacts and last location for safety.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Mudah dihubungi ketika kecemasan', en: 'Easier to contact during emergencies' },
+    { ms: 'Kurangkan panik', en: 'Less panic' },
+    { ms: 'Sesuai untuk semua pengguna', en: 'Suitable for all users' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 80,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Bas - Simpan “Emergency Contact”', en: 'Bus - Keep Emergency Contact' },
+  desc: { ms: 'Simpan nombor kecemasan dan maklumkan peneman/keluarga laluan perjalanan.', en: 'Keep emergency contact and share route with family/companions.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Lebih selamat ketika travel', en: 'Safer travel' },
+    { ms: 'Bantu jika telefon habis bateri', en: 'Helps if phone battery dies' },
+    { ms: 'Kurangkan risiko hilang arah', en: 'Lower risk of disorientation' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 81,
+  cat: 'land',
+  icon: 'fas fa-battery-half',
+  name: { ms: 'Telefon & Powerbank (Keperluan Travel)', en: 'Phone & Power Bank (Travel Essentials)' },
+  desc: { ms: 'Pastikan telefon cukup bateri untuk navigasi, hubungi bantuan dan semak jadual.', en: 'Ensure enough battery for navigation, assistance calls, and schedule checking.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Mudah guna peta & arahan', en: 'Easy map/navigation use' },
+    { ms: 'Boleh hubungi bantuan segera', en: 'Call help quickly' },
+    { ms: 'Kurangkan risiko tersesat', en: 'Lower risk of getting lost' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 82,
+  cat: 'land',
+  icon: 'fas fa-shirt',
+  name: { ms: 'Barang Penting: Baju Hujan / Payung', en: 'Essentials: Raincoat / Umbrella' },
+  desc: { ms: 'Cuaca Malaysia tak menentu. Bawa payung/baju hujan untuk elak licin dan basah.', en: 'Malaysia weather is unpredictable. Carry umbrella/raincoat to avoid slippery conditions.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko tergelincir', en: 'Reduces slipping risk' },
+    { ms: 'Lebih selesa ketika perjalanan', en: 'More comfortable commuting' },
+    { ms: 'Sesuai untuk semua orang', en: 'Useful for everyone' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 83,
+  cat: 'land',
+  icon: 'fas fa-train-subway',
+  name: { ms: 'Peta Laluan (Rujukan Umum)', en: 'Route Maps (General Reference)' },
+  desc: { ms: 'Gunakan peta laluan rasmi untuk lihat stesen interchange dan jarak perjalanan.', en: 'Use official maps to view interchange stations and travel distance.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Mudah rancang perjalanan', en: 'Easier trip planning' },
+    { ms: 'Kurangkan pertukaran tidak perlu', en: 'Reduces unnecessary transfers' },
+    { ms: 'Bantu pilih stesen paling dekat', en: 'Helps choose nearest station' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 84,
+  cat: 'land',
+  icon: 'fas fa-train',
+  name: { ms: 'Semak Gangguan Perkhidmatan (Jika Ada)', en: 'Check Service Disruptions (If Any)' },
+  desc: { ms: 'Sebelum bertolak, semak jika ada gangguan servis atau laluan ditutup sementara.', en: 'Before traveling, check for service disruptions or temporary closures.' },
+  discount: { ms: 'Makluman', en: 'Notice' },
+  benefits: [
+    { ms: 'Elak perjalanan terganggu', en: 'Avoid disrupted travel' },
+    { ms: 'Mudah rancang laluan alternatif', en: 'Plan alternate routes' },
+    { ms: 'Kurangkan stress', en: 'Less stress' }
+  ],
+  link: 'https://myrapid.com.my/'
+},
+{
+  id: 85,
+  cat: 'land',
+  icon: 'fas fa-bus',
+  name: { ms: 'Semak Jadual Bas (Jika Ada)', en: 'Check Bus Timetables (If Available)' },
+  desc: { ms: 'Sesetengah operator ada jadual online. Semak untuk elak tunggu lama di hentian.', en: 'Some operators provide online timetables. Check to avoid long waiting times.' },
+  discount: { ms: 'Makluman', en: 'Notice' },
+  benefits: [
+    { ms: 'Kurangkan tunggu di hentian', en: 'Reduces waiting time' },
+    { ms: 'Lebih selamat (kurang lama di luar)', en: 'Safer (less time outside)' },
+    { ms: 'Mudah rancang waktu', en: 'Better time planning' }
+  ],
+  link: 'https://www.apad.gov.my/'
+},
+{
+  id: 86,
+  cat: 'land',
+  icon: 'fas fa-handshake-angle',
+  name: { ms: 'Bantuan Komuniti OKU (Travel Buddy)', en: 'PWD Community Support (Travel Buddy)' },
+  desc: { ms: 'Jika ada program komuniti/NGO setempat, “travel buddy” boleh bantu urusan perjalanan.', en: 'If local NGO/community programs exist, travel buddies can assist trips.' },
+  discount: { ms: 'Sokongan', en: 'Support' },
+  benefits: [
+    { ms: 'Kurangkan rasa takut travel seorang', en: 'Less fear traveling alone' },
+    { ms: 'Lebih selamat bila ada peneman', en: 'Safer with companion' },
+    { ms: 'Bantu OKU baru belajar guna pengangkutan awam', en: 'Helps new PWD commuters' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 87,
+  cat: 'land',
+  icon: 'fas fa-user-shield',
+  name: { ms: 'Keselamatan Malam - Tip OKU', en: 'Night Safety - PWD Tips' },
+  desc: { ms: 'Jika travel malam, pilih kawasan terang, dekat CCTV, dan elak jalan sunyi.', en: 'When traveling at night, stay in bright/CCTV areas and avoid isolated routes.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko jenayah', en: 'Reduces crime risk' },
+    { ms: 'Lebih tenang ketika menunggu', en: 'Calmer waiting' },
+    { ms: 'Mudah minta bantuan', en: 'Easier to seek help' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 88,
+  cat: 'land',
+  icon: 'fas fa-shield',
+  name: { ms: 'Elak Scammer/Orang Mengganggu (Awam Darat)', en: 'Avoid Scammers/Harassment (Public Transport)' },
+  desc: { ms: 'Jangan kongsi maklumat peribadi, elak ikut orang asing, dan lapor staf jika diganggu.', en: 'Do not share personal info, avoid following strangers, report to staff if harassed.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko ditipu', en: 'Reduces scam risk' },
+    { ms: 'Lebih selamat untuk OKU', en: 'Safer for PWD' },
+    { ms: 'Boleh ambil tindakan cepat', en: 'Faster action' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 89,
+  cat: 'land',
+  icon: 'fas fa-circle-info',
+  name: { ms: 'Rujukan Agensi: MOT & APAD (Pengangkutan)', en: 'Agency Reference: MOT & APAD (Transport)' },
+  desc: { ms: 'Portal rujukan umum untuk dasar/garis panduan pengangkutan dan maklumat operator.', en: 'General reference portals for transport guidelines and operator information.' },
+  discount: { ms: 'Rujukan', en: 'Reference' },
+  benefits: [
+    { ms: 'Sesuai untuk semakan rasmi', en: 'Useful for official checks' },
+    { ms: 'Boleh rujuk info terkini', en: 'Can refer to latest info' },
+    { ms: 'Bantu elak info palsu', en: 'Helps avoid misinformation' }
+  ],
+  link: 'https://www.mot.gov.my/'
+},
+{
+  id: 90,
+  cat: 'land',
+  icon: 'fas fa-check-double',
+  name: { ms: 'Checklist Sebelum Travel (OKU)', en: 'Pre-Travel Checklist (PWD)' },
+  desc: { ms: 'Checklist ringkas: Kad OKU, IC, ubat, bateri telefon, duit kecil, dan laluan alternatif.', en: 'Quick checklist: PWD card, ID, meds, phone battery, small cash, and alternate route.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Kurangkan terlupa barang penting', en: 'Prevents forgetting essentials' },
+    { ms: 'Lebih yakin semasa perjalanan', en: 'More confident travel' },
+    { ms: 'Kurangkan stress', en: 'Less stress' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+// =====================================
+// JPJ & VEHICLE MASTER DATA (91-170)
+// CAT: road
+// =====================================
+
+// --- Road Tax / LKM / Exemption ---
+{
+  id: 91,
+  cat: 'road',
+  icon: 'fas fa-receipt',
+  name: { ms: 'JPJ - Pengecualian Cukai Jalan (LKM) OKU', en: 'JPJ - PWD Road Tax (LKM) Exemption' },
+  desc: { ms: 'Pengecualian cukai jalan untuk kenderaan yang layak atas nama OKU (tertakluk syarat semasa).', en: 'Road tax exemption for eligible vehicles under the PWD’s name (subject to current conditions).' },
+  discount: { ms: 'Tertakluk Kelayakan', en: 'Subject to Eligibility' },
+  benefits: [
+    { ms: 'Kurangkan kos tahunan pemilikan kenderaan', en: 'Reduces annual vehicle ownership cost' },
+    { ms: 'Proses permohonan di JPJ (rujuk kaunter)', en: 'Apply at JPJ (refer to counters)' },
+    { ms: 'Simpan rekod dokumen untuk pembaharuan', en: 'Keep document records for renewal' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 92,
+  cat: 'road',
+  icon: 'fas fa-file-signature',
+  name: { ms: 'JPJ - Dokumen Asas Untuk Mohon LKM OKU', en: 'JPJ - Basic Documents for PWD LKM Exemption' },
+  desc: { ms: 'Senarai dokumen umum: Kad OKU, IC, geran kenderaan, insurans, dan borang berkaitan.', en: 'General document list: PWD card, ID, vehicle grant, insurance, and relevant forms.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Kurangkan risiko permohonan ditolak sebab dokumen tak lengkap', en: 'Reduces rejection due to incomplete documents' },
+    { ms: 'Memudahkan urusan di kaunter JPJ', en: 'Makes JPJ counter process easier' },
+    { ms: 'Boleh dijadikan checklist sebelum pergi JPJ', en: 'Works as a pre-visit checklist' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 93,
+  cat: 'road',
+  icon: 'fas fa-rotate',
+  name: { ms: 'JPJ - Pembaharuan LKM OKU (Renewal)', en: 'JPJ - PWD LKM Renewal' },
+  desc: { ms: 'Panduan ringkas pembaharuan cukai jalan selepas diluluskan (tertakluk tempoh & syarat).', en: 'Quick guide to renew road tax after approval (subject to duration & conditions).' },
+  discount: { ms: 'Tertakluk Polisi Semasa', en: 'Subject to Current Policy' },
+  benefits: [
+    { ms: 'Elak LKM tamat tempoh', en: 'Avoid expired road tax' },
+    { ms: 'Simpan salinan kelulusan/rekod', en: 'Keep approval/records copies' },
+    { ms: 'Mudah semak status di JPJ', en: 'Easier to check status with JPJ' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 94,
+  cat: 'road',
+  icon: 'fas fa-circle-question',
+  name: { ms: 'JPJ - Soalan Lazim LKM OKU', en: 'JPJ - PWD Road Tax FAQ' },
+  desc: { ms: 'Rujukan umum untuk soalan biasa: kelayakan, jenis kenderaan, dokumen, dan proses.', en: 'General reference for common questions: eligibility, vehicle type, documents, and process.' },
+  discount: { ms: 'FAQ', en: 'FAQ' },
+  benefits: [
+    { ms: 'Kurangkan kekeliruan sebelum mohon', en: 'Reduces confusion before applying' },
+    { ms: 'Bantu rancang urusan JPJ', en: 'Helps plan JPJ visit' },
+    { ms: 'Elak maklumat salah dari sumber tak rasmi', en: 'Avoids misinformation from unofficial sources' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+
+// --- Driving License / Disabled license fee ---
+{
+  id: 95,
+  cat: 'road',
+  icon: 'fas fa-id-card',
+  name: { ms: 'JPJ - Lesen Memandu OKU (Garis Umum)', en: 'JPJ - PWD Driving License (General Guide)' },
+  desc: { ms: 'Panduan umum lesen memandu untuk OKU: pemeriksaan, kelas lesen, dan keperluan keselamatan.', en: 'General guide for PWD driving license: assessments, license class, and safety requirements.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Faham proses sebelum daftar sekolah memandu', en: 'Understand process before enrolling in driving school' },
+    { ms: 'Kurangkan risiko tersalah kelas lesen', en: 'Reduces wrong license class risk' },
+    { ms: 'Bantu persediaan awal dokumen', en: 'Helps prep documents early' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 96,
+  cat: 'road',
+  icon: 'fas fa-stethoscope',
+  name: { ms: 'JPJ - Pemeriksaan Kesihatan Untuk Lesen OKU', en: 'JPJ - Medical Assessment for PWD License' },
+  desc: { ms: 'Sesetengah kategori OKU mungkin perlukan penilaian kesihatan sebelum lesen/endorsement.', en: 'Some PWD categories may require medical assessment before licensing/endorsement.' },
+  discount: { ms: 'Tertakluk Kelayakan', en: 'Subject to Eligibility' },
+  benefits: [
+    { ms: 'Pastikan pemanduan selamat', en: 'Ensures safe driving' },
+    { ms: 'Kurangkan risiko ditolak semasa proses', en: 'Reduces rejection risk during process' },
+    { ms: 'Bantu pilih pengubahsuaian yang sesuai', en: 'Helps choose suitable modifications' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 97,
+  cat: 'road',
+  icon: 'fas fa-screwdriver-wrench',
+  name: { ms: 'JPJ - Kenderaan Ubahsuai (Hand Control, Ramp)', en: 'JPJ - Modified Vehicles (Hand Control, Ramp)' },
+  desc: { ms: 'Ubahsuai kenderaan untuk OKU perlu ikut standard keselamatan & pemeriksaan (rujuk JPJ).', en: 'Vehicle modifications for PWD must meet safety standards & inspections (refer JPJ).' },
+  discount: { ms: 'Tertakluk Pemeriksaan', en: 'Subject to Inspection' },
+  benefits: [
+    { ms: 'Lebih selamat untuk pemandu OKU', en: 'Safer for PWD drivers' },
+    { ms: 'Elak saman/isu undang-undang', en: 'Avoid fines/legal issues' },
+    { ms: 'Boleh didaftarkan secara sah', en: 'Can be legally registered' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 98,
+  cat: 'road',
+  icon: 'fas fa-clipboard-check',
+  name: { ms: 'PUSPAKOM - Pemeriksaan Kenderaan Ubahsuai', en: 'PUSPAKOM - Modified Vehicle Inspection' },
+  desc: { ms: 'Untuk ubahsuai tertentu, pemeriksaan kenderaan mungkin diperlukan sebelum pengesahan JPJ.', en: 'For certain modifications, vehicle inspection may be required before JPJ confirmation.' },
+  discount: { ms: 'Tertakluk Prosedur', en: 'Subject to Procedure' },
+  benefits: [
+    { ms: 'Pastikan ubahsuai ikut standard', en: 'Ensures modifications meet standards' },
+    { ms: 'Kurangkan risiko gagal pemeriksaan', en: 'Reduces inspection failure risk' },
+    { ms: 'Bantu urusan JPJ jadi lancar', en: 'Helps smooth JPJ processing' }
+  ],
+  link: 'https://www.puspakom.com.my/'
+},
+
+// --- Insurance / Road safety / Documents ---
+{
+  id: 99,
+  cat: 'road',
+  icon: 'fas fa-shield-halved',
+  name: { ms: 'Insurans Kenderaan - Tip Untuk Pemandu OKU', en: 'Vehicle Insurance - Tips for PWD Drivers' },
+  desc: { ms: 'Pilih perlindungan sesuai dan pastikan maklumat ubahsuai dinyatakan jika perlu.', en: 'Choose suitable coverage and declare modifications if required.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko tuntutan ditolak', en: 'Reduces rejected claims risk' },
+    { ms: 'Perlindungan lebih tepat', en: 'More accurate coverage' },
+    { ms: 'Lebih tenang ketika memandu', en: 'More peace of mind while driving' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 100,
+  cat: 'road',
+  icon: 'fas fa-file-lines',
+  name: { ms: 'Checklist Dokumen Dalam Kenderaan', en: 'In-Car Document Checklist' },
+  desc: { ms: 'Simpan salinan: lesen, insurans, geran (jika perlu), dan nombor kecemasan.', en: 'Keep copies: license, insurance, grant (if needed), and emergency contacts.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Mudah jika pemeriksaan jalan raya', en: 'Easier during road checks' },
+    { ms: 'Kurangkan panik ketika kecemasan', en: 'Less panic in emergencies' },
+    { ms: 'Sesuai untuk semua pemandu', en: 'Suitable for all drivers' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+
+// --- Parking / Accessibility ---
+{
+  id: 101,
+  cat: 'road',
+  icon: 'fas fa-square-parking',
+  name: { ms: 'Parkir OKU - Etika & Penggunaan Betul', en: 'PWD Parking - Proper Use & Etiquette' },
+  desc: { ms: 'Petak parkir OKU untuk pemegang kad/permit sah. Elak disalahguna dan lapor jika perlu.', en: 'PWD parking bays are for valid card/permit holders. Avoid misuse and report when needed.' },
+  discount: { ms: 'Kemudahan', en: 'Facility' },
+  benefits: [
+    { ms: 'Lebih dekat dengan pintu masuk', en: 'Closer to entrances' },
+    { ms: 'Lebih ruang untuk kerusi roda/ramp', en: 'More space for wheelchair/ramp' },
+    { ms: 'Kurangkan risiko kecederaan', en: 'Reduces injury risk' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 102,
+  cat: 'road',
+  icon: 'fas fa-building',
+  name: { ms: 'Permit/Sticker Parkir OKU (Rujukan Umum)', en: 'PWD Parking Permit/Sticker (General Reference)' },
+  desc: { ms: 'Sesetengah tempat perlukan permit/sticker parkir OKU. Semak PBT/majlis setempat.', en: 'Some places require PWD parking permits/stickers. Check local councils.' },
+  discount: { ms: 'Ikut PBT', en: 'By Local Council' },
+  benefits: [
+    { ms: 'Kurangkan risiko saman', en: 'Reduces fine risk' },
+    { ms: 'Mudahkan akses parkir', en: 'Easier parking access' },
+    { ms: 'Sesuai untuk urusan harian', en: 'Useful for daily errands' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- Vehicle modification types (many) ---
+{
+  id: 103,
+  cat: 'road',
+  icon: 'fas fa-hand',
+  name: { ms: 'Ubahsuai: Hand Control (Gas/Brake)', en: 'Modification: Hand Controls (Gas/Brake)' },
+  desc: { ms: 'Sesuai untuk pemandu OKU mobiliti kaki. Pastikan pemasangan ikut standard & pemeriksaan.', en: 'Suitable for PWD drivers with leg mobility limitations. Install per standards & inspection.' },
+  discount: { ms: 'Tertakluk Pemeriksaan', en: 'Subject to Inspection' },
+  benefits: [
+    { ms: 'Memandu lebih selamat dan terkawal', en: 'Safer and more controlled driving' },
+    { ms: 'Boleh disesuaikan ikut keperluan', en: 'Can be customized to needs' },
+    { ms: 'Kurangkan keletihan kaki', en: 'Reduces leg fatigue' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 104,
+  cat: 'road',
+  icon: 'fas fa-wheelchair',
+  name: { ms: 'Ubahsuai: Ramp Kerusi Roda (Van)', en: 'Modification: Wheelchair Ramp (Van)' },
+  desc: { ms: 'Ramp memudahkan naik turun kerusi roda. Semak spesifikasi keselamatan & pengikatan.', en: 'Ramps enable wheelchair boarding. Check safety specs and securement.' },
+  discount: { ms: 'Tertakluk Pemeriksaan', en: 'Subject to Inspection' },
+  benefits: [
+    { ms: 'Masuk/keluar kenderaan lebih mudah', en: 'Easier vehicle entry/exit' },
+    { ms: 'Kurangkan bantuan fizikal diperlukan', en: 'Less physical assistance needed' },
+    { ms: 'Lebih sesuai untuk keluarga/penjaga', en: 'Better for caregivers/family' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 105,
+  cat: 'road',
+  icon: 'fas fa-chair',
+  name: { ms: 'Ubahsuai: Seat Base / Swivel Seat', en: 'Modification: Seat Base / Swivel Seat' },
+  desc: { ms: 'Kerusi berpusing memudahkan pindah dari kerusi roda ke tempat duduk pemandu/penumpang.', en: 'Swivel seats help transfer from wheelchair to driver/passenger seat.' },
+  discount: { ms: 'Tertakluk Pemeriksaan', en: 'Subject to Inspection' },
+  benefits: [
+    { ms: 'Kurangkan risiko kecederaan transfer', en: 'Reduces transfer injury risk' },
+    { ms: 'Lebih selesa untuk perjalanan', en: 'More comfortable travel' },
+    { ms: 'Mudah untuk pengguna OKU', en: 'Easier for PWD users' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 106,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Ubahsuai: Pedal Extender', en: 'Modification: Pedal Extenders' },
+  desc: { ms: 'Untuk pemandu yang perlukan capaian pedal lebih dekat. Pastikan pemasangan selamat.', en: 'For drivers needing closer pedal reach. Ensure safe installation.' },
+  discount: { ms: 'Tertakluk Pemeriksaan', en: 'Subject to Inspection' },
+  benefits: [
+    { ms: 'Capaian pedal lebih stabil', en: 'More stable pedal reach' },
+    { ms: 'Kurangkan risiko salah tekan', en: 'Reduces mis-press risk' },
+    { ms: 'Bantu posisi pemanduan ergonomik', en: 'Improves ergonomic driving posture' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 107,
+  cat: 'road',
+  icon: 'fas fa-gauge',
+  name: { ms: 'Ubahsuai: Steering Knob (Spinner)', en: 'Modification: Steering Knob (Spinner)' },
+  desc: { ms: 'Membantu pemandu yang ada limitasi tangan. Pastikan sesuai dengan kelas lesen & kelulusan.', en: 'Helps drivers with hand limitations. Ensure suitability with license class & approvals.' },
+  discount: { ms: 'Tertakluk Kelayakan', en: 'Subject to Eligibility' },
+  benefits: [
+    { ms: 'Kawalan stereng lebih mudah', en: 'Easier steering control' },
+    { ms: 'Kurangkan keletihan tangan', en: 'Reduces hand fatigue' },
+    { ms: 'Lebih selamat untuk manuver', en: 'Safer maneuvering' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+
+// --- Road safety / OKU driving tips (many) ---
+{
+  id: 108,
+  cat: 'road',
+  icon: 'fas fa-triangle-exclamation',
+  name: { ms: 'Keselamatan: Latihan Pemanduan Defensif', en: 'Safety: Defensive Driving Training' },
+  desc: { ms: 'Latihan pemanduan defensif membantu kurangkan risiko kemalangan, sesuai untuk semua pemandu.', en: 'Defensive driving training reduces accident risk, suitable for all drivers.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Lebih peka bahaya di jalan raya', en: 'More aware of road hazards' },
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Tambah keyakinan pemandu', en: 'Increases driver confidence' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 109,
+  cat: 'road',
+  icon: 'fas fa-person-circle-check',
+  name: { ms: 'Tip OKU: Rancang Laluan Kurang Sesak', en: 'PWD Tip: Plan Less Crowded Routes' },
+  desc: { ms: 'Pilih laluan yang kurang sesak untuk kurangkan tekanan dan risiko situasi berbahaya.', en: 'Choose less crowded routes to reduce stress and risky situations.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan stress pemanduan', en: 'Reduces driving stress' },
+    { ms: 'Lebih selamat', en: 'Safer trips' },
+    { ms: 'Kurangkan keletihan', en: 'Less fatigue' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 110,
+  cat: 'road',
+  icon: 'fas fa-wrench',
+  name: { ms: 'Checklist Servis Kenderaan (Keselamatan)', en: 'Vehicle Service Checklist (Safety)' },
+  desc: { ms: 'Semak tayar, brek, lampu, wiper, bateri. Penting untuk keselamatan pemandu dan penumpang.', en: 'Check tyres, brakes, lights, wipers, battery. Important for driver & passenger safety.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Kurangkan risiko breakdown', en: 'Reduces breakdown risk' },
+    { ms: 'Lebih selamat ketika hujan/malam', en: 'Safer in rain/night' },
+    { ms: 'Kurangkan kos pembaikan besar', en: 'Reduces major repair costs' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+
+// --- JPJ Online / MyJPJ / Road rules ---
+{
+  id: 111,
+  cat: 'road',
+  icon: 'fas fa-mobile-screen-button',
+  name: { ms: 'MyJPJ - Rujukan Aplikasi Rasmi', en: 'MyJPJ - Official App Reference' },
+  desc: { ms: 'Aplikasi/portal berkaitan JPJ untuk urusan terpilih (tertakluk fungsi semasa).', en: 'JPJ-related app/portal for selected matters (subject to current features).' },
+  discount: { ms: 'Rujukan', en: 'Reference' },
+  benefits: [
+    { ms: 'Mudah semak info asas', en: 'Easier to check basic info' },
+    { ms: 'Kurangkan keperluan beratur', en: 'Less need for counter queues' },
+    { ms: 'Bantu rancang urusan JPJ', en: 'Helps plan JPJ tasks' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 112,
+  cat: 'road',
+  icon: 'fas fa-user-check',
+  name: { ms: 'JPJ - Profil Pemandu & Kenderaan (Semakan Umum)', en: 'JPJ - Driver & Vehicle Profile (General Check)' },
+  desc: { ms: 'Semakan maklumat asas pemandu/kenderaan melalui saluran rasmi (tertakluk akses).', en: 'Check basic driver/vehicle info via official channels (subject to access).' },
+  discount: { ms: 'Rujukan', en: 'Reference' },
+  benefits: [
+    { ms: 'Elak tersalah maklumat rekod', en: 'Avoid incorrect record info' },
+    { ms: 'Bantu persediaan sebelum urusan', en: 'Helps preparation before tasks' },
+    { ms: 'Sesuai untuk semakan berkala', en: 'Suitable for periodic checks' }
+  ],
+  link: 'https://public.jpj.gov.my/public/login.zul'
+},
+
+// --- Vehicle ownership / transfer / grant ---
+{
+  id: 113,
+  cat: 'road',
+  icon: 'fas fa-file-contract',
+  name: { ms: 'Tukar Hak Milik Kenderaan - Checklist Umum', en: 'Vehicle Ownership Transfer - General Checklist' },
+  desc: { ms: 'Checklist umum tukar hak milik: geran, pemeriksaan, insurans, identiti, dan proses berkaitan.', en: 'General checklist: grant, inspection, insurance, identity, and related steps.' },
+  discount: { ms: 'Panduan', en: 'Guide' },
+  benefits: [
+    { ms: 'Kurangkan kesilapan semasa jual beli', en: 'Reduces mistakes during buying/selling' },
+    { ms: 'Lebih selamat dari segi undang-undang', en: 'Legally safer' },
+    { ms: 'Mudah susun dokumen', en: 'Easier document organization' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 114,
+  cat: 'road',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Semak Status Saman (Rujukan Umum)', en: 'Check Summons Status (General Reference)' },
+  desc: { ms: 'Semak saman melalui saluran rasmi yang sah untuk elak kejutan semasa pembaharuan lesen/LKM.', en: 'Check summons via official channels to avoid surprises during renewals.' },
+  discount: { ms: 'Rujukan', en: 'Reference' },
+  benefits: [
+    { ms: 'Elak urusan tergendala', en: 'Avoid blocked processes' },
+    { ms: 'Mudah rancang bayaran/kompaun', en: 'Plan payments/compounds' },
+    { ms: 'Lebih teratur rekod pemandu', en: 'Better driver record management' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+
+// --- Accessibility on roads: ramps, loading, wheelchair safety ---
+{
+  id: 115,
+  cat: 'road',
+  icon: 'fas fa-wheelchair-move',
+  name: { ms: 'Keselamatan Kerusi Roda Dalam Kenderaan', en: 'Wheelchair Safety Inside Vehicles' },
+  desc: { ms: 'Jika OKU kekal atas kerusi roda dalam van, pastikan sistem pengikatan dan tali pinggang selamat.', en: 'If staying in wheelchair inside van, ensure secure tie-down and seatbelt systems.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko cedera bila brek mengejut', en: 'Reduces injury risk during sudden braking' },
+    { ms: 'Lebih stabil semasa perjalanan', en: 'More stable travel' },
+    { ms: 'Sesuai untuk penjaga/family', en: 'Useful for caregivers/family' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- More JPJ/vehicle tips (bulk) ---
+{
+  id: 116,
+  cat: 'road',
+  icon: 'fas fa-car-burst',
+  name: { ms: 'Apa Buat Jika Accident (Panduan Umum)', en: 'What to Do in an Accident (General Guide)' },
+  desc: { ms: 'Panduan umum: pastikan selamat, ambil gambar, tukar maklumat, hubungi bantuan, dan buat laporan jika perlu.', en: 'General steps: ensure safety, take photos, exchange info, call help, report if needed.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan panik', en: 'Reduces panic' },
+    { ms: 'Mudah urus tuntutan insurans', en: 'Easier insurance claim process' },
+    { ms: 'Lindungi hak anda', en: 'Protects your rights' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 117,
+  cat: 'road',
+  icon: 'fas fa-toolbox',
+  name: { ms: 'Kit Kecemasan Dalam Kereta (OKU Friendly)', en: 'Car Emergency Kit (PWD Friendly)' },
+  desc: { ms: 'Sediakan kit: lampu suluh, ubat, powerbank, air, nombor kecemasan, dan alat asas.', en: 'Prepare kit: flashlight, meds, power bank, water, emergency contacts, basic tools.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Lebih bersedia jika kereta rosak', en: 'More prepared for breakdowns' },
+    { ms: 'Sesuai untuk perjalanan jauh', en: 'Useful for long trips' },
+    { ms: 'Kurangkan risiko kecemasan', en: 'Reduces emergency risk' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 118,
+  cat: 'road',
+  icon: 'fas fa-sun',
+  name: { ms: 'Tip OKU: Elak Memandu Bila Terlalu Penat', en: 'PWD Tip: Avoid Driving When Extremely Fatigued' },
+  desc: { ms: 'Jika penat/sakit, rehat dulu. Keutamaan ialah keselamatan diri dan orang lain.', en: 'If tired/unwell, rest first. Safety is priority.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Lindungi kesihatan', en: 'Protects health' },
+    { ms: 'Pemanduan lebih fokus', en: 'More focused driving' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- many more road items: driving school, mods, checks ---
+{
+  id: 119,
+  cat: 'road',
+  icon: 'fas fa-school',
+  name: { ms: 'Sekolah Memandu - Pilih Yang Mesra OKU', en: 'Driving Schools - Choose PWD-Friendly Options' },
+  desc: { ms: 'Cari sekolah memandu yang boleh sediakan latihan sesuai dan kenderaan latihan yang sesuai (jika ada).', en: 'Look for driving schools that can provide suitable training and training vehicles (if available).' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Latihan lebih sesuai ikut keperluan', en: 'More suitable training for needs' },
+    { ms: 'Kurangkan tekanan semasa belajar', en: 'Less stress while learning' },
+    { ms: 'Meningkatkan keyakinan', en: 'Increases confidence' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 120,
+  cat: 'road',
+  icon: 'fas fa-screwdriver-wrench',
+  name: { ms: 'Ubahsuai: Parking Sensor & Kamera Belakang', en: 'Modification: Parking Sensors & Reverse Camera' },
+  desc: { ms: 'Boleh bantu pemandu yang perlukan bantuan visual semasa parkir dan undur.', en: 'Helps drivers needing visual assistance when parking and reversing.' },
+  discount: { ms: 'Kemudahan', en: 'Convenience' },
+  benefits: [
+    { ms: 'Kurangkan risiko hentam objek', en: 'Reduces collision risk' },
+    { ms: 'Parkir lebih mudah', en: 'Easier parking' },
+    { ms: 'Sesuai untuk banyak pemandu', en: 'Useful for many drivers' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+
+// --- Bulk: road keywords for searchability (these help your search function too) ---
+{
+  id: 121,
+  cat: 'road',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: Cukai Jalan OKU', en: 'Quick Search: PWD Road Tax' },
+  desc: { ms: 'Kata kunci: LKM, cukai jalan OKU, pengecualian, JPJ, dokumen, pembaharuan.', en: 'Keywords: LKM, PWD road tax, exemption, JPJ, documents, renewal.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Cepat jumpa item berkaitan', en: 'Quickly find related items' },
+    { ms: 'Bantu pengguna baru', en: 'Helps new users' },
+    { ms: 'Kurangkan masa cari', en: 'Saves time' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 122,
+  cat: 'road',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: Lesen OKU', en: 'Quick Search: PWD License' },
+  desc: { ms: 'Kata kunci: lesen memandu OKU, pemeriksaan kesihatan, kelas lesen, JPJ.', en: 'Keywords: PWD driving license, medical assessment, license class, JPJ.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Senang cari info lesen', en: 'Easier to find license info' },
+    { ms: 'Bantu sebelum daftar sekolah memandu', en: 'Helps before enrolling' },
+    { ms: 'Kurangkan kekeliruan', en: 'Reduces confusion' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 123,
+  cat: 'road',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: Ubahsuai Kenderaan', en: 'Quick Search: Vehicle Modifications' },
+  desc: { ms: 'Kata kunci: ubahsuai OKU, hand control, ramp, PUSPAKOM, pemeriksaan.', en: 'Keywords: PWD modifications, hand control, ramp, PUSPAKOM, inspection.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Cepat cari info ubahsuai', en: 'Quickly find mod info' },
+    { ms: 'Bantu rancang bajet ubahsuai', en: 'Helps budget planning' },
+    { ms: 'Elak ubahsuai tak sah', en: 'Avoid illegal mods' }
+  ],
+  link: 'https://www.puspakom.com.my/'
+},
+
+// --- More items to make it HUGE: general but helpful ---
+{
+  id: 124,
+  cat: 'road',
+  icon: 'fas fa-hand-holding-medical',
+  name: { ms: 'Tip OKU: Ubat & Kesihatan Semasa Memandu', en: 'PWD Tip: Medication & Health While Driving' },
+  desc: { ms: 'Jika ambil ubat yang boleh mengantuk, elakkan memandu. Utamakan keselamatan.', en: 'If taking drowsy medication, avoid driving. Prioritize safety.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko microsleep', en: 'Reduces microsleep risk' },
+    { ms: 'Pemanduan lebih fokus', en: 'More focused driving' },
+    { ms: 'Lindungi pengguna jalan lain', en: 'Protects other road users' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 125,
+  cat: 'road',
+  icon: 'fas fa-traffic-light',
+  name: { ms: 'Tip: Elak Gangguan Telefon Semasa Memandu', en: 'Tip: Avoid Phone Distractions While Driving' },
+  desc: { ms: 'Gunakan “hands-free” hanya jika perlu dan berhenti di tempat selamat untuk urusan penting.', en: 'Use hands-free only if necessary and stop safely for important tasks.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Lebih fokus pemanduan', en: 'More focused driving' },
+    { ms: 'Sesuai untuk semua pemandu', en: 'Suitable for all drivers' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+
+// --- continue bulk with unique names (126-170) ---
+{
+  id: 126,
+  cat: 'road',
+  icon: 'fas fa-car-side',
+  name: { ms: 'Ubahsuai: Pintu Gelangsar Automatik (Van)', en: 'Modification: Automatic Sliding Door (Van)' },
+  desc: { ms: 'Pintu automatik memudahkan OKU/penjaga masuk keluar kenderaan dengan lebih selamat.', en: 'Automatic doors help PWD/caregivers enter/exit more safely.' },
+  discount: { ms: 'Kemudahan', en: 'Convenience' },
+  benefits: [
+    { ms: 'Kurangkan risiko tersepit', en: 'Reduces pinching risk' },
+    { ms: 'Lebih mudah untuk penjaga', en: 'Easier for caregivers' },
+    { ms: 'Mudah digunakan dalam ruang sempit', en: 'Useful in tight spaces' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 127,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Ubahsuai: Ketinggian Kereta (Akses Masuk)', en: 'Modification: Vehicle Height for Easier Entry' },
+  desc: { ms: 'Sesetengah OKU perlukan ketinggian kereta sesuai untuk transfer. Pastikan ubahsuai ikut peraturan.', en: 'Some PWDs need appropriate vehicle height for transfers. Ensure compliance.' },
+  discount: { ms: 'Tertakluk Pemeriksaan', en: 'Subject to Inspection' },
+  benefits: [
+    { ms: 'Masuk/keluar lebih mudah', en: 'Easier entry/exit' },
+    { ms: 'Kurangkan risiko jatuh', en: 'Reduces fall risk' },
+    { ms: 'Lebih ergonomik', en: 'More ergonomic' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 128,
+  cat: 'road',
+  icon: 'fas fa-screwdriver-wrench',
+  name: { ms: 'Ubahsuai: Tali Pinggang Tambahan / Harness', en: 'Modification: Extra Seatbelt / Harness' },
+  desc: { ms: 'Untuk penumpang yang perlukan sokongan tambahan (tertakluk kesesuaian dan standard keselamatan).', en: 'For passengers needing extra support (subject to suitability and safety standards).' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Lebih stabil semasa perjalanan', en: 'More stability during travel' },
+    { ms: 'Kurangkan risiko cedera', en: 'Reduces injury risk' },
+    { ms: 'Sesuai untuk perjalanan jauh', en: 'Useful for long trips' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 129,
+  cat: 'road',
+  icon: 'fas fa-car-on',
+  name: { ms: 'Tip: Parkir Selamat Untuk Kerusi Roda', en: 'Tip: Safe Parking for Wheelchair Users' },
+  desc: { ms: 'Pilih parkir yang rata, luas, dan dekat laluan ramp/lif untuk elak kesukaran.', en: 'Choose flat, wide parking near ramps/lifts to avoid difficulties.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko jatuh', en: 'Reduces fall risk' },
+    { ms: 'Lebih mudah buka pintu luas', en: 'Easier wide door opening' },
+    { ms: 'Mudah turunkan kerusi roda', en: 'Easier wheelchair handling' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 130,
+  cat: 'road',
+  icon: 'fas fa-route',
+  name: { ms: 'Tip: Rancang “Rest Stop” Untuk Perjalanan Jauh', en: 'Tip: Plan Rest Stops for Long Drives' },
+  desc: { ms: 'Bagi OKU yang mudah penat, rancang hentian rehat dan minum air secukupnya.', en: 'For PWDs who tire easily, plan rest stops and stay hydrated.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan keletihan', en: 'Reduces fatigue' },
+    { ms: 'Kurangkan risiko hilang fokus', en: 'Reduces loss of focus' },
+    { ms: 'Lebih selamat untuk semua', en: 'Safer for everyone' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 131,
+  cat: 'road',
+  icon: 'fas fa-road',
+  name: { ms: 'Tip: Elak Jalan Berlubang / Permukaan Rosak', en: 'Tip: Avoid Potholes / Damaged Roads' },
+  desc: { ms: 'Jika kenderaan ubahsuai atau ada ramp, elak jalan teruk untuk kurangkan kerosakan.', en: 'If modified vehicle has ramps, avoid bad roads to reduce damage.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan kos pembaikan', en: 'Reduces repair costs' },
+    { ms: 'Lebih selesa semasa memandu', en: 'More comfortable driving' },
+    { ms: 'Kurangkan risiko kemalangan kecil', en: 'Reduces minor accidents risk' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 132,
+  cat: 'road',
+  icon: 'fas fa-snowflake',
+  name: { ms: 'Tip: Pastikan Aircond Selesa (Kesihatan OKU)', en: 'Tip: Ensure Comfortable AC (PWD Health)' },
+  desc: { ms: 'Untuk OKU tertentu, suhu terlalu panas boleh jadi trigger. Pastikan pengudaraan baik.', en: 'For some PWDs, heat can be a trigger. Maintain good ventilation.' },
+  discount: { ms: 'Kesihatan', en: 'Health' },
+  benefits: [
+    { ms: 'Kurangkan ketidakselesaan', en: 'Reduces discomfort' },
+    { ms: 'Lebih fokus memandu', en: 'Better focus' },
+    { ms: 'Sesuai perjalanan jauh', en: 'Useful for long trips' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 133,
+  cat: 'road',
+  icon: 'fas fa-gas-pump',
+  name: { ms: 'Stesen Minyak - Tip Akses OKU', en: 'Petrol Stations - PWD Access Tips' },
+  desc: { ms: 'Pilih stesen minyak yang ada ruang luas dan bantuan staf jika perlu.', en: 'Choose stations with wider space and staff assistance if needed.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Lebih mudah turun naik kenderaan', en: 'Easier entry/exit' },
+    { ms: 'Kurangkan risiko terganggu trafik', en: 'Reduces traffic disturbance risk' },
+    { ms: 'Sesuai untuk kerusi roda', en: 'Wheelchair-friendly' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 134,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Pandu Uji Selepas Ubahsuai (Checklist)', en: 'Post-Modification Test Drive (Checklist)' },
+  desc: { ms: 'Buat pandu uji di kawasan selamat: brek, stereng, hand control, dan respon pedal.', en: 'Test drive safely: brakes, steering, hand controls, and pedal response.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Pastikan ubahsuai berfungsi', en: 'Ensures mods work properly' },
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Tingkat keyakinan pemandu', en: 'Improves driver confidence' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 135,
+  cat: 'road',
+  icon: 'fas fa-road-circle-check',
+  name: { ms: 'Label/Nota Dalam Kereta (Keperluan OKU)', en: 'Car Notes/Labels (PWD Needs)' },
+  desc: { ms: 'Letak nota ringkas (contoh: “Sila tunggu, OKU naik turun”) untuk bantu situasi parking/pickup.', en: 'Use short notes (e.g., “Please wait, PWD boarding”) for parking/pickup situations.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan konflik di tempat awam', en: 'Reduces public conflict' },
+    { ms: 'Bantu orang faham situasi', en: 'Helps others understand' },
+    { ms: 'Lebih selamat semasa naik turun', en: 'Safer boarding/alighting' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// ---- continue generating many “road” items until 170 (still MS/EN) ----
+{
+  id: 136,
+  cat: 'road',
+  icon: 'fas fa-circle-info',
+  name: { ms: 'JPJ - Rujukan Rasmi Polisi & Pengumuman', en: 'JPJ - Official Policy & Announcements Reference' },
+  desc: { ms: 'Semak pengumuman rasmi untuk perubahan prosedur, borang, atau syarat berkaitan OKU.', en: 'Check official announcements for changes in procedures, forms, or PWD-related conditions.' },
+  discount: { ms: 'Rujukan', en: 'Reference' },
+  benefits: [
+    { ms: 'Elak ikut info lama', en: 'Avoid outdated info' },
+    { ms: 'Bantu urusan lebih lancar', en: 'Smoother processing' },
+    { ms: 'Sesuai untuk semakan berkala', en: 'Good for periodic checks' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 137,
+  cat: 'road',
+  icon: 'fas fa-headset',
+  name: { ms: 'Hubungi JPJ - Pertanyaan OKU (Rujukan)', en: 'Contact JPJ - PWD Inquiries (Reference)' },
+  desc: { ms: 'Jika anda keliru syarat, hubungi JPJ/rujuk kaunter untuk pengesahan sebelum buat apa-apa ubahsuai.', en: 'If unsure, contact JPJ/counters for confirmation before any modifications.' },
+  discount: { ms: 'Bantuan', en: 'Assistance' },
+  benefits: [
+    { ms: 'Kurangkan risiko buang duit ubahsuai salah', en: 'Avoid wasting money on wrong modifications' },
+    { ms: 'Maklumat lebih tepat', en: 'More accurate info' },
+    { ms: 'Bantu rancang dokumen', en: 'Helps plan documents' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 138,
+  cat: 'road',
+  icon: 'fas fa-car-rear',
+  name: { ms: 'Tip: Cermin Tambahan (Blind Spot Mirror)', en: 'Tip: Blind Spot Mirror Add-on' },
+  desc: { ms: 'Cermin kecil tambahan bantu pemandu lihat blind spot, terutama untuk pemandu yang perlukan bantuan visual.', en: 'Small add-on mirrors help with blind spots, useful for drivers needing visual support.' },
+  discount: { ms: 'Kemudahan', en: 'Convenience' },
+  benefits: [
+    { ms: 'Kurangkan risiko tukar lorong bahaya', en: 'Reduces risky lane changes' },
+    { ms: 'Parkir lebih senang', en: 'Easier parking' },
+    { ms: 'Kos rendah', en: 'Low cost' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 139,
+  cat: 'road',
+  icon: 'fas fa-car-side',
+  name: { ms: 'Tip: Dashcam Untuk Keselamatan', en: 'Tip: Dashcam for Safety' },
+  desc: { ms: 'Dashcam boleh bantu bukti jika berlaku kemalangan/insiden. Pastikan pemasangan tidak mengganggu pandangan.', en: 'Dashcams help provide evidence in incidents. Ensure installation does not block view.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Bantu urusan insurans', en: 'Helps insurance process' },
+    { ms: 'Kurangkan penipuan tuntutan', en: 'Reduces claim fraud' },
+    { ms: 'Tambah rasa selamat', en: 'Adds safety confidence' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 140,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Tip: Pilih Kereta Pintu Lebar Untuk Transfer', en: 'Tip: Choose Wide-Door Cars for Easier Transfer' },
+  desc: { ms: 'Untuk OKU mobiliti, pintu lebar dan ruang kabin luas memudahkan naik turun.', en: 'For mobility PWD, wide doors and spacious cabins ease transfers.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko jatuh', en: 'Reduces fall risk' },
+    { ms: 'Lebih selesa', en: 'More comfortable' },
+    { ms: 'Mudah urus kerusi roda/tongkat', en: 'Easier wheelchair/cane handling' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 141,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Tip: Pilih Kereta Dengan “Higher Seat Height”', en: 'Tip: Choose Cars with Higher Seat Height' },
+  desc: { ms: 'Tempat duduk lebih tinggi boleh memudahkan transfer bagi sesetengah OKU (ikut kesesuaian).', en: 'Higher seats can ease transfers for some PWDs (depending on needs).' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan kesukaran bangun/duduk', en: 'Less difficulty sitting/standing' },
+    { ms: 'Lebih sesuai untuk penjaga bantu', en: 'Easier for caregivers to assist' },
+    { ms: 'Kurangkan sakit lutut/pinggul', en: 'Less knee/hip strain' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 142,
+  cat: 'road',
+  icon: 'fas fa-triangle-exclamation',
+  name: { ms: 'Tip: Jika Ada Serangan Panik Semasa Memandu', en: 'Tip: If Panic Attack Happens While Driving' },
+  desc: { ms: 'Berhenti di tempat selamat, tarik nafas, hubungi orang dipercayai, jangan terus memandu jika tak stabil.', en: 'Stop safely, breathe, call someone trusted, avoid driving if unstable.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Lindungi kesihatan mental', en: 'Protects mental health' },
+    { ms: 'Bantu kawal situasi', en: 'Helps regain control' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 143,
+  cat: 'road',
+  icon: 'fas fa-kit-medical',
+  name: { ms: 'Kit “First Aid” Dalam Kereta', en: 'First Aid Kit in Car' },
+  desc: { ms: 'Sediakan kit rawatan asas untuk luka kecil. Penting untuk perjalanan jauh/keluarga.', en: 'Keep a basic first aid kit for minor injuries, useful for long trips/family.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Rawat kecederaan kecil cepat', en: 'Handle minor injuries quickly' },
+    { ms: 'Bantu sebelum bantuan tiba', en: 'Helps before help arrives' },
+    { ms: 'Sesuai untuk semua', en: 'Useful for all' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 144,
+  cat: 'road',
+  icon: 'fas fa-location-dot',
+  name: { ms: 'Kongsi Lokasi Bila Travel Seorang', en: 'Share Location When Traveling Alone' },
+  desc: { ms: 'Jika anda OKU travel seorang, kongsi lokasi live dengan keluarga/rakan untuk keselamatan.', en: 'If traveling alone, share live location with family/friends for safety.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Mudah dicari jika kecemasan', en: 'Easier to locate in emergencies' },
+    { ms: 'Kurangkan risiko hilang arah', en: 'Reduces disorientation risk' },
+    { ms: 'Tambah rasa selamat', en: 'Adds peace of mind' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 145,
+  cat: 'road',
+  icon: 'fas fa-clipboard-list',
+  name: { ms: 'Checklist Sebelum Drive (OKU Friendly)', en: 'Pre-Drive Checklist (PWD Friendly)' },
+  desc: { ms: 'Semak tempat duduk, cermin, brek, alat ubahsuai, dan pastikan telefon tidak mengganggu.', en: 'Check seat, mirrors, brakes, modification tools, and avoid phone distractions.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Pemanduan lebih selesa', en: 'More comfortable driving' },
+    { ms: 'Mudah jadi rutin harian', en: 'Easy daily routine' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 146,
+  cat: 'road',
+  icon: 'fas fa-clipboard-list',
+  name: { ms: 'Checklist Selepas Drive (OKU Friendly)', en: 'Post-Drive Checklist (PWD Friendly)' },
+  desc: { ms: 'Pastikan kerusi roda/tongkat diambil, pintu dikunci, barang ubat tidak tertinggal.', en: 'Ensure wheelchair/cane is taken, doors locked, meds not left behind.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Kurangkan barang hilang', en: 'Reduces lost items' },
+    { ms: 'Lebih selamat', en: 'Safer' },
+    { ms: 'Mudah jadi tabiat baik', en: 'Builds good habits' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 147,
+  cat: 'road',
+  icon: 'fas fa-clipboard-check',
+  name: { ms: 'Semak Keserasian Ubahsuai Dengan Lesen', en: 'Check Modification Compatibility with License' },
+  desc: { ms: 'Pastikan ubahsuai (hand control/spinner) sesuai dengan keperluan dan kelulusan yang betul.', en: 'Ensure modifications (hand controls/spinner) match needs and proper approval.' },
+  discount: { ms: 'Tertakluk Kelayakan', en: 'Subject to Eligibility' },
+  benefits: [
+    { ms: 'Elak isu undang-undang', en: 'Avoid legal issues' },
+    { ms: 'Lebih selamat', en: 'Safer driving' },
+    { ms: 'Dokumen lebih teratur', en: 'Better documentation' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 148,
+  cat: 'road',
+  icon: 'fas fa-screwdriver-wrench',
+  name: { ms: 'Ubahsuai: Sokongan Tempat Duduk (Cushion/Back Support)', en: 'Modification: Seat Support (Cushion/Back Support)' },
+  desc: { ms: 'Sokongan tambahan bantu pemandu/penumpang yang ada sakit belakang atau postur tertentu.', en: 'Extra support helps drivers/passengers with back pain or posture needs.' },
+  discount: { ms: 'Keselesaan', en: 'Comfort' },
+  benefits: [
+    { ms: 'Kurangkan sakit belakang', en: 'Reduces back pain' },
+    { ms: 'Lebih fokus memandu', en: 'Better driving focus' },
+    { ms: 'Sesuai untuk perjalanan jauh', en: 'Useful for long trips' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 149,
+  cat: 'road',
+  icon: 'fas fa-person-walking-with-cane',
+  name: { ms: 'Tip: Masa Naik Turun Kereta Jangan Rush', en: 'Tip: Don’t Rush When Getting In/Out' },
+  desc: { ms: 'Ambil masa, pastikan permukaan rata, gunakan sokongan, dan minta bantuan jika perlu.', en: 'Take time, ensure flat ground, use support, and ask for help if needed.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko jatuh', en: 'Reduces fall risk' },
+    { ms: 'Lebih selamat untuk OKU mobiliti', en: 'Safer for mobility PWD' },
+    { ms: 'Kurangkan kecederaan otot', en: 'Less muscle strain' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 150,
+  cat: 'road',
+  icon: 'fas fa-car-side',
+  name: { ms: 'Tip: Bawa “Portable Ramp” Jika Sesuai', en: 'Tip: Carry a Portable Ramp (If Suitable)' },
+  desc: { ms: 'Untuk sesetengah pengguna kerusi roda, portable ramp boleh bantu akses curb kecil (ikut keselamatan).', en: 'For some wheelchair users, a portable ramp can help with small curbs (safety-dependent).' },
+  discount: { ms: 'Tertakluk Keselamatan', en: 'Safety Dependent' },
+  benefits: [
+    { ms: 'Mudah akses tempat tinggi rendah', en: 'Easier curb access' },
+    { ms: 'Kurangkan bantuan orang lain', en: 'Less dependence on others' },
+    { ms: 'Sesuai untuk aktiviti luar', en: 'Useful outdoors' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+
+// --- Continue: make more until 170 with different angles ---
+{
+  id: 151,
+  cat: 'road',
+  icon: 'fas fa-screwdriver-wrench',
+  name: { ms: 'Ubahsuai: Handle Tambahan Dalam Kereta', en: 'Modification: Extra Grab Handles' },
+  desc: { ms: 'Handle tambahan membantu OKU naik turun kereta dengan lebih stabil.', en: 'Extra grab handles help PWD enter/exit more stably.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko jatuh', en: 'Reduces fall risk' },
+    { ms: 'Naik turun lebih stabil', en: 'More stable entry/exit' },
+    { ms: 'Sesuai untuk warga emas juga', en: 'Also useful for elderly' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 152,
+  cat: 'road',
+  icon: 'fas fa-screwdriver-wrench',
+  name: { ms: 'Ubahsuai: Tali Penarik Kerusi Roda (Storage)', en: 'Modification: Wheelchair Storage Straps' },
+  desc: { ms: 'Strap membantu ikat kerusi roda dalam boot agar tidak bergerak semasa pemanduan.', en: 'Straps secure wheelchairs in the boot to prevent movement while driving.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko kerusi roda terhentak', en: 'Reduces wheelchair shifting impact' },
+    { ms: 'Lebih kemas dan selamat', en: 'Cleaner and safer storage' },
+    { ms: 'Sesuai untuk perjalanan jauh', en: 'Useful for long trips' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 153,
+  cat: 'road',
+  icon: 'fas fa-screwdriver-wrench',
+  name: { ms: 'Ubahsuai: Button Start / Keyless (Kemudahan)', en: 'Modification: Push Start / Keyless (Convenience)' },
+  desc: { ms: 'Untuk sesetengah OKU, keyless lebih mudah berbanding kunci fizikal (ikut model).', en: 'For some PWDs, keyless is easier than physical keys (model-dependent).' },
+  discount: { ms: 'Kemudahan', en: 'Convenience' },
+  benefits: [
+    { ms: 'Kurangkan kesukaran pegang kunci', en: 'Less difficulty handling keys' },
+    { ms: 'Lebih cepat masuk/keluar', en: 'Faster access' },
+    { ms: 'Sesuai untuk mobiliti tangan terhad', en: 'Useful for limited hand mobility' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 154,
+  cat: 'road',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: Parkir OKU', en: 'Quick Search: PWD Parking' },
+  desc: { ms: 'Kata kunci: parkir OKU, petak OKU, permit, sticker, etika, saman.', en: 'Keywords: PWD parking, bays, permit, sticker, etiquette, fines.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Mudah cari topik parkir', en: 'Easier parking topic search' },
+    { ms: 'Bantu pengguna baru', en: 'Helps new users' },
+    { ms: 'Kurangkan salah guna', en: 'Reduces misuse' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 155,
+  cat: 'road',
+  icon: 'fas fa-magnifying-glass',
+  name: { ms: 'Carian Pantas: PUSPAKOM', en: 'Quick Search: PUSPAKOM' },
+  desc: { ms: 'Kata kunci: puspakom, pemeriksaan, ubahsuai, tukar hak milik, laporan.', en: 'Keywords: puspakom, inspection, modifications, ownership transfer, reports.' },
+  discount: { ms: 'Carian', en: 'Search' },
+  benefits: [
+    { ms: 'Cepat cari info pemeriksaan', en: 'Quickly find inspection info' },
+    { ms: 'Bantu rancang appointment', en: 'Helps plan appointments' },
+    { ms: 'Kurangkan kekeliruan prosedur', en: 'Reduces procedural confusion' }
+  ],
+  link: 'https://www.puspakom.com.my/'
+},
+{
+  id: 156,
+  cat: 'road',
+  icon: 'fas fa-helmet-safety',
+  name: { ms: 'Keselamatan Motosikal: Gear & Visibility', en: 'Motorcycle Safety: Gear & Visibility' },
+  desc: { ms: 'Jika menunggang, gunakan helmet, jaket reflect, dan lampu berfungsi untuk lebih selamat.', en: 'If riding, wear helmet, reflective gear, and ensure lights work for safety.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Lebih nampak waktu malam', en: 'More visible at night' },
+    { ms: 'Kurangkan kecederaan jika jatuh', en: 'Reduces injury in falls' },
+    { ms: 'Sesuai untuk semua penunggang', en: 'Suitable for all riders' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 157,
+  cat: 'road',
+  icon: 'fas fa-motorcycle',
+  name: { ms: 'OKU & Motosikal: Tip Rancang Perjalanan', en: 'PWD & Motorcycle: Trip Planning Tips' },
+  desc: { ms: 'Pilih laluan kurang bahaya, elak hujan, dan berhenti rehat bila perlu.', en: 'Choose safer routes, avoid rain, and rest when needed.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Lebih selamat untuk OKU', en: 'Safer for PWD' },
+    { ms: 'Kurangkan keletihan', en: 'Less fatigue' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 158,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Tip: Gunakan “Sunshade” Untuk Kurang Silau', en: 'Tip: Use Sunshade to Reduce Glare' },
+  desc: { ms: 'Silau boleh ganggu fokus. Sunshade dan cermin tinted ikut peraturan membantu.', en: 'Glare affects focus. Sunshades and legal tinting can help.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan silau mata', en: 'Reduces glare' },
+    { ms: 'Pemanduan lebih fokus', en: 'Improves focus' },
+    { ms: 'Lebih selesa siang hari', en: 'More comfortable daytime driving' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 159,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Tip: Pastikan “Seat Belt Fit” Sesuai', en: 'Tip: Ensure Proper Seatbelt Fit' },
+  desc: { ms: 'Seat belt yang sesuai penting untuk keselamatan. Gunakan clip/adjuster yang selamat jika perlu.', en: 'Proper seatbelt fit is crucial. Use safe clips/adjusters if needed.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Kurangkan risiko kecederaan', en: 'Reduces injury risk' },
+    { ms: 'Lebih selamat ketika brek mengejut', en: 'Safer during sudden braking' },
+    { ms: 'Sesuai untuk semua penumpang', en: 'Useful for all passengers' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 160,
+  cat: 'road',
+  icon: 'fas fa-triangle-exclamation',
+  name: { ms: 'Tip: Berhenti Jika Ada Simptom Bahaya', en: 'Tip: Stop if You Experience Dangerous Symptoms' },
+  desc: { ms: 'Jika pening, sesak nafas, atau sakit kuat—berhenti di tempat selamat dan minta bantuan.', en: 'If dizzy, breathless, or in severe pain—stop safely and seek help.' },
+  discount: { ms: 'Keselamatan', en: 'Safety' },
+  benefits: [
+    { ms: 'Lindungi nyawa', en: 'Protects life' },
+    { ms: 'Kurangkan risiko kemalangan', en: 'Reduces accident risk' },
+    { ms: 'Bantu tindakan cepat', en: 'Enables quick action' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 161,
+  cat: 'road',
+  icon: 'fas fa-oil-can',
+  name: { ms: 'Tip: Servis Berkala Untuk Kenderaan Ubahsuai', en: 'Tip: Regular Servicing for Modified Vehicles' },
+  desc: { ms: 'Kenderaan ubahsuai perlukan servis berkala untuk pastikan sistem tambahan kekal selamat.', en: 'Modified vehicles need regular servicing to keep added systems safe.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan risiko kegagalan alat', en: 'Reduces equipment failure risk' },
+    { ms: 'Lebih selamat', en: 'Safer' },
+    { ms: 'Pan jangka hayat ubahsuai', en: 'Extends modification lifespan' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 162,
+  cat: 'road',
+  icon: 'fas fa-clipboard',
+  name: { ms: 'Rekod Ubahsuai & Resit (Simpan)', en: 'Keep Modification Records & Receipts' },
+  desc: { ms: 'Simpan resit dan dokumen pemasangan untuk rujukan pemeriksaan/insurans.', en: 'Keep receipts and installation docs for inspections/insurance reference.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Mudah buat tuntutan/rujukan', en: 'Easier claims/reference' },
+    { ms: 'Kurangkan risiko salah faham', en: 'Reduces misunderstandings' },
+    { ms: 'Bantu urusan JPJ', en: 'Helps JPJ process' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 163,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Tip: Pilih “Auto Transmission” Jika Sesuai', en: 'Tip: Choose Automatic Transmission if Suitable' },
+  desc: { ms: 'Untuk sesetengah OKU, auto lebih mudah dan kurang penat berbanding manual.', en: 'For some PWDs, automatic is easier and less tiring than manual.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan keletihan kaki/tangan', en: 'Less leg/hand fatigue' },
+    { ms: 'Memandu lebih santai', en: 'More relaxed driving' },
+    { ms: 'Sesuai untuk trafik sesak', en: 'Better for heavy traffic' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 164,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Tip: Pintu “Sliding Door” Untuk Kerusi Roda', en: 'Tip: Sliding Doors for Wheelchair Access' },
+  desc: { ms: 'Pintu sliding memudahkan akses ruang sisi dan kurang ganggu kereta sebelah ketika parkir sempit.', en: 'Sliding doors ease side access and reduce interference in tight parking.' },
+  discount: { ms: 'Kemudahan', en: 'Convenience' },
+  benefits: [
+    { ms: 'Lebih mudah buka pintu', en: 'Easier door access' },
+    { ms: 'Sesuai parkir sempit', en: 'Useful in tight parking' },
+    { ms: 'Mudah untuk penjaga', en: 'Easier for caregivers' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 165,
+  cat: 'road',
+  icon: 'fas fa-car',
+  name: { ms: 'Tip: “Wide Boot Opening” Untuk Simpan Kerusi Roda', en: 'Tip: Wide Boot Opening for Wheelchair Storage' },
+  desc: { ms: 'Bukaan boot luas memudahkan masukkan kerusi roda, walker, atau alat sokongan lain.', en: 'Wide boot openings help store wheelchairs, walkers, and support equipment.' },
+  discount: { ms: 'Tips', en: 'Tips' },
+  benefits: [
+    { ms: 'Kurangkan tenaga angkat', en: 'Less lifting effort' },
+    { ms: 'Lebih cepat siap', en: 'Faster loading' },
+    { ms: 'Kurangkan risiko sakit belakang', en: 'Lower back strain risk' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 166,
+  cat: 'road',
+  icon: 'fas fa-circle-info',
+  name: { ms: 'Rujukan Agensi: JPJ & PUSPAKOM', en: 'Agency Reference: JPJ & PUSPAKOM' },
+  desc: { ms: 'Rujukan umum untuk urusan jalan raya, pemeriksaan, ubahsuai dan dokumen kenderaan.', en: 'General references for road matters, inspection, modifications, and vehicle documents.' },
+  discount: { ms: 'Rujukan', en: 'Reference' },
+  benefits: [
+    { ms: 'Sumber lebih rasmi', en: 'More official sources' },
+    { ms: 'Kurangkan info palsu', en: 'Less misinformation' },
+    { ms: 'Bantu semak prosedur terkini', en: 'Check latest procedures' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 167,
+  cat: 'road',
+  icon: 'fas fa-circle-info',
+  name: { ms: 'Rujukan Umum Keselamatan Jalan Raya', en: 'General Road Safety Reference' },
+  desc: { ms: 'Rujukan am untuk keselamatan jalan raya dan panduan pemanduan selamat.', en: 'General reference for road safety and safe driving guidelines.' },
+  discount: { ms: 'Rujukan', en: 'Reference' },
+  benefits: [
+    { ms: 'Tambah pengetahuan keselamatan', en: 'Improves safety awareness' },
+    { ms: 'Sesuai untuk semua pemandu', en: 'Suitable for all drivers' },
+    { ms: 'Bantu kurangkan risiko kemalangan', en: 'Helps reduce accident risk' }
+  ],
+  link: 'https://www.malaysia.gov.my/portal/index'
+},
+{
+  id: 168,
+  cat: 'road',
+  icon: 'fas fa-check-double',
+  name: { ms: 'Checklist: Sebelum Ke JPJ', en: 'Checklist: Before Going to JPJ' },
+  desc: { ms: 'Sediakan dokumen, semak waktu operasi, dan pastikan semua salinan lengkap untuk jimat masa.', en: 'Prepare documents, check operating hours, and bring complete copies to save time.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Kurangkan ulang-alik', en: 'Reduces repeated trips' },
+    { ms: 'Jimat masa beratur', en: 'Saves queue time' },
+    { ms: 'Urusan lebih lancar', en: 'Smoother processing' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 169,
+  cat: 'road',
+  icon: 'fas fa-check-double',
+  name: { ms: 'Checklist: Sebelum Ubahsuai Kenderaan', en: 'Checklist: Before Modifying a Vehicle' },
+  desc: { ms: 'Semak kelulusan, pilih bengkel pakar, rancang bajet, dan pastikan ada rekod pemasangan.', en: 'Check approvals, choose specialist workshops, plan budget, and keep installation records.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Elak ubahsuai tak sesuai', en: 'Avoid unsuitable modifications' },
+    { ms: 'Kurangkan pembaziran duit', en: 'Reduces wasted money' },
+    { ms: 'Lebih selamat & sah', en: 'Safer & legal' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+  id: 170,
+  cat: 'road',
+  icon: 'fas fa-check-double',
+  name: { ms: 'Checklist: Selepas Ubahsuai Kenderaan', en: 'Checklist: After Vehicle Modifications' },
+  desc: { ms: 'Buat pandu uji, simpan resit, semak insurans, dan ikut prosedur pemeriksaan jika diperlukan.', en: 'Test drive, keep receipts, check insurance, and follow inspection procedures if required.' },
+  discount: { ms: 'Checklist', en: 'Checklist' },
+  benefits: [
+    { ms: 'Pastikan ubahsuai selamat', en: 'Ensures modifications are safe' },
+    { ms: 'Elak masalah tuntutan insurans', en: 'Avoid insurance claim issues' },
+    { ms: 'Urusan JPJ lebih lancar', en: 'Smoother JPJ processes' }
+  ],
+  link: 'https://www.jpj.gov.my/'
+},
+{
+id:171,
+cat:'ehailing',
+icon:'fab fa-grab',
+name:{ms:'GrabAssist',en:'GrabAssist'},
+desc:{ms:'Perkhidmatan Grab khas untuk OKU dengan pemandu terlatih membantu penumpang.',en:'Grab service designed for PWD passengers with trained drivers assisting riders.'},
+discount:{ms:'Kadar Khas',en:'Special Rate'},
+benefits:[
+{ms:'Pemandu dilatih membantu OKU',en:'Drivers trained to assist PWD passengers'},
+{ms:'Boleh muat kerusi roda lipat',en:'Supports folded wheelchairs'},
+{ms:'Tempahan melalui aplikasi Grab',en:'Bookable via Grab app'}
+],
+link:'https://www.grab.com/my/transport/assist/'
+},
+
+{
+id:172,
+cat:'ehailing',
+icon:'fab fa-grab',
+name:{ms:'GrabAssist Plus',en:'GrabAssist Plus'},
+desc:{ms:'Versi GrabAssist dengan bantuan tambahan untuk penumpang memerlukan sokongan lebih.',en:'Enhanced GrabAssist service for passengers requiring extra support.'},
+discount:{ms:'Kadar Khas',en:'Special Rate'},
+benefits:[
+{ms:'Pemandu bantu naik turun kereta',en:'Driver helps boarding and alighting'},
+{ms:'Sesetengah kenderaan lebih luas',en:'Some vehicles have larger cabin space'},
+{ms:'Tempahan dalam aplikasi Grab',en:'Booking through Grab app'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:173,
+cat:'ehailing',
+icon:'fas fa-wheelchair',
+name:{ms:'Grab Kerusi Roda (Pilot)',en:'Grab Wheelchair Service'},
+desc:{ms:'Perkhidmatan ujian Grab untuk pengguna kerusi roda dengan kenderaan khas.',en:'Pilot Grab service for wheelchair users using specially equipped vehicles.'},
+discount:{ms:'Tertakluk Kawasan',en:'Area Based'},
+benefits:[
+{ms:'Kenderaan ada ramp',en:'Vehicles equipped with ramp'},
+{ms:'Sesuai kerusi roda',en:'Wheelchair compatible'},
+{ms:'Akses mudah ke hospital',en:'Useful for hospital visits'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:174,
+cat:'ehailing',
+icon:'fas fa-car',
+name:{ms:'AirAsia Ride',en:'AirAsia Ride'},
+desc:{ms:'Perkhidmatan e-hailing oleh AirAsia yang boleh digunakan untuk perjalanan harian.',en:'E-hailing service by AirAsia for daily rides.'},
+discount:{ms:'Promo Berkala',en:'Occasional Promo'},
+benefits:[
+{ms:'Tempahan dalam aplikasi AirAsia',en:'Book through AirAsia app'},
+{ms:'Harga kompetitif',en:'Competitive pricing'},
+{ms:'Pilihan kereta luas',en:'Various vehicle options'}
+],
+link:'https://ride.airasia.com/'
+},
+
+{
+id:175,
+cat:'ehailing',
+icon:'fas fa-car',
+name:{ms:'inDrive',en:'inDrive'},
+desc:{ms:'Aplikasi e-hailing yang membolehkan penumpang cadang harga perjalanan.',en:'Ride hailing app allowing passengers to propose trip fare.'},
+discount:{ms:'Harga Runding',en:'Negotiated Fare'},
+benefits:[
+{ms:'Boleh runding harga',en:'Passengers negotiate fare'},
+{ms:'Pilihan pemandu banyak',en:'Multiple driver options'},
+{ms:'Tempahan melalui aplikasi',en:'App booking available'}
+],
+link:'https://indrive.com/'
+},
+
+{
+id:176,
+cat:'ehailing',
+icon:'fas fa-car',
+name:{ms:'Maxim Ride',en:'Maxim Ride'},
+desc:{ms:'Perkhidmatan e-hailing alternatif dengan harga kompetitif di beberapa bandar.',en:'Alternative ride hailing service with competitive fares in selected cities.'},
+discount:{ms:'Tambang Rendah',en:'Low Fare'},
+benefits:[
+{ms:'Harga kompetitif',en:'Competitive pricing'},
+{ms:'Tempahan aplikasi',en:'App booking'},
+{ms:'Banyak kawasan liputan',en:'Wide city coverage'}
+],
+link:'https://maxim-rides.com/'
+},
+
+{
+id:177,
+cat:'ehailing',
+icon:'fas fa-hand-holding',
+name:{ms:'Bantuan Pemandu (Assist Service)',en:'Driver Assistance Service'},
+desc:{ms:'Sesetengah pemandu e-hailing membantu penumpang OKU secara sukarela.',en:'Some drivers voluntarily assist PWD passengers.'},
+discount:{ms:'Tiada Caj Tambahan',en:'No Extra Charge'},
+benefits:[
+{ms:'Bantu bawa barang',en:'Helps carry items'},
+{ms:'Bantu masuk kereta',en:'Helps boarding vehicle'},
+{ms:'Boleh minta dalam chat app',en:'Request through in-app chat'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:178,
+cat:'ehailing',
+icon:'fas fa-wheelchair',
+name:{ms:'Tip Tempah Kereta Mesra OKU',en:'Tip Booking Accessible Cars'},
+desc:{ms:'Pilih kereta jenis MPV atau SUV untuk lebih ruang kerusi roda.',en:'Choose MPV or SUV vehicles for more wheelchair space.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Ruang lebih besar',en:'More interior space'},
+{ms:'Mudah masuk keluar',en:'Easier entry and exit'},
+{ms:'Sesuai kerusi roda',en:'Wheelchair friendly'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:179,
+cat:'ehailing',
+icon:'fas fa-user-check',
+name:{ms:'Rating Pemandu',en:'Driver Rating'},
+desc:{ms:'Pilih pemandu dengan rating tinggi untuk pengalaman lebih baik.',en:'Choose drivers with high ratings for better ride experience.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Lebih profesional',en:'More professional drivers'},
+{ms:'Pengalaman perjalanan lebih selamat',en:'Safer ride experience'},
+{ms:'Kurang risiko masalah',en:'Lower issue risk'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:180,
+cat:'ehailing',
+icon:'fas fa-comment',
+name:{ms:'Chat Pemandu Sebelum Pickup',en:'Chat Driver Before Pickup'},
+desc:{ms:'Gunakan chat dalam aplikasi untuk beritahu jika anda pengguna OKU.',en:'Use in-app chat to inform driver if you are a PWD user.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Pemandu boleh bersedia',en:'Driver can prepare'},
+{ms:'Kurangkan kekeliruan pickup',en:'Reduce pickup confusion'},
+{ms:'Bantu komunikasi awal',en:'Improves communication'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:181,
+cat:'ehailing',
+icon:'fas fa-location-dot',
+name:{ms:'Lokasi Pickup Tepat',en:'Accurate Pickup Location'},
+desc:{ms:'Pastikan lokasi pickup tepat untuk memudahkan pemandu mencari anda.',en:'Ensure pickup location is accurate to help drivers find you.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Pickup lebih cepat',en:'Faster pickup'},
+{ms:'Kurangkan masa tunggu',en:'Less waiting time'},
+{ms:'Perjalanan lebih lancar',en:'Smoother journey'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:182,
+cat:'ehailing',
+icon:'fas fa-clock',
+name:{ms:'Tempah Awal',en:'Book Earlier'},
+desc:{ms:'Tempah ride lebih awal jika anda perlukan bantuan khas.',en:'Book rides earlier if you need special assistance.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Lebih masa bersedia',en:'More preparation time'},
+{ms:'Kurangkan stress',en:'Reduces stress'},
+{ms:'Perjalanan lebih lancar',en:'Smoother trip'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:183,
+cat:'ehailing',
+icon:'fas fa-phone',
+name:{ms:'Hubungi Pemandu',en:'Contact Driver'},
+desc:{ms:'Gunakan fungsi call dalam aplikasi jika pemandu sukar jumpa lokasi.',en:'Use the call function if driver cannot find location.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Pickup lebih cepat',en:'Faster pickup'},
+{ms:'Kurangkan kesilapan lokasi',en:'Reduce location mistakes'},
+{ms:'Komunikasi lebih jelas',en:'Clearer communication'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:184,
+cat:'ehailing',
+icon:'fas fa-map',
+name:{ms:'Kongsi Perjalanan',en:'Share Trip'},
+desc:{ms:'Kongsi perjalanan dengan keluarga untuk keselamatan.',en:'Share trip with family for safety.'},
+discount:{ms:'Keselamatan',en:'Safety'},
+benefits:[
+{ms:'Keluarga boleh jejak lokasi',en:'Family can track location'},
+{ms:'Tambah keselamatan',en:'Adds safety'},
+{ms:'Kurangkan risiko bahaya',en:'Reduces danger risk'}
+],
+link:'https://www.grab.com/my/'
+},
+
+{
+id:185,
+cat:'ehailing',
+icon:'fas fa-star',
+name:{ms:'Beri Rating Pemandu',en:'Rate Driver'},
+desc:{ms:'Beri rating selepas perjalanan untuk bantu komuniti.',en:'Rate drivers after trips to help the community.'},
+discount:{ms:'Komuniti',en:'Community'},
+benefits:[
+{ms:'Tingkat kualiti servis',en:'Improves service quality'},
+{ms:'Bantu penumpang lain',en:'Helps other passengers'},
+{ms:'Galak servis mesra OKU',en:'Encourages PWD friendly service'}
+],
+link:'https://www.grab.com/my/'
+},
+{
+id:221,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Malaysia Airlines – Bantuan Khas (Special Assistance)',en:'Malaysia Airlines – Special Assistance'},
+desc:{ms:'Permohonan bantuan untuk penumpang OKU: kerusi roda, boarding awal, bantuan transit dan lain-lain.',en:'Assistance request for PWD passengers: wheelchair, priority boarding, transit help and more.'},
+discount:{ms:'Bantuan Perjalanan',en:'Travel Assistance'},
+benefits:[
+{ms:'Permohonan kerusi roda (WCHR/WCHS/WCHC)',en:'Wheelchair request (WCHR/WCHS/WCHC)'},
+{ms:'Boarding awal & bantuan kru',en:'Priority boarding & crew assistance'},
+{ms:'Sokongan semasa transit/connecting flight',en:'Support during transit/connecting flights'}
+],
+link:'https://www.malaysiaairlines.com/'
+},
+
+{
+id:222,
+cat:'air',
+icon:'fas fa-plane-up',
+name:{ms:'AirAsia – Bantuan Khas (Special Assistance)',en:'AirAsia – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan untuk penumpang OKU termasuk kerusi roda dan keutamaan boarding (tertakluk polisi).',en:'Assistance service for PWD passengers including wheelchair and priority boarding (subject to policy).'},
+discount:{ms:'Servis Bantuan',en:'Assistance Service'},
+benefits:[
+{ms:'Permohonan bantuan dalam sistem tempahan',en:'Request assistance within booking system'},
+{ms:'Kerusi roda di lapangan terbang (tertakluk ketersediaan)',en:'Airport wheelchair support (subject to availability)'},
+{ms:'Boleh bawa peralatan bantuan mobiliti',en:'Assistive mobility devices allowed'}
+],
+link:'https://www.airasia.com/'
+},
+
+{
+id:223,
+cat:'air',
+icon:'fas fa-plane-departure',
+name:{ms:'Batik Air Malaysia – Bantuan Penumpang OKU',en:'Batik Air Malaysia – PWD Passenger Assistance'},
+desc:{ms:'Kemudahan bantuan di lapangan terbang untuk penumpang OKU termasuk bantuan kerusi roda dan check-in.',en:'Airport assistance for PWD passengers including wheelchair support and check-in help.'},
+discount:{ms:'Bantuan Lapangan Terbang',en:'Airport Assistance'},
+benefits:[
+{ms:'Bantuan check-in & boarding',en:'Check-in & boarding assistance'},
+{ms:'Sokongan kerusi roda (permohonan awal digalakkan)',en:'Wheelchair support (early request recommended)'},
+{ms:'Kebenaran peralatan bantuan',en:'Assistive devices permitted'}
+],
+link:'https://batikair.com/'
+},
+
+{
+id:224,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Firefly – Bantuan Khas',en:'Firefly – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan penumpang OKU untuk penerbangan domestik/serantau (tertakluk ketersediaan).',en:'PWD passenger assistance for domestic/regional flights (subject to availability).'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan boarding & turun pesawat',en:'Assistance during boarding & disembarking'},
+{ms:'Sokongan mobiliti di lapangan terbang',en:'Mobility support at airport'},
+{ms:'Cadangan maklum awal sebelum penerbangan',en:'Recommended to inform early before flight'}
+],
+link:'https://www.fireflyz.com.my/'
+},
+
+{
+id:225,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'MASwings – Bantuan Penumpang OKU',en:'MASwings – PWD Passenger Assistance'},
+desc:{ms:'Bantuan untuk penumpang OKU terutama bagi laluan Borneo; maklum awal untuk pengurusan lebih lancar.',en:'Assistance for PWD passengers especially for Borneo routes; inform early for smoother handling.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan semasa check-in',en:'Check-in assistance'},
+{ms:'Sokongan pergerakan/kerusi roda',en:'Mobility/wheelchair support'},
+{ms:'Keutamaan bantuan di pintu pelepasan',en:'Priority help at departure gate'}
+],
+link:'https://www.maswings.com.my/'
+},
+
+{
+id:226,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Singapore Airlines – Special Assistance',en:'Singapore Airlines – Special Assistance'},
+desc:{ms:'Panduan bantuan untuk penumpang OKU termasuk kerusi roda dan bantuan dalam penerbangan.',en:'Assistance guide for PWD passengers including wheelchair and onboard help.'},
+discount:{ms:'Bantuan Perjalanan',en:'Travel Assistance'},
+benefits:[
+{ms:'Permohonan bantuan kerusi roda',en:'Wheelchair request'},
+{ms:'Sokongan semasa transit',en:'Transit support'},
+{ms:'Bantuan naik/turun pesawat',en:'Boarding/disembarking assistance'}
+],
+link:'https://www.singaporeair.com/'
+},
+
+{
+id:227,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Scoot – Bantuan Khas',en:'Scoot – Special Assistance'},
+desc:{ms:'Permohonan bantuan perjalanan untuk penumpang yang memerlukan sokongan mobiliti atau bantuan lain.',en:'Travel assistance request for passengers needing mobility support or other help.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Maklum awal sebelum penerbangan',en:'Inform early before flight'},
+{ms:'Bantuan lapangan terbang (tertakluk)',en:'Airport assistance (subject to)'},
+{ms:'Boleh bawa peralatan bantuan tertentu',en:'Certain assistive devices allowed'}
+],
+link:'https://www.flyscoot.com/'
+},
+
+{
+id:228,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Qatar Airways – Bantuan Penumpang OKU',en:'Qatar Airways – PWD Passenger Assistance'},
+desc:{ms:'Bantuan khas dan permintaan perkhidmatan untuk penumpang yang memerlukan bantuan mobiliti.',en:'Special assistance and service requests for passengers requiring mobility support.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Permintaan bantuan semasa tempahan',en:'Request assistance during booking'},
+{ms:'Sokongan kerusi roda',en:'Wheelchair support'},
+{ms:'Maklum awal untuk keperluan khas',en:'Inform early for special needs'}
+],
+link:'https://www.qatarairways.com/'
+},
+
+{
+id:229,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Emirates – Bantuan Khas',en:'Emirates – Special Assistance'},
+desc:{ms:'Pilihan bantuan perjalanan untuk penumpang OKU termasuk mobiliti, boarding dan bantuan lapangan terbang.',en:'Travel assistance options for PWD passengers including mobility, boarding and airport help.'},
+discount:{ms:'Bantuan Perjalanan',en:'Travel Assistance'},
+benefits:[
+{ms:'Bantuan kerusi roda (permohonan)',en:'Wheelchair assistance (request)'},
+{ms:'Bantuan boarding awal',en:'Priority boarding'},
+{ms:'Sokongan transit di hub',en:'Transit support at hub'}
+],
+link:'https://www.emirates.com/'
+},
+
+{
+id:230,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Turkish Airlines – Bantuan Khas',en:'Turkish Airlines – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan untuk penumpang yang memerlukan sokongan mobiliti atau bantuan perjalanan lain.',en:'Assistance services for passengers requiring mobility support or other travel help.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Maklum awal kepada syarikat penerbangan',en:'Inform airline early'},
+{ms:'Sokongan lapangan terbang',en:'Airport support'},
+{ms:'Kebenaran peralatan bantuan',en:'Assistive devices permitted'}
+],
+link:'https://www.turkishairlines.com/'
+},
+
+{
+id:231,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Etihad Airways – Bantuan Khas',en:'Etihad Airways – Special Assistance'},
+desc:{ms:'Panduan bantuan untuk keperluan khas termasuk kerusi roda dan bantuan di lapangan terbang.',en:'Assistance guide for special needs including wheelchair and airport support.'},
+discount:{ms:'Bantuan Perjalanan',en:'Travel Assistance'},
+benefits:[
+{ms:'Permohonan bantuan sebelum berlepas',en:'Request assistance before departure'},
+{ms:'Sokongan mobiliti di lapangan terbang',en:'Mobility support at airport'},
+{ms:'Boarding lebih teratur',en:'More organized boarding'}
+],
+link:'https://www.etihad.com/'
+},
+
+{
+id:232,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Japan Airlines – Bantuan Khas',en:'Japan Airlines – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan untuk penumpang OKU termasuk panduan di lapangan terbang dan bantuan kerusi roda.',en:'Assistance services for PWD passengers including airport guidance and wheelchair support.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan check-in & transit',en:'Check-in & transit support'},
+{ms:'Sokongan mobiliti',en:'Mobility support'},
+{ms:'Maklum awal untuk susunan terbaik',en:'Inform early for best arrangement'}
+],
+link:'https://www.jal.co.jp/'
+},
+
+{
+id:233,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'ANA – Bantuan Khas',en:'ANA – Special Assistance'},
+desc:{ms:'Panduan dan bantuan untuk penumpang yang memerlukan sokongan khas semasa perjalanan udara.',en:'Guidance and assistance for passengers requiring special support during air travel.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan di lapangan terbang',en:'Airport assistance'},
+{ms:'Sokongan kerusi roda',en:'Wheelchair support'},
+{ms:'Proses boarding lebih mudah',en:'Easier boarding process'}
+],
+link:'https://www.ana.co.jp/'
+},
+
+{
+id:234,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Thai Airways – Bantuan Khas',en:'Thai Airways – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan untuk penumpang OKU termasuk bantuan mobiliti dan keutamaan tertentu.',en:'Assistance services for PWD passengers including mobility support and certain priorities.'},
+discount:{ms:'Bantuan Perjalanan',en:'Travel Assistance'},
+benefits:[
+{ms:'Bantuan kerusi roda (permohonan awal)',en:'Wheelchair support (early request)'},
+{ms:'Bantuan boarding',en:'Boarding assistance'},
+{ms:'Sokongan transit',en:'Transit support'}
+],
+link:'https://www.thaiairways.com/'
+},
+
+{
+id:235,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Cathay Pacific – Bantuan Khas',en:'Cathay Pacific – Special Assistance'},
+desc:{ms:'Bantuan khas untuk penumpang yang memerlukan sokongan mobiliti atau bantuan di lapangan terbang.',en:'Special assistance for passengers needing mobility support or airport help.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan kerusi roda',en:'Wheelchair support'},
+{ms:'Panduan semasa transit',en:'Transit guidance'},
+{ms:'Maklum awal untuk susunan terbaik',en:'Inform early for best arrangement'}
+],
+link:'https://www.cathaypacific.com/'
+},
+
+{
+id:236,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Korean Air – Bantuan Khas',en:'Korean Air – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan untuk penumpang OKU termasuk mobiliti, boarding dan bantuan lapangan terbang.',en:'Assistance service for PWD passengers including mobility, boarding and airport support.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan mobiliti (kerusi roda)',en:'Mobility support (wheelchair)'},
+{ms:'Boarding teratur',en:'Organized boarding'},
+{ms:'Sokongan semasa transit',en:'Transit support'}
+],
+link:'https://www.koreanair.com/'
+},
+
+{
+id:237,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'China Airlines – Bantuan Khas',en:'China Airlines – Special Assistance'},
+desc:{ms:'Bantuan khas untuk penumpang yang memerlukan sokongan semasa perjalanan dan di lapangan terbang.',en:'Special assistance for passengers needing support during travel and at airport.'},
+discount:{ms:'Bantuan Perjalanan',en:'Travel Assistance'},
+benefits:[
+{ms:'Bantuan kerusi roda',en:'Wheelchair assistance'},
+{ms:'Bantuan check-in',en:'Check-in support'},
+{ms:'Maklum awal sebelum perjalanan',en:'Inform early before travel'}
+],
+link:'https://www.china-airlines.com/'
+},
+
+{
+id:238,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Royal Brunei – Bantuan Khas',en:'Royal Brunei – Special Assistance'},
+desc:{ms:'Kemudahan bantuan untuk penumpang OKU bagi perjalanan lebih selesa.',en:'Assistance facilities for PWD passengers for more comfortable travel.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Sokongan mobiliti',en:'Mobility support'},
+{ms:'Bantuan boarding',en:'Boarding assistance'},
+{ms:'Maklum awal digalakkan',en:'Early notice recommended'}
+],
+link:'https://www.flyroyalbrunei.com/'
+},
+
+{
+id:239,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Lapangan Terbang Malaysia – OKU Assistance Counter',en:'Malaysia Airports – PWD Assistance Counter'},
+desc:{ms:'Kemudahan bantuan di lapangan terbang: kaunter bantuan, kerusi roda, dan laluan mesra OKU.',en:'Airport facilities: assistance counters, wheelchairs and PWD-friendly routes.'},
+discount:{ms:'Kemudahan Lapangan Terbang',en:'Airport Facilities'},
+benefits:[
+{ms:'Kaunter bantuan / info',en:'Assistance / info counter'},
+{ms:'Akses lif & ramp',en:'Lift and ramp access'},
+{ms:'Keutamaan bantuan jika dimaklum awal',en:'Priority support if informed early'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:240,
+cat:'air',
+icon:'fas fa-wheelchair',
+name:{ms:'Permohonan Kerusi Roda (WCHR/WCHS/WCHC)',en:'Wheelchair Request (WCHR/WCHS/WCHC)'},
+desc:{ms:'Kod standard bantuan kerusi roda yang digunakan oleh syarikat penerbangan untuk tahap bantuan berbeza.',en:'Standard wheelchair codes used by airlines to determine different assistance levels.'},
+discount:{ms:'Panduan',en:'Guide'},
+benefits:[
+{ms:'WCHR: bantuan ke gate',en:'WCHR: assistance to gate'},
+{ms:'WCHS: bantuan naik tangga/boarding',en:'WCHS: assistance with stairs/boarding'},
+{ms:'WCHC: bantuan penuh (cabin seat)',en:'WCHC: full assistance (cabin seat)'}
+],
+link:'https://www.iata.org/'
+},
+
+{
+id:241,
+cat:'air',
+icon:'fas fa-suitcase-rolling',
+name:{ms:'Peralatan Bantuan Mobiliti',en:'Mobility Assistive Devices'},
+desc:{ms:'Kerusi roda, tongkat, walker dan alat bantuan mobiliti biasanya dibenarkan (tertakluk polisi).',en:'Wheelchairs, canes, walkers and mobility aids are generally allowed (subject to policy).'},
+discount:{ms:'Hak Penumpang',en:'Passenger Rights'},
+benefits:[
+{ms:'Maklum jenis alat sebelum terbang',en:'Inform device type before flying'},
+{ms:'Label alat & simpan maklumat',en:'Label device and keep information'},
+{ms:'Ambil gambar alat sebelum check-in',en:'Take photos before check-in'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:242,
+cat:'air',
+icon:'fas fa-file-medical',
+name:{ms:'Surat Doktor (Jika Perlu)',en:'Medical Letter (If Needed)'},
+desc:{ms:'Untuk sesetengah keadaan, syarikat penerbangan mungkin minta pengesahan doktor atau borang MEDIF.',en:'For some conditions, airlines may require doctor confirmation or MEDIF form.'},
+discount:{ms:'Keperluan Dokumen',en:'Document Requirement'},
+benefits:[
+{ms:'Semak polisi syarikat penerbangan',en:'Check airline policy'},
+{ms:'Simpan dokumen semasa travel',en:'Keep documents during travel'},
+{ms:'Maklum awal untuk elak delay',en:'Inform early to avoid delays'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:243,
+cat:'air',
+icon:'fas fa-door-open',
+name:{ms:'Boarding Awal (Priority Boarding)',en:'Priority Boarding'},
+desc:{ms:'Sesetengah syarikat penerbangan benarkan boarding awal untuk penumpang OKU bagi keselamatan dan keselesaan.',en:'Some airlines offer priority boarding for PWD passengers for safety and comfort.'},
+discount:{ms:'Keutamaan',en:'Priority'},
+benefits:[
+{ms:'Kurang sesak semasa naik',en:'Less crowd during boarding'},
+{ms:'Lebih masa untuk duduk selesa',en:'More time to settle comfortably'},
+{ms:'Mudah urus peralatan bantuan',en:'Easier to manage assistive devices'}
+],
+link:'https://www.malaysiaairlines.com/'
+},
+
+{
+id:244,
+cat:'air',
+icon:'fas fa-chair',
+name:{ms:'Tempat Duduk Sesuai (Seat Request)',en:'Suitable Seating (Seat Request)'},
+desc:{ms:'Boleh minta tempat duduk lebih sesuai untuk mobiliti atau keperluan khas (tertakluk ketersediaan).',en:'You may request more suitable seats for mobility or special needs (subject to availability).'},
+discount:{ms:'Permintaan Tempat Duduk',en:'Seat Request'},
+benefits:[
+{ms:'Dekat aisle untuk mudah bergerak',en:'Aisle seat for easier movement'},
+{ms:'Dekat tandas (jika perlu)',en:'Near restroom (if needed)'},
+{ms:'Maklum awal semasa tempahan',en:'Request early during booking'}
+],
+link:'https://www.malaysiaairlines.com/'
+},
+
+{
+id:245,
+cat:'air',
+icon:'fas fa-route',
+name:{ms:'Transit & Connecting Flight OKU',en:'PWD Transit & Connecting Flights'},
+desc:{ms:'Jika ada transit, minta bantuan pengiring untuk elak terlepas connecting flight.',en:'If you have transit, request escort assistance to avoid missing connections.'},
+discount:{ms:'Bantuan Transit',en:'Transit Assistance'},
+benefits:[
+{ms:'Sokongan bergerak antara gate',en:'Support moving between gates'},
+{ms:'Keutamaan bantuan untuk masa singkat',en:'Priority help for short connection time'},
+{ms:'Maklum awal kepada airline/airport',en:'Inform airline/airport early'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:246,
+cat:'air',
+icon:'fas fa-bag-medical',
+name:{ms:'Ubat & Peralatan Perubatan',en:'Medication & Medical Equipment'},
+desc:{ms:'Bawa ubat dan peralatan penting dalam beg kabin; ikut peraturan keselamatan.',en:'Carry essential medication and devices in cabin bag; follow security rules.'},
+discount:{ms:'Panduan',en:'Guide'},
+benefits:[
+{ms:'Simpan ubat dalam bekas asal',en:'Keep medicine in original packaging'},
+{ms:'Sediakan preskripsi jika perlu',en:'Prepare prescription if needed'},
+{ms:'Bawa bateri peranti ikut polisi',en:'Carry device batteries per policy'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:247,
+cat:'air',
+icon:'fas fa-headset',
+name:{ms:'Bantuan Penumpang Kurang Dengar',en:'Assistance for Hearing Impaired Passengers'},
+desc:{ms:'Maklumkan kru jika anda kurang dengar untuk bantuan pengumuman, arahan keselamatan, dan komunikasi.',en:'Inform crew if you have hearing impairment for announcements, safety instructions, and communication support.'},
+discount:{ms:'Sokongan Komunikasi',en:'Communication Support'},
+benefits:[
+{ms:'Minta arahan keselamatan bertulis',en:'Request written safety instructions'},
+{ms:'Gunakan chat/nota di telefon',en:'Use phone notes/chat to communicate'},
+{ms:'Maklum awal semasa check-in',en:'Inform during check-in'}
+],
+link:'https://www.malaysiaairlines.com/'
+},
+
+{
+id:248,
+cat:'air',
+icon:'fas fa-eye',
+name:{ms:'Bantuan Penumpang Kurang Penglihatan',en:'Assistance for Visually Impaired Passengers'},
+desc:{ms:'Boleh minta bantuan pengiring dari check-in hingga gate dan bantuan semasa boarding.',en:'You may request escort assistance from check-in to gate and help during boarding.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Escort ke gate',en:'Escort to gate'},
+{ms:'Bantuan boarding & turun pesawat',en:'Boarding & disembarking assistance'},
+{ms:'Maklum awal kepada airline',en:'Inform airline early'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:249,
+cat:'air',
+icon:'fas fa-child',
+name:{ms:'OKU + Penjaga (Carer/Companion)',en:'PWD + Carer (Companion)'},
+desc:{ms:'Jika anda perlukan penjaga, semak polisi tiket dan susunan tempat duduk bersama.',en:'If you require a carer, check ticket policy and seating arrangements together.'},
+discount:{ms:'Susunan Perjalanan',en:'Travel Arrangement'},
+benefits:[
+{ms:'Minta tempat duduk bersebelahan (tertakluk)',en:'Request adjacent seats (subject to)'},
+{ms:'Maklum semasa tempahan',en:'Inform during booking'},
+{ms:'Bantu proses boarding lebih cepat',en:'Helps speed up boarding process'}
+],
+link:'https://www.malaysiaairlines.com/'
+},
+
+{
+id:250,
+cat:'air',
+icon:'fas fa-suitcase',
+name:{ms:'Bagasi Tambahan Untuk Peralatan',en:'Extra Baggage for Assistive Equipment'},
+desc:{ms:'Sesetengah airline beri kelonggaran bagasi untuk peralatan OKU (bergantung polisi).',en:'Some airlines may allow extra baggage for assistive equipment (policy dependent).'},
+discount:{ms:'Tertakluk Polisi',en:'Subject to Policy'},
+benefits:[
+{ms:'Semak polisi sebelum travel',en:'Check policy before travel'},
+{ms:'Maklumkan alat & saiz',en:'Inform device type and size'},
+{ms:'Simpan bukti komunikasi',en:'Keep proof of communication'}
+],
+link:'https://www.airasia.com/'
+},
+
+{
+id:251,
+cat:'air',
+icon:'fas fa-building',
+name:{ms:'Kaunter Check-in Khas (Jika Ada)',en:'Special Check-in Counter (If Available)'},
+desc:{ms:'Beberapa lapangan terbang menyediakan kaunter khas atau laluan keutamaan untuk OKU.',en:'Some airports provide special counters or priority lanes for PWD passengers.'},
+discount:{ms:'Kemudahan',en:'Facility'},
+benefits:[
+{ms:'Kurang beratur lama',en:'Less long queues'},
+{ms:'Bantuan pegawai bertugas',en:'Support from officers'},
+{ms:'Mudah urus dokumen',en:'Easier document handling'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:252,
+cat:'air',
+icon:'fas fa-restroom',
+name:{ms:'Akses Tandas & Kemudahan OKU',en:'Accessible Toilets & Facilities'},
+desc:{ms:'Cari tandas OKU, ramp dan lif berhampiran gate untuk keselesaan.',en:'Locate accessible toilets, ramps and lifts near gates for comfort.'},
+discount:{ms:'Kemudahan Lapangan Terbang',en:'Airport Facilities'},
+benefits:[
+{ms:'Tandas OKU lebih luas',en:'Spacious accessible toilets'},
+{ms:'Ruang menunggu mesra OKU',en:'PWD-friendly waiting area'},
+{ms:'Akses lif ke tingkat berbeza',en:'Lift access between levels'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:253,
+cat:'air',
+icon:'fas fa-shield-halved',
+name:{ms:'Keselamatan & Pemeriksaan (Screening)',en:'Security & Screening'},
+desc:{ms:'Semasa pemeriksaan keselamatan, anda boleh minta bantuan pegawai jika ada peralatan bantuan atau keadaan tertentu.',en:'During security screening, you may request officer assistance if you have assistive devices or specific conditions.'},
+discount:{ms:'Panduan',en:'Guide'},
+benefits:[
+{ms:'Maklum pegawai tentang alat bantuan',en:'Inform officer about assistive devices'},
+{ms:'Minta pemeriksaan lebih privasi jika perlu',en:'Request more private screening if needed'},
+{ms:'Bertenang dan ikut arahan',en:'Stay calm and follow instructions'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:254,
+cat:'air',
+icon:'fas fa-bell-concierge',
+name:{ms:'Bantuan Kerusi Roda Lapangan Terbang',en:'Airport Wheelchair Assistance'},
+desc:{ms:'Lapangan terbang biasanya ada kerusi roda untuk pinjam dengan permohonan bantuan (tertakluk ketersediaan).',en:'Airports often provide wheelchairs upon request (subject to availability).'},
+discount:{ms:'Kemudahan',en:'Facility'},
+benefits:[
+{ms:'Minta awal semasa check-in',en:'Request early during check-in'},
+{ms:'Boleh guna dari kaunter ke gate',en:'Use from counter to gate'},
+{ms:'Bantuan pegawai bertugas',en:'Support from airport staff'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:255,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Rujukan Umum: Polisi Bantuan Airline',en:'General Reference: Airline Assistance Policies'},
+desc:{ms:'Setiap airline ada polisi berbeza. Semak bahagian “Special Assistance/Accessibility” di laman rasmi.',en:'Each airline differs. Check the “Special Assistance/Accessibility” section on official website.'},
+discount:{ms:'Rujukan',en:'Reference'},
+benefits:[
+{ms:'Elak info tidak tepat',en:'Avoid inaccurate information'},
+{ms:'Boleh buat permohonan rasmi',en:'Allows formal assistance request'},
+{ms:'Lebih mudah jika berlaku masalah',en:'Helps if issues occur'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+/* ====== EXTRA AIRLINES / ROUTES / PRACTICAL GUIDES (256–270) ====== */
+
+{
+id:256,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Saudia – Bantuan Khas',en:'Saudia – Special Assistance'},
+desc:{ms:'Bantuan untuk penumpang OKU termasuk sokongan mobiliti dan bantuan lapangan terbang.',en:'Assistance for PWD passengers including mobility support and airport assistance.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Permohonan bantuan semasa tempahan',en:'Request assistance during booking'},
+{ms:'Sokongan kerusi roda',en:'Wheelchair support'},
+{ms:'Maklum awal untuk susunan terbaik',en:'Inform early for best arrangement'}
+],
+link:'https://www.saudia.com/'
+},
+
+{
+id:257,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'IndiGo – Bantuan Khas',en:'IndiGo – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan untuk penumpang dengan keperluan khas (tertakluk polisi).',en:'Assistance services for passengers with special needs (subject to policy).'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Maklum awal sebelum perjalanan',en:'Inform early before travel'},
+{ms:'Bantuan boarding',en:'Boarding assistance'},
+{ms:'Sokongan mobiliti',en:'Mobility support'}
+],
+link:'https://www.goindigo.in/'
+},
+
+{
+id:258,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'VietJet – Bantuan Khas',en:'VietJet – Special Assistance'},
+desc:{ms:'Kemudahan bantuan untuk penumpang OKU, semak polisi & prosedur sebelum terbang.',en:'Assistance facilities for PWD passengers, check policy & procedure before flying.'},
+discount:{ms:'Tertakluk Polisi',en:'Subject to Policy'},
+benefits:[
+{ms:'Maklum awal kepada airline',en:'Inform airline early'},
+{ms:'Sokongan kerusi roda (jika ada)',en:'Wheelchair support (if available)'},
+{ms:'Bawa peralatan bantuan tertentu',en:'Bring certain assistive devices'}
+],
+link:'https://www.vietjetair.com/'
+},
+
+{
+id:259,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Lion Air – Bantuan Khas',en:'Lion Air – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan untuk penumpang OKU mengikut polisi syarikat penerbangan.',en:'Assistance for PWD passengers according to airline policy.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan check-in',en:'Check-in assistance'},
+{ms:'Maklum awal digalakkan',en:'Early notice recommended'},
+{ms:'Kebenaran peralatan bantuan',en:'Assistive devices permitted'}
+],
+link:'https://lionair.co.id/'
+},
+
+{
+id:260,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Wings Air – Bantuan Khas',en:'Wings Air – Special Assistance'},
+desc:{ms:'Bantuan khas untuk penumpang OKU terutama bagi penerbangan domestik jarak dekat.',en:'Special assistance for PWD passengers especially for short domestic flights.'},
+discount:{ms:'Bantuan Khas',en:'Special Assistance'},
+benefits:[
+{ms:'Bantuan boarding',en:'Boarding assistance'},
+{ms:'Sokongan mobiliti',en:'Mobility support'},
+{ms:'Maklum awal untuk susunan terbaik',en:'Inform early for best arrangement'}
+],
+link:'https://wingsair.co.id/'
+},
+
+{
+id:261,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Air India – Bantuan Khas',en:'Air India – Special Assistance'},
+desc:{ms:'Perkhidmatan bantuan penumpang dengan keperluan khas termasuk kerusi roda.',en:'Assistance services for passengers with special needs including wheelchair support.'},
+discount:{ms:'Bantuan Perjalanan',en:'Travel Assistance'},
+benefits:[
+{ms:'Permintaan bantuan semasa tempahan',en:'Request assistance during booking'},
+{ms:'Sokongan mobiliti',en:'Mobility support'},
+{ms:'Maklum awal untuk susunan terbaik',en:'Inform early for best arrangement'}
+],
+link:'https://www.airindia.com/'
+},
+
+{
+id:262,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Malaysia Airports – Parking OKU (Lapangan Terbang)',en:'Malaysia Airports – PWD Parking (Airport)'},
+desc:{ms:'Sesetengah lapangan terbang menyediakan petak parkir OKU dan akses mudah ke terminal.',en:'Some airports provide PWD parking bays and easier access to terminals.'},
+discount:{ms:'Kemudahan',en:'Facility'},
+benefits:[
+{ms:'Parkir lebih dekat ke pintu masuk',en:'Parking closer to entrance'},
+{ms:'Laluan mesra OKU',en:'PWD-friendly routes'},
+{ms:'Akses lif/ramp',en:'Lift/ramp access'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:263,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Tip: Datang Awal Ke Lapangan Terbang',en:'Tip: Arrive Early at Airport'},
+desc:{ms:'Datang lebih awal memberi masa untuk bantuan kerusi roda, kaunter khas, dan pemeriksaan keselamatan.',en:'Arriving early gives time for wheelchair assistance, special counters, and security screening.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Kurangkan risiko terlepas flight',en:'Reduce risk of missing flight'},
+{ms:'Lebih masa untuk urusan bantuan',en:'More time to arrange assistance'},
+{ms:'Kurang stres semasa proses',en:'Less stress during process'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:264,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Tip: Simpan Nombor Hotline Airline',en:'Tip: Save Airline Hotline Number'},
+desc:{ms:'Simpan nombor hotline airline untuk bantuan segera jika ada perubahan jadual atau isu bantuan.',en:'Save airline hotline for quick help if schedule changes or assistance issues occur.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Senang buat perubahan tempahan',en:'Easier booking changes'},
+{ms:'Boleh minta bantuan segera',en:'Request immediate help'},
+{ms:'Kurangkan masa tunggu',en:'Reduces waiting time'}
+],
+link:'https://www.malaysiaairlines.com/'
+},
+
+{
+id:265,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Tip: Screenshot Polisi Bantuan',en:'Tip: Screenshot Assistance Policy'},
+desc:{ms:'Ambil screenshot polisi bantuan dari laman rasmi untuk rujukan semasa travel.',en:'Screenshot official assistance policy for reference during travel.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Bukti rujukan cepat',en:'Quick reference proof'},
+{ms:'Mudahkan komunikasi dengan staf',en:'Easier communication with staff'},
+{ms:'Elak salah faham',en:'Avoid misunderstandings'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:266,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Tip: Label Kerusi Roda & Alat Bantuan',en:'Tip: Label Wheelchair & Assistive Devices'},
+desc:{ms:'Letak label nama dan nombor telefon pada kerusi roda/alatan untuk elak hilang.',en:'Put name and phone labels on wheelchair/devices to prevent loss.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Kurangkan risiko hilang',en:'Lower loss risk'},
+{ms:'Mudah dikenal pasti',en:'Easy identification'},
+{ms:'Lebih cepat dapat balik alat',en:'Faster device retrieval'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:267,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Tip: Minta Bantuan Gate-to-Gate',en:'Tip: Request Gate-to-Gate Assistance'},
+desc:{ms:'Jika anda sukar berjalan jauh, minta bantuan dari check-in hingga gate dan seterusnya.',en:'If long walking is difficult, request support from check-in to gate and onward.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Kurangkan keletihan',en:'Reduces fatigue'},
+{ms:'Lebih selamat bergerak',en:'Safer movement'},
+{ms:'Sesuai untuk transit',en:'Useful for transit flights'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:268,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Tip: Maklum Keperluan Dalam Catatan Tempahan',en:'Tip: Put Needs in Booking Notes'},
+desc:{ms:'Isi catatan tempahan: kerusi roda, bantuan komunikasi, atau keperluan lain.',en:'Use booking notes: wheelchair, communication assistance, or other needs.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Staf lebih bersedia',en:'Staff can prepare better'},
+{ms:'Kurangkan salah komunikasi',en:'Reduces miscommunication'},
+{ms:'Urusan lebih cepat',en:'Faster handling'}
+],
+link:'https://www.airasia.com/'
+},
+
+{
+id:269,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Tip: Rancang Laluan Terminal (Maps)',en:'Tip: Plan Terminal Route (Maps)'},
+desc:{ms:'Gunakan peta terminal untuk cari lif, tandas OKU, dan lokasi gate dengan mudah.',en:'Use terminal maps to locate lifts, accessible toilets, and gates easily.'},
+discount:{ms:'Tips',en:'Tip'},
+benefits:[
+{ms:'Kurangkan sesat',en:'Less chance of getting lost'},
+{ms:'Jimat masa',en:'Saves time'},
+{ms:'Lebih yakin bergerak',en:'More confidence moving around'}
+],
+link:'https://www.malaysiaairports.com.my/'
+},
+
+{
+id:270,
+cat:'air',
+icon:'fas fa-plane',
+name:{ms:'Rujukan: Maklum Awal (Advance Notice)',en:'Reference: Advance Notice'},
+desc:{ms:'Kebanyakan bantuan lebih mudah jika dimaklum 24–48 jam sebelum penerbangan (bergantung polisi).',en:'Most assistance is easier with 24–48 hours advance notice (policy dependent).'},
+discount:{ms:'Rujukan',en:'Reference'},
+benefits:[
+{ms:'Memudahkan penyediaan staf',en:'Helps staff preparation'},
+{ms:'Kurangkan risiko bantuan tak tersedia',en:'Lower risk of assistance unavailability'},
+{ms:'Proses lebih lancar',en:'Smoother process'}
+],
+link:'https://www.malaysiaairports.com.my/'
+}
+], // ✅ Data kekal sama (tak payah repeat - semua items 1-270)
+
+                get filteredTransport() {
+                    if (this.activeCat === 'all') {
+                        return this.transportData;
+                    }
+                    return this.transportData.filter(item => item.cat === this.activeCat);
+                },
+
+                // Functions
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                sendMessage() {
+                    if (!this.userMsg.trim()) return;
+                    
+                    this.messages.push({ id: Date.now(), text: this.userMsg, sender: 'user' });
+                    
+                    setTimeout(() => {
+                        let reply = "";
+                        const m = this.userMsg.toLowerCase();
+                        if(this.lang === 'ms') {
+                            if(m.includes('keretapi') || m.includes('ktmb') || m.includes('lrt')) reply = "Untuk keretapi (KTMB/LRT), anda boleh dapat <b>Diskaun 50%</b>. Sila bawa kad OKU ke kaunter atau daftar KTMB i-Card online.";
+                            else if(m.includes('jpj') || m.includes('cukai') || m.includes('roadtax')) reply = "Untuk Cukai Jalan (LKM), ia adalah <b>PERCUMA</b> untuk kereta/motor OKU yang layak. Perlu mohon di kaunter JPJ.";
+                            else reply = "Terima kasih. Anda boleh lihat senarai di atas untuk pautan rasmi JPJ, RapidKL, dan lain-lain.";
+                        } else {
+                            if(m.includes('train') || m.includes('ktmb') || m.includes('lrt')) reply = "For trains (KTMB/LRT), you are entitled to a <b>50% Discount</b>. Please bring your PWD card to the counter or register for KTMB i-Card online.";
+                            else if(m.includes('jpj') || m.includes('tax') || m.includes('roadtax')) reply = "For Road Tax (LKM), it is <b>FREE</b> for eligible PWD vehicles. You need to apply at JPJ counters.";
+                            else reply = "Thank you. You can refer to the list above for official links to JPJ, RapidKL, and others.";
+                        }
+                        this.messages.push({ id: Date.now() + 1, text: reply, sender: 'bot' });
+                        
+                        setTimeout(() => {
+                            const chatContainer = document.getElementById('chat-messages');
+                            if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+                        }, 100);
+                    }, 1000);
+
+                    this.userMsg = '';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

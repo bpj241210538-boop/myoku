@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY OKU SENTRAL - Bantuan Perumahan</title>
+    <meta name="description" content="Portal info perumahan, diskaun dan skim khas perumahan untuk OKU di Malaysia.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        house: { 500: '#10B981', 600: '#059669' }
+                    },
+                    animation: { 'spin-slow': 'spin 3s linear infinite' }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="housingData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+             <div class="flex items-center gap-3 md:gap-6">
+                <a href="index.html" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_home">Utama</a>
+                <a href="#senarai" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_list">Senarai Skim</a>
+                <a href="#tips" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_tips">Tips & Hak</a>
+                
+                 <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 px-4 bg-gradient-to-br from-green-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-green-200/50 rounded-full blur-3xl -translate-y-20 translate-x-20"></div>
+        
+        <div class="container mx-auto max-w-5xl relative z-10 text-center">
+            <a href="index.html" class="inline-flex items-center gap-2 text-gray-500 hover:text-brand-600 mb-6 font-bold transition">
+                <i class="fas fa-arrow-left"></i> <span x-text="txt[lang].back_home">Kembali ke Menu Utama</span>
+            </a>
+
+            <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-500" x-text="txt[lang].page_title">Kediaman & Perumahan</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-10" x-text="txt[lang].page_desc">
+                Info lengkap tentang diskaun pembelian rumah, skim sewaan PPR, dan bantuan baik pulih rumah khas untuk pemegang kad OKU.
+            </p>
+
+            <div class="max-w-2xl mx-auto relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-green-400 to-teal-400 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                <div class="relative flex items-center bg-white dark:bg-gray-800 rounded-full p-2 shadow-2xl">
+                    <i class="fas fa-search text-gray-400 ml-4 text-xl"></i>
+                    <input type="text" x-model="search" :placeholder="txt[lang].search_ph" 
+                           class="w-full bg-transparent border-none focus:ring-0 text-lg px-4 text-gray-800 dark:text-white placeholder-gray-400 font-semibold h-12">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="senarai" class="py-16 bg-white dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <template x-for="cat in categories">
+                    <button @click="activeCat = cat.id" 
+                            class="px-6 py-3 rounded-full font-bold text-sm transition-all border-2 flex items-center gap-2"
+                            :class="activeCat === cat.id ? 'bg-green-600 border-green-600 text-white shadow-lg scale-105' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 text-gray-600 dark:text-gray-300'">
+                        <i :class="cat.icon"></i> <span x-text="cat.label[lang]"></span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <template x-for="item in filteredHousing" :key="item.id">
+                    <div class="group bg-gray-50 dark:bg-gray-800 rounded-3xl p-6 shadow-sm hover:shadow-2xl border border-gray-100 dark:border-gray-700 transition duration-300 relative overflow-hidden flex flex-col h-full">
+                        <div class="absolute top-4 right-4 bg-green-100 text-green-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-green-200" x-text="item.type[lang]"></div>
+                        
+                        <div class="mb-6">
+                            <div class="w-14 h-14 bg-white dark:bg-gray-700 rounded-2xl flex items-center justify-center text-3xl shadow-md mb-4 group-hover:scale-110 transition">
+                                <span x-text="item.emoji"></span>
+                            </div>
+                            <h3 class="text-2xl font-black text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-green-600 transition" x-text="item.title[lang]"></h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="item.agency"></p>
+                        </div>
+
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed flex-grow" x-text="item.desc[lang]"></p>
+
+                        <div class="bg-white dark:bg-gray-900/50 rounded-xl p-4 mb-6 border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs font-bold text-green-600 uppercase mb-3 flex items-center gap-2">
+                                <i class="fas fa-star"></i> <span x-text="txt[lang].highlights">Kelebihan</span>
+                            </p>
+                            <ul class="space-y-2">
+                                <template x-for="point in item.points">
+                                    <li class="flex items-start gap-2 text-xs font-medium dark:text-gray-300">
+                                        <i class="fas fa-check-circle text-green-500 mt-0.5"></i> <span x-text="point[lang]"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+
+                        <div class="mt-auto flex flex-col gap-3">
+                            <a :href="item.link" target="_blank" class="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-center hover:opacity-90 transition shadow-lg flex items-center justify-center gap-2">
+                                <span x-text="txt[lang].btn_visit">Layari Web Rasmi</span> <i class="fas fa-external-link-alt text-xs"></i>
+                            </a>
+                            <button @click="openChatWithQuery(item.title[lang])" class="w-full py-3 bg-green-100 dark:bg-gray-700 text-green-700 dark:text-green-400 rounded-xl font-bold text-center hover:bg-green-200 dark:hover:bg-gray-600 transition">
+                                <i class="fas fa-comment-dots mr-2"></i> <span x-text="txt[lang].btn_ask">Tanya Bot</span>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+                
+                <div x-show="filteredHousing.length === 0" class="col-span-3 text-center py-20">
+                    <div class="text-6xl mb-4">🏠❓</div>
+                    <h3 class="text-xl font-bold text-gray-400" x-text="txt[lang].no_result">Tiada skim dijumpai untuk carian ini.</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tips" class="py-20 bg-green-50 dark:bg-gray-800/50">
+        <div class="container mx-auto px-4 max-w-4xl">
+            <h2 class="text-3xl font-black mb-8 text-center" x-text="txt[lang].tips_title">Info Penting & Hak OKU</h2>
+            
+            <div class="space-y-4">
+                <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 overflow-hidden">
+                    <button @click="open = !open" class="w-full px-6 py-4 flex justify-between items-center text-left font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <span x-text="txt[lang].faq_1_q">Adakah OKU dapat diskaun beli rumah?</span>
+                        <i class="fas fa-chevron-down transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" class="px-6 py-4 text-gray-600 dark:text-gray-300 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <p x-text="txt[lang].faq_1_a">Ya. Secara dasarnya, terdapat polisi Diskaun 20% untuk pembelian rumah kos rendah dan sederhana rendah bagi OKU di kebanyakan negeri. Namun, ia bergantung kepada pemaju dan kerajaan negeri masing-masing.</p>
+                    </div>
+                </div>
+
+                <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 overflow-hidden">
+                    <button @click="open = !open" class="w-full px-6 py-4 flex justify-between items-center text-left font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <span x-text="txt[lang].faq_2_q">Bagaimana dengan rumah sewa PPR?</span>
+                        <i class="fas fa-chevron-down transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" class="px-6 py-4 text-gray-600 dark:text-gray-300 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <p x-text="txt[lang].faq_2_a">KPKT memberi keutamaan kepada OKU untuk menduduki PPR (Program Perumahan Rakyat) dengan kadar sewa serendah RM124 sebulan. Anda perlu memohon melalui laman web TEDUH atau SUK Negeri.</p>
+                    </div>
+                </div>
+
+                <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 overflow-hidden">
+                    <button @click="open = !open" class="w-full px-6 py-4 flex justify-between items-center text-left font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <span x-text="txt[lang].faq_3_q">Rekabentuk Universal (Universal Design)</span>
+                        <i class="fas fa-chevron-down transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" class="px-6 py-4 text-gray-600 dark:text-gray-300 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <p x-text="txt[lang].faq_3_a">Di bawah Undang-undang Kecil Bangunan Seragam (UBBL), bangunan baru mesti mempunyai akses OKU (ramp, tandas khas, lif). Jika rumah anda tiada, anda boleh memohon Bantuan Baik Pulih Rumah daripada JKM.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400">Utama</a></li>
+                    <li><a href="kewangan.html" class="hover:text-brand-400">Kewangan</a></li>
+                    <li><a href="pendidikan.html" class="hover:text-brand-400">Pendidikan</a></li>
+                    <li><a href="kerjaya.html" class="hover:text-brand-400">Kerjaya</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-building text-brand-500"></i> KPKT Malaysia</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">OKU Housing Bot</h4>
+                        <span class="text-[10px] opacity-80 block">Online</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+                <div x-show="isTyping" class="flex justify-start">
+                    <div class="bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 h-10 items-center">
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                    </div>
+                </div>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dots text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function housingData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+                search: '',
+                activeCat: 'all',
+                
+                // Chat variables
+                chatOpen: false,
+                userMsg: '',
+                isTyping: false,
+                messages: [
+                    { id: 1, text: 'Hai! 🏠 Saya pakar bantuan perumahan. Nak tanya pasal <b>RMR</b>, <b>PPR</b> atau <b>Baik Pulih</b>?', sender: 'bot' }
+                ],
+
+                // DATA TRANSLATIONS (✅ data kekal sama)
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Mod Cerah',
+                        mode_dark: 'Mod Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        btn_settings: 'Akses',
+                        menu_home: 'Utama',
+                        menu_list: 'Senarai Skim',
+                        menu_tips: 'Tips & Hak',
+                        back_home: 'Kembali ke Menu Utama',
+                        page_title: 'Kediaman & Perumahan',
+                        page_desc: 'Info lengkap tentang diskaun pembelian rumah, skim sewaan PPR, dan bantuan baik pulih rumah khas untuk pemegang kad OKU.',
+                        search_ph: 'Cari skim (cth: SPNB, Sewa, Selangor)...',
+                        btn_visit: 'Layari Web Rasmi',
+                        btn_ask: 'Tanya Bot',
+                        no_result: 'Tiada skim dijumpai untuk carian ini.',
+                        highlights: 'Kelebihan',
+                        tips_title: 'Info Penting & Hak OKU',
+                        faq_1_q: 'Adakah OKU dapat diskaun beli rumah?',
+                        faq_1_a: 'Ya. Secara dasarnya, terdapat polisi Diskaun 20% untuk pembelian rumah kos rendah dan sederhana rendah bagi OKU. Tertakluk kepada kerajaan negeri.',
+                        faq_2_q: 'Bagaimana dengan rumah sewa PPR?',
+                        faq_2_a: 'PPR memberi keutamaan kepada OKU dengan kadar sewa rendah (sekitar RM124/bulan). Permohonan melalui TEDUH.',
+                        faq_3_q: 'Akses OKU di rumah (Ramp/Toilet)?',
+                        faq_3_a: 'Bangunan baru mesti ada akses OKU (UBBL). Jika rumah lama, boleh mohon Bantuan Baik Pulih JKM.',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Taip soalan anda...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light Mode',
+                        mode_dark: 'Dark Mode',
+                        lbl_font: 'Font Size',
+                        btn_settings: 'Access',
+                        menu_home: 'Home',
+                        menu_list: 'Scheme List',
+                        menu_tips: 'Tips & Rights',
+                        back_home: 'Back to Main Menu',
+                        page_title: 'Housing & Living',
+                        page_desc: 'Complete info on house purchase discounts, PPR rental schemes, and home repair aid specifically for OKU card holders.',
+                        search_ph: 'Search schemes (e.g., SPNB, Rent, Selangor)...',
+                        btn_visit: 'Visit Official Site',
+                        btn_ask: 'Ask Bot',
+                        no_result: 'No schemes found for this search.',
+                        highlights: 'Highlights',
+                        tips_title: 'Important Info & Rights',
+                        faq_1_q: 'Do PWDs get discounts for buying houses?',
+                        faq_1_a: 'Yes. Generally, there is a 20% Discount policy for low and low-medium cost houses for PWDs. Subject to state governments.',
+                        faq_2_q: 'What about PPR rental homes?',
+                        faq_2_a: 'PPR gives priority to PWDs with low rental rates (around RM124/month). Apply via TEDUH.',
+                        faq_3_q: 'PWD Accessibility (Ramp/Toilet)?',
+                        faq_3_a: 'New buildings must have PWD access (UBBL). For old homes, apply for JKM Home Repair Aid.',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Type your question...'
+                    }
+                },
+
+                // --- CATEGORIES ---
+                categories: [
+                    { id: 'all', label: { ms: 'Semua', en: 'All' }, icon: 'fas fa-th' },
+                    { id: 'beli', label: { ms: 'Beli Rumah', en: 'Buy House' }, icon: 'fas fa-home' },
+                    { id: 'sewa', label: { ms: 'Sewa', en: 'Rent' }, icon: 'fas fa-key' },
+                    { id: 'baikpulih', label: { ms: 'Baik Pulih', en: 'Repair' }, icon: 'fas fa-tools' }
+                ],
+
+                // --- HOUSING SCHEMES DATA (LINKED!) ---
+                schemes: [
+                    {
+                        id: 1,
+                        cat: 'sewa',
+                        emoji: '🏢',
+                        title: { ms: 'PPR (Program Perumahan Rakyat)', en: 'PPR (Public Housing Prog)' },
+                        agency: 'KPKT / TEDUH',
+                        desc: { 
+                            ms: 'Rumah sewa kerajaan dengan kadar sangat rendah untuk golongan B40 dan OKU. Keutamaan diberikan kepada pemohon OKU.',
+                            en: 'Government rental housing with very low rates for B40 and PWDs. Priority is given to PWD applicants.'
+                        },
+                        points: [
+                            { ms: 'Sewa serendah RM124/bulan', en: 'Rent as low as RM124/month' },
+                            { ms: 'Keutamaan unit aras bawah (Ground Floor)', en: 'Priority for Ground Floor units' }
+                        ],
+                        link: 'https://teduh.kpkt.gov.my/',
+                        type: { ms: 'SEWAAN', en: 'RENTAL' }
+                    },
+                    {
+                        id: 2,
+                        cat: 'beli',
+                        emoji: '🏡',
+                        title: { ms: 'RMR (Rumah Mesra Rakyat)', en: 'RMR (Friendly Homes)' },
+                        agency: 'SPNB',
+                        desc: { 
+                            ms: 'Bina rumah di atas tanah sendiri. Subsidi kerajaan sehingga RM20,000. Sesuai untuk OKU yang ada tanah tapi rumah uzur.',
+                            en: 'Build a house on your own land. Govt subsidy up to RM20,000. Suitable for PWDs with land but dilapidated houses.'
+                        },
+                        points: [
+                            { ms: 'Subsidi RM20,000', en: 'RM20,000 Subsidy' },
+                            { ms: 'Bayaran bulanan rendah (~RM300)', en: 'Low monthly payment (~RM300)' }
+                        ],
+                        link: 'https://spnb.com.my/rumah-mesra-rakyat/',
+                        type: { ms: 'BINA SENDIRI', en: 'BUILD OWN' }
+                    },
+                    {
+                        id: 3,
+                        cat: 'beli',
+                        emoji: '🏙️',
+                        title: { ms: 'Residensi Wilayah (RUMAWIP)', en: 'Residensi Wilayah' },
+                        agency: 'KWP',
+                        desc: { 
+                            ms: 'Rumah mampu milik di Kuala Lumpur, Putrajaya & Labuan. Terdapat unit khas yang diperuntukkan untuk kuota OKU.',
+                            en: 'Affordable homes in KL, Putrajaya & Labuan. There are specific units allocated for PWD quota.'
+                        },
+                        points: [
+                            { ms: 'Harga bawah RM300k', en: 'Price below RM300k' },
+                            { ms: 'Lokasi strategik di bandar', en: 'Strategic city locations' }
+                        ],
+                        link: 'https://residensiwilayah.kwp.gov.my/',
+                        type: { ms: 'BELI', en: 'BUY' }
+                    },
+                    {
+                        id: 4,
+                        cat: 'baikpulih',
+                        emoji: '🔨',
+                        title: { ms: 'Bantuan Baik Pulih Rumah', en: 'Home Repair Aid' },
+                        agency: 'JKM / KPLB',
+                        desc: { 
+                            ms: 'Bantuan kewangan untuk membaiki rumah bagi keselesaan OKU. Termasuk pembinaan ramp, tandas OKU, dan pembaikan atap.',
+                            en: 'Financial aid to repair homes for PWD comfort. Includes building ramps, PWD toilets, and roof repairs.'
+                        },
+                        points: [
+                            { ms: 'Maksimum bantuan bergantung bajet', en: 'Max aid depends on budget' },
+                            { ms: 'Fokus aksesibiliti (ramp/tandas)', en: 'Focus on accessibility (ramp/toilet)' }
+                        ],
+                        link: 'https://www.jkm.gov.my/',
+                        type: { ms: 'GERAN', en: 'GRANT' }
+                    },
+                    {
+                        id: 5,
+                        cat: 'beli',
+                        emoji: '🕌',
+                        title: { ms: 'Rumah Selangorku', en: 'Rumah Selangorku' },
+                        agency: 'LPHS (Selangor)',
+                        desc: { 
+                            ms: 'Skim perumahan khas negeri Selangor. Terdapat polisi kuota dan keutamaan tingkat bawah untuk pemohon OKU.',
+                            en: 'Special housing scheme for Selangor. There is a quota policy and ground floor priority for PWD applicants.'
+                        },
+                        points: [
+                            { ms: 'Pelbagai jenis (A, B, C, D)', en: 'Various types (A, B, C, D)' },
+                            { ms: 'Harga terkawal', en: 'Controlled pricing' }
+                        ],
+                        link: 'https://ehartanah.lphs.gov.my/',
+                        type: { ms: 'NEGERI', en: 'STATE' }
+                    },
+                    {
+                        id: 6,
+                        cat: 'beli',
+                        emoji: '🐅',
+                        title: { ms: 'Rumah Mampu Milik Johor', en: 'Johor Affordable Homes' },
+                        agency: 'eRumah Johor',
+                        desc: { 
+                            ms: 'Permohonan rumah mampu milik di Johor. Kategori Khas OKU (KRA) disediakan dalam borang permohonan.',
+                            en: 'Application for affordable homes in Johor. Special PWD Category (KRA) available in application form.'
+                        },
+                        points: [
+                            { ms: 'Kategori Khas OKU', en: 'Special PWD Category' },
+                            { ms: 'Diskaun bumiputera & kuota', en: 'Bumiputera discount & quota' }
+                        ],
+                        link: 'https://erumah.johor.gov.my/',
+                        type: { ms: 'NEGERI', en: 'STATE' }
+                    },
+                    // ✅ EXTRA DATA: tambah bawah item terakhir (id: 6)
+{
+  id: 7,
+  cat: 'beli',
+  emoji: '🏘️',
+  title: { ms: 'PR1MA (Rumah Mampu Milik)', en: 'PR1MA (Affordable Homes)' },
+  agency: 'PR1MA Malaysia',
+  desc: {
+    ms: 'Skim rumah mampu milik untuk rakyat Malaysia (tertakluk syarat & lokasi). Semak projek yang dibuka dan syarat kelayakan.',
+    en: 'Affordable housing scheme (subject to eligibility & location). Check open projects and requirements.'
+  },
+  points: [
+    { ms: 'Permohonan online', en: 'Online application' },
+    { ms: 'Bergantung projek & negeri', en: 'Depends on projects & state' }
+  ],
+  link: 'https://www.pr1ma.my/',
+  type: { ms: 'BELI', en: 'BUY' }
+},
+{
+  id: 8,
+  cat: 'beli',
+  emoji: '🏗️',
+  title: { ms: 'MyHome (Skim Perumahan Mampu Milik)', en: 'MyHome (Affordable Housing Scheme)' },
+  agency: 'KPKT',
+  desc: {
+    ms: 'Insentif/bantuan untuk pembelian rumah mampu milik (bergantung pengumuman semasa). Semak status skim & pendaftaran.',
+    en: 'Incentives/assistance for affordable home purchase (depends on current announcements). Check scheme status & registration.'
+  },
+  points: [
+    { ms: 'Rujuk status terkini', en: 'Refer latest status' },
+    { ms: 'Ikut kelayakan pemohon', en: 'Eligibility-based' }
+  ],
+  link: 'https://teduh.kpkt.gov.my/',
+  type: { ms: 'BELI', en: 'BUY' }
+},
+{
+  id: 9,
+  cat: 'sewa',
+  emoji: '🧾',
+  title: { ms: 'Skim Sewa Untuk Dimiliki (Rent-to-Own)', en: 'Rent-to-Own (RTO)' },
+  agency: 'Pelbagai (Bank/Agensi/Projek)',
+  desc: {
+    ms: 'Konsep sewa dulu, kemudian beli. Sesuai jika belum cukup deposit. Bergantung pada projek dan syarat bank/agensi.',
+    en: 'Rent first, buy later. Useful if you lack upfront deposit. Depends on project and bank/agency terms.'
+  },
+  points: [
+    { ms: 'Kurangkan beban deposit awal', en: 'Lower upfront deposit burden' },
+    { ms: 'Syarat bergantung projek', en: 'Terms depend on project' }
+  ],
+  link: 'https://teduh.kpkt.gov.my/',
+  type: { ms: 'SEWAAN', en: 'RENTAL' }
+},
+{
+  id: 10,
+  cat: 'baikpulih',
+  emoji: '♿',
+  title: { ms: 'Naik Taraf Akses OKU (Ramp/Tandas)', en: 'PWD Accessibility Upgrade (Ramp/Toilet)' },
+  agency: 'JKM / PBT / NGO (bergantung tempat)',
+  desc: {
+    ms: 'Naik taraf akses rumah: ramp, handrail, tandas OKU, pintu lebih lebar. Mohon melalui saluran bantuan yang ada di kawasan anda.',
+    en: 'Home accessibility upgrades: ramps, handrails, PWD toilet, wider doors. Apply through available local aid channels.'
+  },
+  points: [
+    { ms: 'Fokus kepada aksesibiliti harian', en: 'Focus on daily accessibility' },
+    { ms: 'Sediakan dokumen & gambar rumah', en: 'Prepare documents & house photos' }
+  ],
+  link: 'https://www.jkm.gov.my/',
+  type: { ms: 'AKSES', en: 'ACCESS' }
+},
+{
+  id: 11,
+  cat: 'baikpulih',
+  emoji: '🧱',
+  title: { ms: 'PPRT (Program Perumahan Rakyat Termiskin)', en: 'PPRT (Rural Poor Housing Program)' },
+  agency: 'KPLB / Kerajaan (bergantung lokasi)',
+  desc: {
+    ms: 'Program bantuan bina/baik pulih rumah untuk golongan sangat memerlukan. OKU dalam kategori miskin tegar biasanya diberi pertimbangan.',
+    en: 'House build/repair assistance for the most needy groups. PWDs in extreme poverty are often considered.'
+  },
+  points: [
+    { ms: 'Fokus B40/miskin tegar', en: 'Focus on B40/extreme poverty' },
+    { ms: 'Kertas siasatan/penilaian diperlukan', en: 'Assessment/verification required' }
+  ],
+  link: 'https://www.kplb.gov.my/',
+  type: { ms: 'BAIK PULIH', en: 'REPAIR' }
+},
+{
+  id: 12,
+  cat: 'diskaun',
+  emoji: '🏷️',
+  title: { ms: 'Diskaun OKU Pembelian Rumah (Polisi Negeri/Pemaju)', en: 'PWD Discount for House Purchase (State/Developer Policy)' },
+  agency: 'Kerajaan Negeri / Pemaju',
+  desc: {
+    ms: 'Sesetengah negeri/pemaju menawarkan diskaun kepada OKU (contoh: rumah kos rendah/sederhana rendah). Tertakluk polisi setempat.',
+    en: 'Some states/developers provide PWD discounts (e.g., low/low-medium cost homes). Subject to local policy.'
+  },
+  points: [
+    { ms: 'Tanya pemaju/pejabat perumahan negeri', en: 'Ask developer/state housing office' },
+    { ms: 'Sediakan Kad OKU & dokumen pendapatan', en: 'Prepare OKU card & income docs' }
+  ],
+  link: 'https://teduh.kpkt.gov.my/',
+  type: { ms: 'DISKAUN', en: 'DISCOUNT' }
+},
+{
+  id: 13,
+  cat: 'pinjaman',
+  emoji: '💳',
+  title: { ms: 'Bantuan Deposit / Pembiayaan (Semak Bank/Agensi)', en: 'Deposit Aid / Financing (Check Banks/Agencies)' },
+  agency: 'Bank / Agensi (bergantung skim)',
+  desc: {
+    ms: 'Sesetengah skim pembiayaan membantu dari segi deposit atau kelulusan pembiayaan. Sangat bergantung pada profil pemohon & projek.',
+    en: 'Some financing schemes help with deposit or approval pathways. Highly dependent on applicant profile & project.'
+  },
+  points: [
+    { ms: 'Bandingkan bank & skim', en: 'Compare banks & schemes' },
+    { ms: 'Semak CCRIS/CTOS jika perlu', en: 'Check CCRIS/CTOS if needed' }
+  ],
+  link: 'https://www.bnm.gov.my/',
+  type: { ms: 'PINJAMAN', en: 'LOAN' }
+},
+{
+id:14,
+cat:'sewa',
+emoji:'🏢',
+title:{ ms:'PPR Disewa DBKL', en:'DBKL Public Housing Rental' },
+agency:'DBKL',
+desc:{
+ms:'Skim sewaan rumah PPR yang diuruskan oleh Dewan Bandaraya Kuala Lumpur untuk golongan B40 dan OKU.',
+en:'Public rental housing managed by Kuala Lumpur City Hall for B40 and PWD applicants.'
+},
+points:[
+{ ms:'Sewa rendah sekitar RM124', en:'Low rent around RM124' },
+{ ms:'Keutamaan untuk OKU', en:'Priority for PWD applicants' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+
+{
+id:15,
+cat:'sewa',
+emoji:'🏠',
+title:{ ms:'Rumah Transit Bandar', en:'Urban Transit Housing' },
+agency:'KPKT',
+desc:{
+ms:'Rumah sementara untuk individu atau keluarga yang memerlukan tempat tinggal sementara.',
+en:'Temporary housing provided for individuals or families needing short term accommodation.'
+},
+points:[
+{ ms:'Tempoh sewaan sementara', en:'Short term rental period' },
+{ ms:'Lokasi bandar', en:'Urban locations available' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+
+{
+id:16,
+cat:'beli',
+emoji:'🏡',
+title:{ ms:'PR1MA Malaysia', en:'PR1MA Malaysia Housing' },
+agency:'PR1MA',
+desc:{
+ms:'Program perumahan mampu milik untuk rakyat Malaysia berpendapatan sederhana.',
+en:'Affordable housing programme for middle income Malaysians.'
+},
+points:[
+{ ms:'Harga lebih rendah dari pasaran', en:'Below market price homes' },
+{ ms:'Pelbagai lokasi projek', en:'Multiple project locations' }
+],
+link:'https://www.pr1ma.my/',
+type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:17,
+cat:'beli',
+emoji:'🏘️',
+title:{ ms:'PR1MA Residensi Bandar', en:'PR1MA City Residences' },
+agency:'PR1MA',
+desc:{
+ms:'Unit apartmen mampu milik di bandar utama untuk pembeli rumah pertama.',
+en:'Affordable apartment units in major cities for first time buyers.'
+},
+points:[
+{ ms:'Reka bentuk moden', en:'Modern design' },
+{ ms:'Harga mampu milik', en:'Affordable pricing' }
+],
+link:'https://www.pr1ma.my/',
+type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:18,
+cat:'beli',
+emoji:'🏠',
+title:{ ms:'Rumah Idaman Rakyat', en:'People Dream Homes Scheme' },
+agency:'Kerajaan Negeri',
+desc:{
+ms:'Program rumah mampu milik oleh kerajaan negeri untuk rakyat berpendapatan rendah.',
+en:'Affordable home initiative by state governments for low income households.'
+},
+points:[
+{ ms:'Subsidi harga rumah', en:'Housing subsidies' },
+{ ms:'Kuota khas OKU', en:'Special quota for PWD' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:19,
+cat:'baikpulih',
+emoji:'🔧',
+title:{ ms:'Program Baik Pulih Rumah Bandar', en:'Urban Home Repair Programme' },
+agency:'KPKT',
+desc:{
+ms:'Bantuan baik pulih rumah untuk keluarga miskin bandar termasuk keluarga OKU.',
+en:'Home repair assistance for urban poor households including PWD families.'
+},
+points:[
+{ ms:'Baiki bumbung dan struktur rumah', en:'Roof and structure repairs' },
+{ ms:'Fokus keselamatan rumah', en:'Focus on house safety' }
+],
+link:'https://www.kpkt.gov.my/',
+type:{ ms:'GERAN', en:'GRANT' }
+},
+
+{
+id:20,
+cat:'baikpulih',
+emoji:'🧱',
+title:{ ms:'Bantuan Rumah Daif', en:'Dilapidated House Repair Aid' },
+agency:'KPLB',
+desc:{
+ms:'Bantuan membaiki rumah uzur di kawasan luar bandar untuk keluarga miskin dan OKU.',
+en:'Repair aid for dilapidated rural houses for poor families and PWD.'
+},
+points:[
+{ ms:'Baiki struktur rumah rosak', en:'Repair damaged house structures' },
+{ ms:'Keutamaan kawasan luar bandar', en:'Priority for rural areas' }
+],
+link:'https://www.rurallink.gov.my/',
+type:{ ms:'GERAN', en:'GRANT' }
+},
+
+{
+id:21,
+cat:'sewa',
+emoji:'🏢',
+title:{ ms:'Rumah Transit Belia', en:'Youth Transit Housing' },
+agency:'KPKT',
+desc:{
+ms:'Perumahan sementara untuk belia yang baru bekerja atau berpindah ke bandar.',
+en:'Temporary housing for youths starting work or moving to urban areas.'
+},
+points:[
+{ ms:'Sewa jangka pendek', en:'Short term rent' },
+{ ms:'Kemudahan asas lengkap', en:'Basic facilities included' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+
+{
+id:22,
+cat:'beli',
+emoji:'🏘️',
+title:{ ms:'Residensi MADANI', en:'Residensi MADANI Housing' },
+agency:'Kerajaan Malaysia',
+desc:{
+ms:'Program rumah mampu milik di bawah inisiatif MADANI untuk rakyat Malaysia.',
+en:'Affordable housing programme under the MADANI initiative.'
+},
+points:[
+{ ms:'Harga mampu milik', en:'Affordable price range' },
+{ ms:'Lokasi strategik', en:'Strategic locations' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:23,
+cat:'baikpulih',
+emoji:'♿',
+title:{ ms:'Pengubahsuaian Rumah OKU', en:'PWD Home Modification Aid' },
+agency:'JKM',
+desc:{
+ms:'Bantuan untuk mengubahsuai rumah supaya lebih mesra OKU seperti ramp dan tandas khas.',
+en:'Aid for modifying homes to be more accessible such as ramps and special toilets.'
+},
+points:[
+{ ms:'Ramp kerusi roda', en:'Wheelchair ramps' },
+{ ms:'Tandas mesra OKU', en:'Accessible toilets' }
+],
+link:'https://www.jkm.gov.my/',
+type:{ ms:'GERAN', en:'GRANT' }
+},
+
+{
+id:24,
+cat:'sewa',
+emoji:'🏢',
+title:{ ms:'Sewa Rumah Bandaraya', en:'City Rental Housing' },
+agency:'PBT',
+desc:{
+ms:'Program rumah sewa oleh pihak berkuasa tempatan untuk penduduk bandar.',
+en:'Rental housing programme managed by local authorities.'
+},
+points:[
+{ ms:'Sewa mampu milik', en:'Affordable rent' },
+{ ms:'Lokasi bandar', en:'Urban locations' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+
+{
+id:25,
+cat:'beli',
+emoji:'🏡',
+title:{ ms:'Program Rumah Impian', en:'Dream Home Programme' },
+agency:'Agensi Perumahan',
+desc:{
+ms:'Program pembelian rumah mampu milik untuk keluarga berpendapatan sederhana.',
+en:'Affordable home purchase programme for middle income families.'
+},
+points:[
+{ ms:'Pembiayaan mudah', en:'Easy financing' },
+{ ms:'Projek pelbagai negeri', en:'Projects in multiple states' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:26,
+cat:'baikpulih',
+emoji:'🔨',
+title:{ ms:'Bantuan Baik Pulih Rumah Desa', en:'Village Home Repair Aid' },
+agency:'KPLB',
+desc:{
+ms:'Program baik pulih rumah bagi komuniti desa termasuk golongan OKU.',
+en:'Home repair assistance programme for rural communities including PWD.'
+},
+points:[
+{ ms:'Baiki rumah rosak', en:'Repair damaged homes' },
+{ ms:'Fokus komuniti desa', en:'Focus on rural communities' }
+],
+link:'https://www.rurallink.gov.my/',
+type:{ ms:'GERAN', en:'GRANT' }
+},
+
+{
+id:27,
+cat:'beli',
+emoji:'🏘️',
+title:{ ms:'Skim Rumah Selamat', en:'Safe Home Scheme' },
+agency:'Kerajaan Negeri',
+desc:{
+ms:'Program perumahan untuk memastikan rumah selamat dan berkualiti untuk rakyat.',
+en:'Housing programme to ensure safe and quality homes for citizens.'
+},
+points:[
+{ ms:'Rumah berkualiti', en:'Quality housing' },
+{ ms:'Harga mampu milik', en:'Affordable pricing' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:28,
+cat:'sewa',
+emoji:'🏢',
+title:{ ms:'Program Sewa Milik', en:'Rent To Own Housing' },
+agency:'PR1MA',
+desc:{
+ms:'Program sewa dahulu sebelum membeli rumah selepas tempoh tertentu.',
+en:'Rent first then purchase home after a certain period.'
+},
+points:[
+{ ms:'Sewa dahulu beli kemudian', en:'Rent before purchase' },
+{ ms:'Harga tetap', en:'Fixed purchase price' }
+],
+link:'https://www.pr1ma.my/',
+type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+
+{
+id:29,
+cat:'baikpulih',
+emoji:'🪚',
+title:{ ms:'Program Baik Pulih Infrastruktur Rumah', en:'Home Infrastructure Repair Programme' },
+agency:'KPKT',
+desc:{
+ms:'Bantuan untuk memperbaiki struktur rumah seperti lantai, tangga dan dinding.',
+en:'Aid to repair house infrastructure such as floors, stairs and walls.'
+},
+points:[
+{ ms:'Baiki struktur rumah', en:'Repair house structure' },
+{ ms:'Tingkat keselamatan rumah', en:'Improve house safety' }
+],
+link:'https://www.kpkt.gov.my/',
+type:{ ms:'GERAN', en:'GRANT' }
+},
+
+{
+id:30,
+cat:'beli',
+emoji:'🏠',
+title:{ ms:'Skim Rumah Harapan', en:'Hope Housing Scheme' },
+agency:'Kerajaan Negeri',
+desc:{
+ms:'Skim perumahan untuk membantu keluarga berpendapatan rendah memiliki rumah.',
+en:'Housing scheme to help low income families own homes.'
+},
+points:[
+{ ms:'Harga rumah rendah', en:'Low house price' },
+{ ms:'Keutamaan golongan B40', en:'Priority for B40 group' }
+],
+link:'https://teduh.kpkt.gov.my/',
+type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:31, cat:'sewa', emoji:'🏢',
+title:{ ms:'PPR Disewa (Kawasan Bandar)', en:'PPR Rental (Urban Areas)' },
+agency:'KPKT / TEDUH',
+desc:{ ms:'Skim sewa PPR di kawasan bandar, keutamaan untuk B40 dan OKU.', en:'Urban PPR rental scheme prioritising B40 and PWD applicants.' },
+points:[ {ms:'Sewa rendah',en:'Low rent'}, {ms:'Keutamaan OKU',en:'PWD priority'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:32, cat:'sewa', emoji:'🏠',
+title:{ ms:'PPR Disewa (Warga Emas & OKU)', en:'PPR Rental (Elderly & PWD)' },
+agency:'KPKT / PBT',
+desc:{ ms:'Unit sewa PPR dengan pertimbangan khas untuk warga emas dan OKU.', en:'PPR rental units with special consideration for elderly and PWD.' },
+points:[ {ms:'Pertimbangan khas OKU',en:'Special PWD consideration'}, {ms:'Unit aras bawah jika perlu',en:'Ground floor preference'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:33, cat:'sewa', emoji:'🔑',
+title:{ ms:'Skim Sewa Mampu Milik Negeri', en:'State Affordable Rental Scheme' },
+agency:'Kerajaan Negeri',
+desc:{ ms:'Skim sewa mampu milik yang ditawarkan oleh kerajaan negeri (berbeza ikut negeri).', en:'Affordable rental scheme offered by state governments (varies by state).' },
+points:[ {ms:'Kadar sewa terkawal',en:'Controlled rent rates'}, {ms:'Ada kuota OKU (bergantung negeri)',en:'PWD quota (state dependent)'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:34, cat:'sewa', emoji:'🏘️',
+title:{ ms:'Rumah Sewa Kos Rendah (PBT)', en:'Low-Cost Rental (Local Council)' },
+agency:'PBT (Majlis Perbandaran/Daerah)',
+desc:{ ms:'Rumah sewa kos rendah bawah PBT untuk penduduk setempat, termasuk OKU.', en:'Low-cost rental under local councils for residents including PWD.' },
+points:[ {ms:'Keutamaan penduduk setempat',en:'Local resident priority'}, {ms:'Permohonan melalui PBT',en:'Apply via local council'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:35, cat:'sewa', emoji:'🏢',
+title:{ ms:'Rumah Transit Keluarga', en:'Family Transit Housing' },
+agency:'KPKT / Agensi Negeri',
+desc:{ ms:'Penempatan sementara untuk keluarga yang perlukan tempat tinggal sementara kerana kecemasan/penempatan semula.', en:'Temporary housing for families needing short-term shelter due to emergency/relocation.' },
+points:[ {ms:'Sementara & bersyarat',en:'Temporary & conditional'}, {ms:'Fokus kes kecemasan',en:'Emergency-focused'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+
+{
+id:36, cat:'beli', emoji:'🏡',
+title:{ ms:'Skim Rumah Pertama (Mampu Milik)', en:'First Home Scheme (Affordable)' },
+agency:'Agensi Perumahan / Bank',
+desc:{ ms:'Program membantu pembeli rumah pertama melalui pakej pembiayaan atau pemilihan projek mampu milik.', en:'Program supporting first-home buyers via financing packages or affordable projects.' },
+points:[ {ms:'Sesuai pembeli kali pertama',en:'First-time buyer friendly'}, {ms:'Pilihan projek mampu milik',en:'Affordable project options'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:37, cat:'beli', emoji:'🏘️',
+title:{ ms:'Rumah Mampu Milik (Kuota OKU)', en:'Affordable Housing (PWD Quota)' },
+agency:'Kerajaan Negeri / Pemaju',
+desc:{ ms:'Sesetengah projek mampu milik menyediakan kuota atau keutamaan tertentu untuk OKU.', en:'Some affordable projects provide quotas or priority allocation for PWD.' },
+points:[ {ms:'Tertakluk syarat projek',en:'Subject to project criteria'}, {ms:'Semak kuota OKU',en:'Check PWD allocation'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:38, cat:'beli', emoji:'🏙️',
+title:{ ms:'Perumahan Mampu Milik Bandar', en:'Urban Affordable Homes' },
+agency:'Agensi Negeri / KPKT',
+desc:{ ms:'Rumah mampu milik di kawasan bandar untuk mengurangkan beban kos hidup.', en:'Affordable homes in urban areas to reduce living cost burden.' },
+points:[ {ms:'Lokasi bandar',en:'Urban location'}, {ms:'Harga terkawal',en:'Controlled pricing'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:39, cat:'beli', emoji:'🏠',
+title:{ ms:'Skim Bina Atas Tanah Sendiri (Subsidi)', en:'Build on Own Land (Subsidy)' },
+agency:'SPNB / Kerajaan',
+desc:{ ms:'Bantuan bina rumah atas tanah sendiri untuk keluarga berpendapatan rendah termasuk OKU.', en:'Subsidised build-on-own-land scheme for low-income families including PWD.' },
+points:[ {ms:'Perlu geran tanah',en:'Land title required'}, {ms:'Subsidi tertakluk program',en:'Subsidy depends on programme'} ],
+link:'https://spnb.com.my/rumah-mesra-rakyat/', type:{ ms:'BINA SENDIRI', en:'BUILD OWN' }
+},
+{
+id:40, cat:'beli', emoji:'🧾',
+title:{ ms:'Diskaun OKU oleh Pemaju', en:'Developer PWD Discount' },
+agency:'Pemaju Perumahan',
+desc:{ ms:'Sesetengah pemaju memberi diskaun khas OKU (contoh rumah kos rendah/sederhana rendah).', en:'Some developers offer PWD discounts (e.g., low/low-medium cost homes).' },
+points:[ {ms:'Bergantung pemaju & negeri',en:'Depends on developer & state'}, {ms:'Perlu bukti Kad OKU',en:'OKU card proof needed'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'DISKAUN', en:'DISCOUNT' }
+},
+
+{
+id:41, cat:'baikpulih', emoji:'🔨',
+title:{ ms:'Bantuan Baik Pulih (Struktur Rumah)', en:'Home Repair Aid (Structure)' },
+agency:'JKM / KPLB',
+desc:{ ms:'Bantuan membaiki struktur asas rumah (bumbung, dinding, lantai) untuk kes selamat didiami.', en:'Aid to repair basic structures (roof, walls, flooring) for safe living conditions.' },
+points:[ {ms:'Fokus keselamatan',en:'Safety-focused'}, {ms:'Ikut kelulusan & bajet',en:'Subject to approval & budget'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+{
+id:42, cat:'baikpulih', emoji:'♿',
+title:{ ms:'Bina Ramp Kerusi Roda', en:'Wheelchair Ramp Installation' },
+agency:'JKM / NGO / PBT',
+desc:{ ms:'Bantuan/geran untuk pembinaan ramp bagi akses kerusi roda di rumah.', en:'Aid/grants for building wheelchair ramps at home.' },
+points:[ {ms:'Tingkat aksesibiliti',en:'Improves accessibility'}, {ms:'Sesuai OKU fizikal',en:'Suitable for physical PWD'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:43, cat:'baikpulih', emoji:'🚻',
+title:{ ms:'Ubahsuai Tandas Mesra OKU', en:'Accessible Toilet Modification' },
+agency:'JKM / NGO',
+desc:{ ms:'Pengubahsuaian tandas: pemegang, ruang luas, lantai anti-gelincir.', en:'Toilet modifications: grab bars, wider space, anti-slip flooring.' },
+points:[ {ms:'Kurangkan risiko jatuh',en:'Reduce fall risk'}, {ms:'Lebih selesa & selamat',en:'Safer & more comfortable'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:44, cat:'baikpulih', emoji:'🛠️',
+title:{ ms:'Baik Pulih Elektrik & Pendawaian', en:'Electrical & Wiring Repair' },
+agency:'JKM / PBT',
+desc:{ ms:'Bantuan membaiki pendawaian atau komponen elektrik berisiko untuk rumah yang uzur.', en:'Aid to repair risky wiring/electrical components in old houses.' },
+points:[ {ms:'Kurangkan risiko kebakaran',en:'Lower fire risk'}, {ms:'Keutamaan rumah uzur',en:'Priority for dilapidated homes'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+{
+id:45, cat:'baikpulih', emoji:'🧱',
+title:{ ms:'Baik Pulih Bumbung Bocor', en:'Leaking Roof Repair' },
+agency:'KPLB / JKM',
+desc:{ ms:'Baiki bumbung bocor untuk elak kerosakan besar dan risiko kesihatan.', en:'Repair leaking roofs to prevent major damage and health risks.' },
+points:[ {ms:'Rumah lebih selesa',en:'Improved comfort'}, {ms:'Elak kulapuk/kelembapan',en:'Prevent mould/moisture'} ],
+link:'https://www.rurallink.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+
+{
+id:46, cat:'sewa', emoji:'🏙️',
+title:{ ms:'Rumah Sewa Mampu Milik Bandar (Pilot)', en:'Affordable City Rental (Pilot)' },
+agency:'Agensi Perumahan',
+desc:{ ms:'Program perintis sewa mampu milik dengan syarat pendapatan tertentu.', en:'Pilot affordable rental programme with income requirements.' },
+points:[ {ms:'Syarat pendapatan',en:'Income requirement'}, {ms:'Kontrak sewaan',en:'Rental contract'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:47, cat:'sewa', emoji:'🏢',
+title:{ ms:'Kuota Unit Aras Bawah (Sewa)', en:'Ground Floor Allocation (Rental)' },
+agency:'PBT / Pengurusan PPR',
+desc:{ ms:'Permohonan untuk unit aras bawah bagi OKU fizikal (jika ada kekosongan).', en:'Request ground floor units for physical PWD (subject to availability).' },
+points:[ {ms:'Tertakluk kekosongan',en:'Subject to availability'}, {ms:'Perlu bukti OKU',en:'Proof of PWD required'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:48, cat:'sewa', emoji:'🧾',
+title:{ ms:'Bantuan Sewa Rumah (Kes Tertentu)', en:'Rental Assistance (Selected Cases)' },
+agency:'JKM / Zakat / NGO',
+desc:{ ms:'Bantuan menampung sewa rumah untuk kes tertentu (kewangan kritikal).', en:'Rental assistance to help cover rent in selected critical financial cases.' },
+points:[ {ms:'Bergantung kelayakan',en:'Eligibility-based'}, {ms:'Dokumen sokongan diperlukan',en:'Supporting documents required'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'BANTUAN', en:'AID' }
+},
+{
+id:49, cat:'beli', emoji:'🏦',
+title:{ ms:'Pembiayaan Perumahan Mesra OKU', en:'PWD-Friendly Home Financing' },
+agency:'Bank / Institusi Kewangan',
+desc:{ ms:'Pakej pembiayaan rumah yang mengambil kira kestabilan pendapatan dan dokumen sokongan.', en:'Home financing packages considering income stability and supporting documents.' },
+points:[ {ms:'Semak kadar & syarat bank',en:'Check bank rates & criteria'}, {ms:'Mungkin perlu penjamin',en:'May require guarantor'} ],
+link:'https://www.pr1ma.my/', type:{ ms:'PEMBIAYAAN', en:'FINANCE' }
+},
+{
+id:50, cat:'beli', emoji:'📍',
+title:{ ms:'Skim Perumahan Negeri (Umum)', en:'General State Housing Scheme' },
+agency:'Kerajaan Negeri',
+desc:{ ms:'Pendaftaran perumahan negeri biasanya ada kategori khas/keutamaan (termasuk OKU).', en:'State housing registration often includes special categories/priority including PWD.' },
+points:[ {ms:'Daftar portal negeri',en:'Register on state portal'}, {ms:'Semak kuota & syarat',en:'Check quota & requirements'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'NEGERI', en:'STATE' }
+},
+
+{
+id:51, cat:'baikpulih', emoji:'🪜',
+title:{ ms:'Baik Pulih Tangga & Handrail', en:'Stairs & Handrail Repair' },
+agency:'JKM / NGO',
+desc:{ ms:'Baiki tangga, tambah handrail untuk keselamatan OKU dan warga emas.', en:'Repair stairs and add handrails for PWD/elderly safety.' },
+points:[ {ms:'Kurangkan risiko jatuh',en:'Reduce fall risk'}, {ms:'Akses lebih mudah',en:'Easier access'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:52, cat:'baikpulih', emoji:'🧯',
+title:{ ms:'Baik Pulih Rumah (Keselamatan Kebakaran)', en:'Home Repair (Fire Safety)' },
+agency:'PBT / JKM',
+desc:{ ms:'Penambahbaikan asas untuk keselamatan seperti suis, pendawaian, pintu keluar.', en:'Basic safety improvements such as switches, wiring, and exits.' },
+points:[ {ms:'Kurangkan risiko kebakaran',en:'Lower fire risk'}, {ms:'Fokus rumah lama',en:'Focus on older homes'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+{
+id:53, cat:'baikpulih', emoji:'🛁',
+title:{ ms:'Ubahsuai Bilik Air Anti-Gelincir', en:'Anti-Slip Bathroom Upgrade' },
+agency:'JKM / NGO',
+desc:{ ms:'Tambah lantai anti-gelincir dan pemegang untuk bilik air mesra OKU.', en:'Add anti-slip flooring and grab bars for PWD-friendly bathrooms.' },
+points:[ {ms:'Sesuai OKU & warga emas',en:'Suitable for PWD & elderly'}, {ms:'Kurangkan risiko kecederaan',en:'Reduce injury risk'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:54, cat:'sewa', emoji:'🏢',
+title:{ ms:'Skim Sewa Keutamaan OKU (PBT)', en:'PWD Priority Rental (Local Council)' },
+agency:'PBT',
+desc:{ ms:'Sesetengah PBT memberi keutamaan kepada OKU untuk unit sewaan kos rendah.', en:'Some local councils prioritise PWD applicants for low-cost rentals.' },
+points:[ {ms:'Syarat pendapatan',en:'Income criteria'}, {ms:'Permohonan di kaunter/portal PBT',en:'Apply via local council counter/portal'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:55, cat:'beli', emoji:'🏗️',
+title:{ ms:'Rumah Mampu Milik (Apartmen)', en:'Affordable Homes (Apartments)' },
+agency:'Agensi Perumahan',
+desc:{ ms:'Unit apartmen mampu milik dengan kemudahan asas dan keselamatan.', en:'Affordable apartment units with basic facilities and security.' },
+points:[ {ms:'Kemudahan komuniti',en:'Community facilities'}, {ms:'Keselamatan berpagar (projek tertentu)',en:'Gated security (selected projects)'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:56, cat:'beli', emoji:'🌿',
+title:{ ms:'Skim Perumahan Luar Bandar', en:'Rural Housing Scheme' },
+agency:'KPLB',
+desc:{ ms:'Program perumahan di kawasan luar bandar untuk penduduk setempat termasuk OKU.', en:'Rural housing programme for local residents including PWD.' },
+points:[ {ms:'Keutamaan luar bandar',en:'Rural priority'}, {ms:'Syarat dokumen tanah/pendapatan',en:'Land/income documents required'} ],
+link:'https://www.rurallink.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:57, cat:'sewa', emoji:'🏘️',
+title:{ ms:'Skim Sewa-Milik (RTO)', en:'Rent-To-Own (RTO)' },
+agency:'PR1MA / Agensi',
+desc:{ ms:'Sewa dahulu sebelum beli, sesuai untuk yang belum layak pinjaman penuh.', en:'Rent first then own, suitable if not eligible for full loan yet.' },
+points:[ {ms:'Konsep sewa → milik',en:'Rent → own concept'}, {ms:'Tertakluk projek',en:'Project dependent'} ],
+link:'https://www.pr1ma.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:58, cat:'beli', emoji:'🧑‍🤝‍🧑',
+title:{ ms:'Skim Keluarga (Keutamaan OKU)', en:'Family Scheme (PWD Priority)' },
+agency:'Kerajaan Negeri',
+desc:{ ms:'Permohonan perumahan dengan pertimbangan khas jika ahli keluarga adalah OKU.', en:'Housing applications may get special consideration if a family member is PWD.' },
+points:[ {ms:'Perlu dokumen OKU',en:'PWD documents required'}, {ms:'Bergantung garis panduan negeri',en:'Depends on state guidelines'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'NEGERI', en:'STATE' }
+},
+{
+id:59, cat:'baikpulih', emoji:'🪟',
+title:{ ms:'Baik Pulih Tingkap & Pengudaraan', en:'Windows & Ventilation Repair' },
+agency:'JKM / PBT',
+desc:{ ms:'Bantuan membaiki tingkap/pengudaraan untuk kesihatan dan keselamatan rumah.', en:'Aid to fix windows/ventilation for healthier and safer homes.' },
+points:[ {ms:'Kurangkan kelembapan',en:'Reduce humidity'}, {ms:'Lebih selesa',en:'Improved comfort'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+{
+id:60, cat:'baikpulih', emoji:'🧹',
+title:{ ms:'Pembaikan Lantai Rosak', en:'Damaged Flooring Repair' },
+agency:'KPLB / JKM',
+desc:{ ms:'Baiki lantai rosak/berlubang untuk elakkan kecederaan, sesuai untuk OKU mobiliti.', en:'Repair broken floors to prevent injuries, important for mobility PWD.' },
+points:[ {ms:'Kurangkan risiko tersadung',en:'Reduce trip hazards'}, {ms:'Fokus keselamatan',en:'Safety-focused'} ],
+link:'https://www.rurallink.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+
+{
+id:61, cat:'beli', emoji:'🏠',
+title:{ ms:'Skim Rumah Mampu Milik (Tingkat Bawah)', en:'Affordable Homes (Ground Floor)' },
+agency:'Pemaju / Agensi Perumahan',
+desc:{ ms:'Permintaan unit tingkat bawah untuk OKU (bergantung projek & stok).', en:'Ground-floor unit requests for PWD (subject to project stock).' },
+points:[ {ms:'Tertakluk kekosongan',en:'Subject to availability'}, {ms:'Perlu permohonan awal',en:'Apply early'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:62, cat:'sewa', emoji:'🏢',
+title:{ ms:'Sewa Unit Tingkat Bawah (OKU)', en:'Ground Floor Rental (PWD)' },
+agency:'Pengurusan PPR / PBT',
+desc:{ ms:'Permohonan unit sewa tingkat bawah khusus untuk OKU fizikal jika tersedia.', en:'Ground floor rental request for physical PWD if available.' },
+points:[ {ms:'Sokongan dokumen OKU',en:'PWD documentation'}, {ms:'Kekosongan unit diperlukan',en:'Unit availability required'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:63, cat:'baikpulih', emoji:'🚪',
+title:{ ms:'Lebarkan Pintu untuk Kerusi Roda', en:'Widen Doorways for Wheelchair' },
+agency:'JKM / NGO',
+desc:{ ms:'Ubahsuai pintu supaya kerusi roda mudah masuk, sesuai untuk rumah lama.', en:'Modify doorways for wheelchair access, suitable for older homes.' },
+points:[ {ms:'Mesra mobiliti',en:'Mobility friendly'}, {ms:'Naik taraf akses rumah',en:'Home accessibility upgrade'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:64, cat:'baikpulih', emoji:'🛏️',
+title:{ ms:'Ubahsuai Bilik Tidur Mesra OKU', en:'PWD-Friendly Bedroom Modification' },
+agency:'JKM / NGO',
+desc:{ ms:'Susun atur dan pengubahsuaian ruang bilik untuk akses lebih mudah.', en:'Room layout and modifications for easier access.' },
+points:[ {ms:'Ruang pergerakan lebih luas',en:'More movement space'}, {ms:'Kurangkan halangan fizikal',en:'Reduce physical barriers'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:65, cat:'beli', emoji:'🏙️',
+title:{ ms:'Residensi Bandar (Kuota Khas)', en:'City Residences (Special Quota)' },
+agency:'Agensi Perumahan',
+desc:{ ms:'Unit perumahan bandar dengan kuota tertentu (contoh OKU/warga emas) bergantung projek.', en:'Urban housing with special quota (PWD/elderly) depending on project.' },
+points:[ {ms:'Bergantung projek',en:'Project dependent'}, {ms:'Semak syarat kelayakan',en:'Check eligibility requirements'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+
+{
+id:66, cat:'sewa', emoji:'🏘️',
+title:{ ms:'Skim Sewa Rumah Negeri (Kuota OKU)', en:'State Rental (PWD Quota)' },
+agency:'Kerajaan Negeri',
+desc:{ ms:'Skim sewa rumah negeri dengan kemungkinan kuota OKU (ikut negeri).', en:'State rental scheme may include PWD quota (varies by state).' },
+points:[ {ms:'Ikut polisi negeri',en:'Depends on state policy'}, {ms:'Semak portal negeri',en:'Check state portal'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:67, cat:'beli', emoji:'🏠',
+title:{ ms:'Skim Rumah Kos Rendah', en:'Low-Cost Home Scheme' },
+agency:'Kerajaan Negeri / Pemaju',
+desc:{ ms:'Skim rumah kos rendah untuk golongan berpendapatan rendah. OKU boleh dapat pertimbangan.', en:'Low-cost housing for low-income households. PWD may receive consideration.' },
+points:[ {ms:'Harga rendah',en:'Low price'}, {ms:'Syarat pendapatan ketat',en:'Strict income criteria'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:68, cat:'beli', emoji:'🏚️',
+title:{ ms:'Penggantian Rumah Uzur (Bina Baru)', en:'Replace Dilapidated House (Rebuild)' },
+agency:'SPNB / KPLB',
+desc:{ ms:'Bina rumah baru menggantikan rumah uzur atas tanah sendiri (tertakluk program).', en:'Build a new house replacing a dilapidated one on own land (programme dependent).' },
+points:[ {ms:'Perlu tanah sendiri',en:'Own land required'}, {ms:'Keutamaan kes daif',en:'Priority for dilapidated cases'} ],
+link:'https://spnb.com.my/rumah-mesra-rakyat/', type:{ ms:'BINA SENDIRI', en:'BUILD OWN' }
+},
+{
+id:69, cat:'baikpulih', emoji:'🧰',
+title:{ ms:'Baik Pulih Dapur Mesra OKU', en:'PWD-Friendly Kitchen Upgrade' },
+agency:'JKM / NGO',
+desc:{ ms:'Pengubahsuaian dapur: meja rendah, ruang laluan lebih luas, dan susun atur selamat.', en:'Kitchen modifications: lower counters, wider pathways, safer layout.' },
+points:[ {ms:'Lebih selamat & mudah',en:'Safer & easier'}, {ms:'Kurangkan risiko kecederaan',en:'Reduce injury risk'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:70, cat:'baikpulih', emoji:'💡',
+title:{ ms:'Naik Taraf Pencahayaan Rumah', en:'Home Lighting Upgrade' },
+agency:'JKM / NGO',
+desc:{ ms:'Bantuan menambah baik pencahayaan untuk keselamatan, penting untuk OKU penglihatan.', en:'Improve home lighting for safety, important for visually impaired PWD.' },
+points:[ {ms:'Kurangkan risiko jatuh',en:'Reduce falls'}, {ms:'Mesra OKU penglihatan',en:'Vision-friendly'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+
+{
+id:71, cat:'sewa', emoji:'🏢',
+title:{ ms:'Sewaan Rumah Khas (Kes Kebajikan)', en:'Special Rental (Welfare Cases)' },
+agency:'JKM / NGO',
+desc:{ ms:'Bantuan atau penempatan sewa bagi kes kebajikan tertentu (sementara).', en:'Rental assistance or placement for selected welfare cases (temporary).' },
+points:[ {ms:'Kes disahkan',en:'Verified cases'}, {ms:'Tempoh terhad',en:'Limited duration'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'BANTUAN', en:'AID' }
+},
+{
+id:72, cat:'beli', emoji:'🏘️',
+title:{ ms:'Skim Rumah Mampu Milik (Tawaran Terhad)', en:'Affordable Homes (Limited Offer)' },
+agency:'Agensi Perumahan',
+desc:{ ms:'Permohonan projek tertentu bila buka tawaran. Sesuai untuk demo data portal.', en:'Project-based application when open. Useful for portal demo data.' },
+points:[ {ms:'Kena pantau tarikh buka',en:'Watch opening dates'}, {ms:'Permohonan dalam talian',en:'Online application'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:73, cat:'baikpulih', emoji:'🧯',
+title:{ ms:'Penambahbaikan Laluan Keluar', en:'Improve Emergency Exit Path' },
+agency:'PBT / JKM',
+desc:{ ms:'Naik taraf laluan keluar rumah (pintu, laluan rata) untuk keselamatan OKU.', en:'Upgrade exit path (doorways, flat paths) for PWD safety.' },
+points:[ {ms:'Keselamatan kecemasan',en:'Emergency safety'}, {ms:'Akses mudah',en:'Easier access'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'AKSES', en:'ACCESS' }
+},
+{
+id:74, cat:'beli', emoji:'🏠',
+title:{ ms:'Skim Perumahan (Pembeli Rumah Pertama)', en:'Housing Scheme (First-Time Buyer)' },
+agency:'Kerajaan / Agensi',
+desc:{ ms:'Skim yang utamakan pembeli rumah pertama untuk bantu miliki rumah.', en:'Schemes prioritising first-time buyers to help home ownership.' },
+points:[ {ms:'Keutamaan pembeli kali pertama',en:'First-time buyer priority'}, {ms:'Syarat kelayakan',en:'Eligibility criteria'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+},
+{
+id:75, cat:'sewa', emoji:'🏘️',
+title:{ ms:'Sewaan Rumah Berhampiran Hospital', en:'Rental Near Hospitals' },
+agency:'Agensi Negeri / NGO',
+desc:{ ms:'Penempatan sewa berhampiran fasiliti kesihatan untuk keluarga pesakit/OKU (terpilih).', en:'Rental placement near healthcare facilities for PWD/families (selected cases).' },
+points:[ {ms:'Kes terpilih',en:'Selected cases'}, {ms:'Dekat fasiliti kesihatan',en:'Near healthcare facilities'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'BANTUAN', en:'AID' }
+},
+
+{
+id:76, cat:'baikpulih', emoji:'🧱',
+title:{ ms:'Baik Pulih Dinding Retak', en:'Cracked Wall Repair' },
+agency:'KPLB / JKM',
+desc:{ ms:'Baiki dinding retak untuk elakkan runtuhan dan risiko keselamatan.', en:'Repair cracked walls to avoid collapse and safety hazards.' },
+points:[ {ms:'Keselamatan rumah',en:'Home safety'}, {ms:'Keutamaan rumah uzur',en:'Priority for older homes'} ],
+link:'https://www.rurallink.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+{
+id:77, cat:'baikpulih', emoji:'🏡',
+title:{ ms:'Baik Pulih Perparitan Rumah', en:'Home Drainage Repair' },
+agency:'PBT / JKM',
+desc:{ ms:'Baiki perparitan untuk elak banjir kilat dan pembiakan nyamuk.', en:'Repair drainage to prevent flash floods and mosquito breeding.' },
+points:[ {ms:'Kurangkan risiko banjir',en:'Reduce flood risk'}, {ms:'Kesihatan lebih baik',en:'Better hygiene/health'} ],
+link:'https://www.kpkt.gov.my/', type:{ ms:'GERAN', en:'GRANT' }
+},
+{
+id:78, cat:'beli', emoji:'🏙️',
+title:{ ms:'Perumahan Transit ke Milik', en:'Transit-to-Ownership Housing' },
+agency:'Agensi Perumahan',
+desc:{ ms:'Model perumahan: sewa sementara dengan opsyen beli (bergantung projek).', en:'Housing model: temporary rent with option to buy (project dependent).' },
+points:[ {ms:'Sesuai yang belum stabil',en:'For those not financially stable yet'}, {ms:'Opsyen beli kemudian',en:'Option to buy later'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'SEWAAN', en:'RENTAL' }
+},
+{
+id:79, cat:'sewa', emoji:'🏠',
+title:{ ms:'Penempatan Sementara (Bencana)', en:'Temporary Shelter (Disaster)' },
+agency:'NADMA / JKM',
+desc:{ ms:'Penempatan sementara untuk mangsa bencana termasuk keluarga OKU.', en:'Temporary shelter for disaster victims including PWD families.' },
+points:[ {ms:'Kes bencana sahaja',en:'Disaster cases only'}, {ms:'Penempatan sementara',en:'Temporary placement'} ],
+link:'https://www.jkm.gov.my/', type:{ ms:'BANTUAN', en:'AID' }
+},
+{
+id:80, cat:'beli', emoji:'🏘️',
+title:{ ms:'Skim Rumah Mampu Milik (Keluarga B40)', en:'Affordable Homes (B40 Families)' },
+agency:'Kerajaan / Agensi Perumahan',
+desc:{ ms:'Skim rumah mampu milik untuk B40, OKU boleh dapat pertimbangan tambahan.', en:'Affordable housing for B40 families; PWD may receive extra consideration.' },
+points:[ {ms:'Keutamaan B40',en:'B40 priority'}, {ms:'Dokumen pendapatan diperlukan',en:'Income documents required'} ],
+link:'https://teduh.kpkt.gov.my/', type:{ ms:'BELI', en:'BUY' }
+}
+                ],
+
+                // FUNCTIONS
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+                
+                // Computed Property for Filtering
+                get filteredHousing() {
+                    return this.schemes.filter(item => {
+                        const catMatch = this.activeCat === 'all' || item.cat === this.activeCat;
+                        
+                        const s = this.search.toLowerCase();
+                        const titleMs = item.title.ms.toLowerCase();
+                        const titleEn = item.title.en.toLowerCase();
+                        const descMs = item.desc.ms.toLowerCase();
+                        const descEn = item.desc.en.toLowerCase();
+                        
+                        const textMatch = titleMs.includes(s) || titleEn.includes(s) || descMs.includes(s) || descEn.includes(s) || item.agency.toLowerCase().includes(s);
+
+                        return catMatch && textMatch;
+                    });
+                },
+
+                // Chat Logic
+                async sendMessage() {
+                    const text = this.userMsg;
+                    this.messages.push({ id: Date.now(), text: text, sender: 'user' });
+                    this.userMsg = '';
+                    this.isTyping = true;
+
+                    setTimeout(() => {
+                        this.isTyping = false;
+                        let response = "";
+                        
+                        if(text.toLowerCase().includes('sewa') || text.toLowerCase().includes('ppr')) {
+                            response = this.lang === 'ms' 
+                                ? "Untuk sewaan, skim terbaik adalah <b>PPR (Program Perumahan Rakyat)</b>. Sewanya sangat murah (~RM124). Anda boleh mohon di laman web TEDUH."
+                                : "For rental, the best scheme is <b>PPR</b>. Rent is very cheap (~RM124). You can apply via the TEDUH website.";
+                        } else if (text.toLowerCase().includes('beli') || text.toLowerCase().includes('diskaun')) {
+                            response = this.lang === 'ms'
+                                ? "Untuk beli, cuba semak <b>SPNB (RMR)</b> jika ada tanah, atau <b>Rumah Selangorku/RUMAWIP</b>. Jangan lupa tanya pemaju tentang diskaun OKU 20%."
+                                : "To buy, check <b>SPNB (RMR)</b> if you have land, or <b>Rumah Selangorku/RUMAWIP</b>. Don't forget to ask developers about the 20% PWD discount.";
+                        } else {
+                            response = this.lang === 'ms'
+                                ? "Maaf, saya kurang jelas. Boleh tanya pasal 'sewa', 'beli' atau 'baik pulih'?"
+                                : "Sorry, I didn't get that. Can you ask about 'rent', 'buy' or 'repair'?";
+                        }
+
+                        this.messages.push({ id: Date.now() + 1, text: response, sender: 'bot' });
+                        
+                        this.$nextTick(() => {
+                            const container = document.getElementById('chat-messages');
+                            if (container) container.scrollTop = container.scrollHeight;
+                        });
+                    }, 1000);
+                },
+
+                openChatWithQuery(query) {
+                    this.chatOpen = true;
+                    this.userMsg = "Info pasal " + query;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

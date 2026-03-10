@@ -1,0 +1,2531 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerjaya & Perniagaan - MY OKU SENTRAL</title>
+    <meta name="description" content="Peluang pekerjaan, geran perniagaan dan latihan kemahiran untuk OKU.">
+    
+   <script src="https://cdn.tailwindcss.com"></script>
+<!-- MARKED.JS -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- FONT AWESOME -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        gold: { 400: '#FACC15', 500: '#EAB308', 600: '#CA8A04' }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0284c7; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300 flex flex-col min-h-screen"
+      x-data="careerPage()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(14)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+            <div class="flex items-center gap-3 md:gap-6">
+    <a href="index.html" class="hidden md:inline font-bold text-gray-500 hover:text-brand-600 transition" x-text="txt[lang].menu_home">Utama</a>
+    <a href="#peluang" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_opp">Peluang</a>
+    <a href="#geran" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_grant">Geran</a>
+    <a href="#tips" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_tips">Tips</a>
+    
+    <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+</div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 px-4 bg-gradient-to-b from-brand-900 to-brand-800 relative overflow-hidden text-white min-h-[500px] flex items-center">
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-500/20 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-3xl"></div>
+
+        <div class="container mx-auto max-w-6xl relative z-10 grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <span class="inline-block py-1 px-3 rounded-full bg-gold-500 text-white font-black text-xs uppercase tracking-widest mb-4 border border-white/30">
+                    <i class="fas fa-briefcase mr-1"></i> <span x-text="txt[lang].hero_badge">Ekonomi & Kerjaya</span>
+                </span>
+                <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight">
+                    <span x-text="txt[lang].hero_title_1">Bina Kerjaya</span><br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-white" x-text="txt[lang].hero_title_2">Impian Anda.</span>
+                </h1>
+                <p class="text-lg md:text-xl text-brand-100 mb-8 leading-relaxed max-w-lg" x-text="txt[lang].hero_desc">
+                    Terokai peluang pekerjaan inklusif, geran perniagaan kerajaan, dan latihan kemahiran khas untuk memperkasakan ekonomi OKU.
+                </p>
+                <div class="flex gap-4">
+                    <a href="#senarai" class="bg-white text-brand-900 px-8 py-4 rounded-xl font-bold hover:bg-brand-50 transition shadow-xl transform hover:-translate-y-1">
+                        <i class="fas fa-search mr-2"></i> <span x-text="txt[lang].btn_explore">Lihat Peluang</span>
+                    </a>
+                </div>
+            </div>
+            <div class="hidden md:flex justify-center">
+                <div class="relative w-80 h-80 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition duration-500">
+                    <div class="absolute -top-10 -right-10 bg-gold-500 text-brand-900 font-black p-4 rounded-2xl shadow-lg z-20">
+                        <span class="block text-3xl">RM450</span>
+                        <span class="text-xs uppercase" x-text="txt[lang].card_epc">Elaun EPC</span>
+                    </div>
+                    <div class="flex flex-col h-full justify-between">
+                        <div>
+                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl text-brand-600 mb-4">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold mb-2" x-text="txt[lang].card_stat_title">Statistik 2026</h3>
+                            <p class="text-sm opacity-80" x-text="txt[lang].card_stat_desc">Dasar 1% Peluang Pekerjaan dalam Perkhidmatan Awam kini diperkasakan.</p>
+                        </div>
+                        <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
+                            <div class="bg-gold-400 h-full w-3/4 animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="bg-white dark:bg-gray-800 shadow-md relative z-20 -mt-8 mx-4 md:mx-auto max-w-5xl rounded-2xl p-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center border border-gray-100 dark:border-gray-700">
+        <div class="border-r border-gray-200 dark:border-gray-700 last:border-0">
+            <i class="fas fa-coins text-gold-500 text-2xl mb-2"></i>
+            <h4 class="font-black text-2xl text-gray-900 dark:text-white">RM2,700</h4>
+            <p class="text-xs text-gray-500 font-bold uppercase" x-text="txt[lang].stat_grant">Geran Pelancaran</p>
+        </div>
+        <div class="border-r border-gray-200 dark:border-gray-700 last:border-0">
+            <i class="fas fa-building text-brand-600 text-2xl mb-2"></i>
+            <h4 class="font-black text-2xl text-gray-900 dark:text-white">1%</h4>
+            <p class="text-xs text-gray-500 font-bold uppercase" x-text="txt[lang].stat_quota">Kuota Sektor Awam</p>
+        </div>
+        <div class="border-r border-gray-200 dark:border-gray-700 last:border-0">
+            <i class="fas fa-hands-helping text-green-500 text-2xl mb-2"></i>
+            <h4 class="font-black text-2xl text-gray-900 dark:text-white">Job Coach</h4>
+            <p class="text-xs text-gray-500 font-bold uppercase" x-text="txt[lang].stat_support">Sokongan Kerja</p>
+        </div>
+        <div class="last:border-0">
+            <i class="fas fa-laptop-code text-purple-500 text-2xl mb-2"></i>
+            <h4 class="font-black text-2xl text-gray-900 dark:text-white">Digital</h4>
+            <p class="text-xs text-gray-500 font-bold uppercase" x-text="txt[lang].stat_training">Latihan e-Kasih</p>
+        </div>
+    </div>
+
+    <section id="senarai" class="py-20 container mx-auto px-4 max-w-6xl">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-black mb-4 dark:text-white" x-text="txt[lang].list_title">Pilih Haluan Anda</h2>
+            <div class="flex flex-wrap justify-center gap-4">
+                <template x-for="cat in categories">
+                    <button @click="activeFilter = cat.id" 
+                        class="px-6 py-2 rounded-full font-bold text-sm transition-all border-2"
+                        :class="activeFilter === cat.id ? 'bg-brand-600 border-brand-600 text-white' : 'bg-transparent border-gray-300 text-gray-500 hover:border-brand-400 dark:text-gray-400'">
+                        <i :class="cat.icon" class="mr-2"></i><span x-text="cat.label[lang]"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <template x-for="item in filteredItems" :key="item.id">
+                <div class="group bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full relative overflow-hidden">
+                    <div class="absolute top-4 right-4 text-xs font-black uppercase px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-500" x-text="item.type[lang]"></div>
+                    
+                    <div class="mb-6 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner" :class="item.bgClass">
+                        <i :class="item.icon"></i>
+                    </div>
+
+                    <h3 class="text-xl font-black mb-2 text-gray-900 dark:text-white group-hover:text-brand-600 transition" x-text="item.title[lang]"></h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 flex-grow leading-relaxed" x-text="item.desc[lang]"></p>
+
+                    <div x-show="item.amount" class="bg-brand-50 dark:bg-gray-700/50 p-3 rounded-xl mb-6 flex items-center gap-3">
+                        <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                        <div>
+                            <span class="block text-[10px] font-bold uppercase text-gray-400" x-text="txt[lang].card_value">Nilai Bantuan</span>
+                            <span class="block font-black text-brand-800 dark:text-brand-200" x-text="item.amount"></span>
+                        </div>
+                    </div>
+
+                    <a :href="item.link" target="_blank" class="mt-auto w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-center hover:opacity-90 transition flex items-center justify-center gap-2">
+                        <span x-text="txt[lang].btn_apply_card">Mohon Sekarang</span> <i class="fas fa-external-link-alt text-xs"></i>
+                    </a>
+                </div>
+            </template>
+        </div>
+    </section>
+
+    <section id="tips" class="py-16 bg-brand-50 dark:bg-gray-800/50">
+        <div class="container mx-auto px-4 max-w-4xl">
+            <h2 class="text-3xl font-black mb-8 text-center flex items-center justify-center gap-3 dark:text-white">
+                <i class="fas fa-lightbulb text-gold-500"></i>
+                <span x-text="txt[lang].tips_title">Tips Kejayaan</span>
+            </h2>
+
+            <div class="space-y-4">
+                <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <button @click="open = !open" class="w-full p-5 flex justify-between items-center text-left font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-white">
+                        <span x-text="txt[lang].faq_1_q">Bagaimana memohon Pekerjaan dalam Sektor Awam?</span>
+                        <i class="fas fa-chevron-down transition-transform duration-300" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" class="p-5 pt-0 text-gray-600 dark:text-gray-300 text-sm leading-relaxed border-t border-gray-100 dark:border-gray-700" x-transition>
+                        <p x-text="txt[lang].faq_1_a">Anda perlu mendaftar melalui portal SPA9 (Suruhanjaya Perkhidmatan Awam). Pastikan anda mengisytiharkan status OKU anda untuk termasuk dalam kuota 1%. Sediakan salinan Kad OKU JKM yang sah.</p>
+                        <a href="https://spa9.spa.gov.my/login" target="_blank" class="inline-block mt-3 text-brand-600 font-bold hover:underline">Ke Portal SPA9 &rarr;</a>
+                    </div>
+                </div>
+
+                <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <button @click="open = !open" class="w-full p-5 flex justify-between items-center text-left font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-white">
+                        <span x-text="txt[lang].faq_2_q">Apa itu sokongan Job Coach?</span>
+                        <i class="fas fa-chevron-down transition-transform duration-300" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" class="p-5 pt-0 text-gray-600 dark:text-gray-300 text-sm leading-relaxed border-t border-gray-100 dark:border-gray-700" x-transition>
+                        <p x-text="txt[lang].faq_2_a">Job Coach adalah pegawai yang dilatih untuk membantu OKU di tempat kerja. Mereka membantu dari segi penyesuaian diri, komunikasi dengan majikan, dan sokongan emosi sehingga OKU boleh berdikari.</p>
+                    </div>
+                </div>
+
+                <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <button @click="open = !open" class="w-full p-5 flex justify-between items-center text-left font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-white">
+                        <span x-text="txt[lang].faq_3_q">Adakah geran perniagaan perlu dibayar balik?</span>
+                        <i class="fas fa-chevron-down transition-transform duration-300" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" class="p-5 pt-0 text-gray-600 dark:text-gray-300 text-sm leading-relaxed border-t border-gray-100 dark:border-gray-700" x-transition>
+                        <p x-text="txt[lang].faq_3_a">Kebanyakan geran seperti Geran Pelancaran (GP) JKM adalah bantuan 'one-off' dan TIDAK perlu dibayar balik, asalkan ia digunakan untuk tujuan perniagaan yang dipersetujui.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500 mt-auto">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400">Utama</a></li>
+                    <li><a href="daftar.html" class="hover:text-brand-400">Pendaftaran JKM</a></li>
+                    <li><a href="pendidikan.html" class="hover:text-brand-400">Pendidikan</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> info@jkm.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+    <div x-show="chatOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+         class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+        
+        <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm">Career Assist Bot</h4>
+                    <span class="text-[10px] opacity-80 block">Online</span>
+                </div>
+            </div>
+            <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+            <template x-for="msg in messages" :key="msg.id">
+                <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                    <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                         class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed"
+                         x-html="msg.text">
+                    </div>
+                </div>
+            </template>
+
+            <div x-show="isTyping" class="flex justify-start">
+                <div class="bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 h-10 items-center">
+                    <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                    <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+                    <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                </div>
+            </div>
+        </div>
+
+        <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+            <input type="text"
+                   x-model="userMsg"
+                   placeholder="Taip soalan kerjaya atau bisnes..."
+                   class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white outline-none">
+            <button type="submit"
+                    :disabled="!userMsg.trim()"
+                    class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                <i class="fas fa-paper-plane text-xs"></i>
+            </button>
+        </form>
+    </div>
+
+    <button @click="chatOpen = !chatOpen"
+            class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+        <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+        <i class="fas fa-comment-dots text-2xl group-hover:rotate-12 transition"></i>
+    </button>
+</div>
+
+    <script>
+        function careerPage() {
+           return {
+    lang: 'ms',
+    isDark: false,
+    currentFontSize: 16,
+    showSettings: false,
+    activeFilter: 'all',
+
+    // CHATBOT
+    chatOpen: false,
+    userMsg: '',
+    isTyping: false,
+    messages: [
+        {
+            id: 1,
+            text: "Hai! Saya boleh bantu anda tentang <b>kerjaya OKU</b>, <b>Elaun EPC</b>, <b>geran perniagaan</b>, <b>latihan kemahiran</b>, dan <b>peluang kerja remote</b>.",
+            sender: 'bot'
+        }
+    ],
+    chatHistory: [
+        {
+            role: "system",
+            content: "Anda adalah pembantu AI untuk portal MY OKU SENTRAL, khusus membantu pengguna tentang kerjaya, pekerjaan, latihan, pembiayaan mikro, geran perniagaan, EPC, Job Coach, TVET, dan peluang ekonomi untuk OKU di Malaysia. Jawab dalam Bahasa Melayu yang jelas, mesra, ringkas, dan profesional. Jika tidak pasti, sarankan pengguna semak portal rasmi agensi berkaitan."
+        }
+    ],
+
+                // TEXT DICTIONARY (FULLY TRANSLATED)
+                 txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        menu_home: 'Utama',
+                        menu_opp: 'Peluang',
+                        menu_grant: 'Geran',
+                        menu_tips: 'Tips',
+                        btn_settings: 'Akses',
+                        hero_badge: 'Ekonomi & Kerjaya',
+                        hero_title_1: 'Bina Kerjaya',
+                        hero_title_2: 'Impian Anda.',
+                        hero_desc: 'Terokai peluang pekerjaan inklusif, geran perniagaan kerajaan, dan latihan kemahiran khas untuk memperkasakan ekonomi OKU.',
+                        btn_explore: 'Lihat Peluang',
+                        card_epc: 'Elaun EPC',
+                        card_stat_title: 'Statistik 2026',
+                        card_stat_desc: 'Dasar 1% Peluang Pekerjaan dalam Perkhidmatan Awam kini diperkasakan.',
+                        stat_grant: 'Geran Pelancaran',
+                        stat_quota: 'Kuota Sektor Awam',
+                        stat_support: 'Sokongan Kerja',
+                        stat_training: 'Latihan e-Kasih',
+                        list_title: 'Pilih Haluan Anda',
+                        card_value: 'Nilai Bantuan',
+                        btn_apply_card: 'Mohon Sekarang',
+                        tips_title: 'Tips Kejayaan',
+                        faq_1_q: 'Bagaimana memohon Pekerjaan dalam Sektor Awam?',
+                        faq_1_a: 'Anda perlu mendaftar melalui portal SPA9 (Suruhanjaya Perkhidmatan Awam). Pastikan anda mengisytiharkan status OKU anda untuk termasuk dalam kuota 1%. Sediakan salinan Kad OKU JKM yang sah.',
+                        faq_2_q: 'Apa itu sokongan Job Coach?',
+                        faq_2_a: 'Job Coach adalah pegawai yang dilatih untuk membantu OKU di tempat kerja. Mereka membantu dari segi penyesuaian diri, komunikasi dengan majikan, dan sokongan emosi sehingga OKU boleh berdikari.',
+                        faq_3_q: 'Adakah geran perniagaan perlu dibayar balik?',
+                        faq_3_a: 'Kebanyakan geran seperti Geran Pelancaran (GP) JKM adalah bantuan "one-off" dan TIDAK perlu dibayar balik, asalkan ia digunakan untuk tujuan perniagaan yang dipersetujui.',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        menu_home: 'Home',
+                        menu_opp: 'Opportunities',
+                        menu_grant: 'Grants',
+                        menu_tips: 'Tips',
+                        btn_settings: 'Access',
+                        hero_badge: 'Economy & Career',
+                        hero_title_1: 'Build Your',
+                        hero_title_2: 'Dream Career.',
+                        hero_desc: 'Explore inclusive job opportunities, government business grants, and special skill training to empower PWD economy.',
+                        btn_explore: 'Explore Now',
+                        card_epc: 'EPC Allowance',
+                        card_stat_title: '2026 Statistics',
+                        card_stat_desc: 'The 1% Public Service Employment Policy is now empowered.',
+                        stat_grant: 'Launch Grant',
+                        stat_quota: 'Public Sector Quota',
+                        stat_support: 'Job Support',
+                        stat_training: 'e-Kasih Training',
+                        list_title: 'Choose Your Path',
+                        card_value: 'Aid Value',
+                        btn_apply_card: 'Apply Now',
+                        tips_title: 'Success Tips',
+                        faq_1_q: 'How to apply for Public Sector Jobs?',
+                        faq_1_a: 'You need to register via the SPA9 portal (Public Services Commission). Ensure you declare your PWD status to be included in the 1% quota. Prepare a valid JKM PWD Card copy.',
+                        faq_2_q: 'What is Job Coach support?',
+                        faq_2_a: 'A Job Coach is an officer trained to assist PWDs in the workplace. They help with adaptation, communication with employers, and emotional support until the PWD can be independent.',
+                        faq_3_q: 'Do business grants need to be repaid?',
+                        faq_3_a: 'Most grants like the JKM Launch Grant (GP) are "one-off" assistance and DO NOT need to be repaid, provided they are used for the agreed business purposes.',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact'
+                    }
+                },
+
+                // FILTER CATEGORIES
+                categories: [
+                    { id: 'all', label: { ms: 'Semua', en: 'All' }, icon: 'fas fa-th' },
+                    { id: 'job', label: { ms: 'Kerjaan', en: 'Jobs' }, icon: 'fas fa-briefcase' },
+                    { id: 'biz', label: { ms: 'Perniagaan', en: 'Business' }, icon: 'fas fa-store' },
+                    { id: 'train', label: { ms: 'Latihan', en: 'Training' }, icon: 'fas fa-graduation-cap' }
+                ],
+
+                // CAREER DATA ITEMS
+               // --- PASTE IN: items: [ ... ]  (FULL 1 → 60) ---
+items: [
+  // 1-6 (asal + lengkapkan item 6)
+  {
+    id: 1,
+    cat: 'biz',
+    type: { ms: 'Geran', en: 'Grant' },
+    title: { ms: 'Geran Pelancaran (GP) JKM', en: 'JKM Launch Grant (GP)' },
+    desc: { ms: 'Bantuan kewangan one-off untuk bantu OKU memulakan atau mengembangkan perniagaan kecil.', en: 'One-off financial help to support PWDs starting or expanding small businesses.' },
+    amount: 'Maks RM2,700',
+    link: 'https://www.jkm.gov.my/jkm/index.php?r=portal/left&id=UnN2U3ZydGZzN2w3TXd3S3V4SjRXZz09',
+    icon: 'fas fa-rocket',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 2,
+    cat: 'job',
+    type: { ms: 'Elaun', en: 'Allowance' },
+    title: { ms: 'Elaun Pekerja Cacat (EPC)', en: 'Disabled Workers Allowance (EPC)' },
+    desc: { ms: 'Insentif bulanan untuk OKU yang bekerja dengan pendapatan RM1,500 ke bawah.', en: 'Monthly incentive for working PWDs earning RM1,500 or below.' },
+    amount: 'RM450 / Bulan',
+    link: 'http://ebantuanjkm.jkm.gov.my/spbk/login.jsp',
+    icon: 'fas fa-wallet',
+    bgClass: 'bg-green-100 dark:bg-green-900',
+    textClass: 'text-green-600 dark:text-green-300'
+  },
+  {
+    id: 3,
+    cat: 'job',
+    type: { ms: 'Portal', en: 'Portal' },
+    title: { ms: 'MYFutureJobs (Penapis OKU)', en: 'MYFutureJobs (PWD Filter)' },
+    desc: { ms: 'Portal pencarian kerja nasional. Guna penapis untuk cari peluang kerja mesra OKU.', en: 'National job portal. Use filters to find PWD-friendly jobs.' },
+    amount: null,
+    link: 'https://www.myfuturejobs.gov.my/',
+    icon: 'fas fa-search',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 4,
+    cat: 'job',
+    type: { ms: 'Sokongan', en: 'Support' },
+    title: { ms: 'Program Job Coach (JKM)', en: 'Job Coach Program (JKM)' },
+    desc: { ms: 'Sokongan pendampingan untuk bantu OKU menyesuaikan diri di tempat kerja (job matching + coaching).', en: 'Coaching support to help PWDs adapt at work (job matching + coaching).' },
+    amount: null,
+    link: 'https://www.jkm.gov.my/',
+    icon: 'fas fa-hands-helping',
+    bgClass: 'bg-purple-100 dark:bg-purple-900',
+    textClass: 'text-purple-600 dark:text-purple-300'
+  },
+  {
+    id: 5,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'Pusat Latihan JKM (PLPP / Pusat Pemulihan)', en: 'JKM Training Centres (PLPP / Rehab Centres)' },
+    desc: { ms: 'Latihan kemahiran & pemulihan vokasional untuk OKU (kursus ikut pusat/program).', en: 'Skills training & vocational rehabilitation for PWDs (courses vary by centre).' },
+    amount: 'Elaun/kemudahan (ikut program)',
+    link: 'https://www.jkm.gov.my/',
+    icon: 'fas fa-graduation-cap',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 6,
+    cat: 'biz',
+    type: { ms: 'Pembiayaan', en: 'Financing' },
+    title: { ms: 'Skim 1OKU (BSN)', en: '1OKU Scheme (BSN)' },
+    desc: { ms: 'Pembiayaan mikro khas untuk usahawan OKU dengan terma yang biasanya lebih mesra peminjam.', en: 'Special micro-financing for PWD entrepreneurs with typically more borrower-friendly terms.' },
+    amount: 'Sehingga RM50,000 (ikut kelulusan)',
+    link: 'https://www.bsn.com.my/BusinessBanking/Micro/scheme-1oku?lang=ms',
+    icon: 'fas fa-university',
+    bgClass: 'bg-teal-100 dark:bg-teal-900',
+    textClass: 'text-teal-600 dark:text-teal-300'
+  },
+
+  // === TAMBAH “KERJAAN” (JOB) BANYAK-BANYAK ===
+  {
+    id: 7,
+    cat: 'job',
+    type: { ms: 'Kerajaan', en: 'Government' },
+    title: { ms: 'SPA9 (Permohonan Kerja Kerajaan)', en: 'SPA9 (Public Service Applications)' },
+    desc: { ms: 'Portal rasmi Suruhanjaya Perkhidmatan Awam untuk daftar, isi profil, dan mohon jawatan kerajaan. Isytihar status OKU untuk peluang inklusif.', en: 'Official Public Service Commission portal to register, complete profile, and apply for government posts. Declare PWD status for inclusive consideration.' },
+    amount: null,
+    link: 'https://spa9.spa.gov.my/',
+    icon: 'fas fa-landmark',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 8,
+    cat: 'job',
+    type: { ms: 'Kerajaan', en: 'Government' },
+    title: { ms: 'SPA (Maklumat Peperiksaan / Psikometrik)', en: 'SPA (Exams / Psychometric Info)' },
+    desc: { ms: 'Rujukan rasmi SPA berkaitan penilaian kompetensi/psikometrik & proses peperiksaan jawatan kerajaan.', en: 'Official SPA references on competency/psychometric assessments and exam processes.' },
+    amount: null,
+    link: 'https://www.spa.gov.my/index.php/informasi/penilaian-kompetensi/sukatan-syarat-peperiksaan',
+    icon: 'fas fa-clipboard-check',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 9,
+    cat: 'job',
+    type: { ms: 'Kerajaan', en: 'Government' },
+    title: { ms: 'MYFutureJobs (Bantuan Penempatan)', en: 'MYFutureJobs (Placement Support)' },
+    desc: { ms: 'Selain cari kerja, MYFutureJobs ada fungsi padanan kerja dan sokongan pencari kerja melalui ekosistem PERKESO.', en: 'Beyond job search, MYFutureJobs supports matching and jobseeker services via PERKESO ecosystem.' },
+    amount: null,
+    link: 'https://www.myfuturejobs.gov.my/',
+    icon: 'fas fa-user-check',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 10,
+    cat: 'job',
+    type: { ms: 'Portal', en: 'Portal' },
+    title: { ms: 'JobsMalaysia (JTKSM)', en: 'JobsMalaysia (Labour Dept.)' },
+    desc: { ms: 'Portal pekerjaan di bawah Jabatan Tenaga Kerja (JTKSM). Sesuai untuk carian kerja sektor swasta/padanan kerja.', en: 'Job portal under the Department of Labour (JTKSM). Useful for private-sector job searches and matching.' },
+    amount: null,
+    link: 'https://www.jobsmalaysia.gov.my/',
+    icon: 'fas fa-briefcase',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 11,
+    cat: 'job',
+    type: { ms: 'Sokongan', en: 'Support' },
+    title: { ms: 'PERKESO Return To Work (RTW)', en: 'PERKESO Return To Work (RTW)' },
+    desc: { ms: 'Program pemulihan vokasional dan kembali bekerja untuk individu yang alami kecederaan/isu kesihatan berkaitan kerja.', en: 'Vocational rehab and return-to-work program for individuals with work-related injury/health issues.' },
+    amount: null,
+    link: 'https://www.perkeso.gov.my/',
+    icon: 'fas fa-heartbeat',
+    bgClass: 'bg-purple-100 dark:bg-purple-900',
+    textClass: 'text-purple-600 dark:text-purple-300'
+  },
+  {
+    id: 12,
+    cat: 'job',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'HRD Corp (Latihan Peningkatan Kemahiran)', en: 'HRD Corp (Upskilling/Reskilling)' },
+    desc: { ms: 'Cari kursus upskilling/reskilling yang sesuai (digital, teknikal, soft skills) melalui ekosistem latihan HRD Corp.', en: 'Find suitable upskilling/reskilling courses (digital, technical, soft skills) via HRD Corp training ecosystem.' },
+    amount: 'Bergantung kursus/geran',
+    link: 'https://www.hrdcorp.gov.my/',
+    icon: 'fas fa-chalkboard-teacher',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 13,
+    cat: 'job',
+    type: { ms: 'Kerajaan', en: 'Government' },
+    title: { ms: 'Portal Rasmi MOHR (Info Program Pekerjaan)', en: 'MOHR Portal (Employment Programs Info)' },
+    desc: { ms: 'Rujuk info program pekerjaan, dasar, dan inisiatif pasaran buruh di bawah Kementerian Sumber Manusia.', en: 'Reference employment programs, policies, and labour market initiatives under the Ministry of Human Resources.' },
+    amount: null,
+    link: 'https://www.mohr.gov.my/',
+    icon: 'fas fa-building',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+
+  // Job portals (mesra OKU / mainstream, letak sebagai “pilihan haluan”)
+  {
+    id: 14,
+    cat: 'job',
+    type: { ms: 'Portal', en: 'Portal' },
+    title: { ms: 'JobStreet Malaysia', en: 'JobStreet Malaysia' },
+    desc: { ms: 'Platform pencarian kerja popular. Guna kata kunci seperti “OKU”, “inclusive”, “accessibility”, “disability”.', en: 'Popular job search platform. Use keywords like “PWD”, “inclusive”, “accessibility”, “disability”.' },
+    amount: null,
+    link: 'https://www.jobstreet.com.my/',
+    icon: 'fas fa-search',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 15,
+    cat: 'job',
+    type: { ms: 'Portal', en: 'Portal' },
+    title: { ms: 'LinkedIn Jobs', en: 'LinkedIn Jobs' },
+    desc: { ms: 'Cari kerja + bina profil profesional. Sesuai untuk internship, kerja remote, dan networking.', en: 'Job search + professional profile. Great for internships, remote work, and networking.' },
+    amount: null,
+    link: 'https://www.linkedin.com/jobs/',
+    icon: 'fab fa-linkedin',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 16,
+    cat: 'job',
+    type: { ms: 'Portal', en: 'Portal' },
+    title: { ms: 'Indeed Malaysia', en: 'Indeed Malaysia' },
+    desc: { ms: 'Enjin carian kerja global. Guna penapis lokasi dan kata kunci “OKU/PWD”.', en: 'Global job search engine. Filter by location and keywords like “PWD”.' },
+    amount: null,
+    link: 'https://malaysia.indeed.com/',
+    icon: 'fas fa-globe',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 17,
+    cat: 'job',
+    type: { ms: 'Portal', en: 'Portal' },
+    title: { ms: 'Ricebowl Malaysia', en: 'Ricebowl Malaysia' },
+    desc: { ms: 'Platform carian kerja tempatan; sesuai untuk fresh grad dan internship.', en: 'Local job platform; good for fresh grads and internships.' },
+    amount: null,
+    link: 'https://www.ricebowl.my/',
+    icon: 'fas fa-bowl-rice',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+
+  // Remote / freelance as “job”
+  {
+    id: 18,
+    cat: 'job',
+    type: { ms: 'Remote', en: 'Remote' },
+    title: { ms: 'Upwork (Freelance)', en: 'Upwork (Freelance)' },
+    desc: { ms: 'Kerja freelance global (design, video editing, coding, admin). Sesuai untuk kerja dari rumah.', en: 'Global freelance work (design, video editing, coding, admin). Good for work-from-home.' },
+    amount: 'Ikut projek',
+    link: 'https://www.upwork.com/',
+    icon: 'fas fa-laptop-house',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 19,
+    cat: 'job',
+    type: { ms: 'Remote', en: 'Remote' },
+    title: { ms: 'Freelancer.com', en: 'Freelancer.com' },
+    desc: { ms: 'Platform projek freelance (logo, web, video, data entry). Bina portfolio + review.', en: 'Freelance project platform (logo, web, video, data entry). Build portfolio + reviews.' },
+    amount: 'Ikut projek',
+    link: 'https://www.freelancer.com/',
+    icon: 'fas fa-briefcase',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 20,
+    cat: 'job',
+    type: { ms: 'Remote', en: 'Remote' },
+    title: { ms: 'Fiverr (Gig)', en: 'Fiverr (Gig)' },
+    desc: { ms: 'Jual servis dalam bentuk “gig” (poster, editing video, voice over, resume).', en: 'Sell services as gigs (posters, video editing, voice over, resume).' },
+    amount: 'Ikut gig',
+    link: 'https://www.fiverr.com/',
+    icon: 'fas fa-tags',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+
+  // === TRAINING / TVET / SKILLS (untuk bantu dapat kerja) ===
+  {
+    id: 21,
+    cat: 'train',
+    type: { ms: 'TVET', en: 'TVET' },
+    title: { ms: 'myTVET (Carian Program TVET)', en: 'myTVET (TVET Program Finder)' },
+    desc: { ms: 'Cari kursus TVET di Malaysia. Sesuai untuk kemahiran teknikal & peluang kerja cepat.', en: 'Find TVET courses in Malaysia. Great for technical skills and faster employability.' },
+    amount: null,
+    link: 'https://mytvet.gov.my/',
+    icon: 'fas fa-tools',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 22,
+    cat: 'train',
+    type: { ms: 'TVET', en: 'TVET' },
+    title: { ms: 'ILP / ADTEC / JMTI (JTM)', en: 'ILP / ADTEC / JMTI (JTM)' },
+    desc: { ms: 'Rangkaian institut latihan teknikal (mekatronik, elektrik, automotif, fabrikasi, IT).', en: 'Technical training institutes network (mechatronics, electrical, automotive, fabrication, IT).' },
+    amount: null,
+    link: 'https://www.jtm.gov.my/',
+    icon: 'fas fa-industry',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 23,
+    cat: 'train',
+    type: { ms: 'Kemahiran', en: 'Skills' },
+    title: { ms: 'JPK / DSD (SKM, TVET Skills)', en: 'DSD / DSD (SKM, Skills Certification)' },
+    desc: { ms: 'Info pensijilan kemahiran seperti SKM (Sijil Kemahiran Malaysia) dan laluan kemahiran.', en: 'Info on skills certification like SKM and skills pathways.' },
+    amount: null,
+    link: 'https://www.dsd.gov.my/',
+    icon: 'fas fa-certificate',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 24,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'Google Digital Garage / Skillshop', en: 'Google Digital Garage / Skillshop' },
+    desc: { ms: 'Belajar digital marketing, analytics, ads, AI basics. Boleh ambil sijil percuma.', en: 'Learn digital marketing, analytics, ads, AI basics. Free certificates available.' },
+    amount: 'Percuma (kebanyakan)',
+    link: 'https://learndigital.withgoogle.com/digitalgarage',
+    icon: 'fab fa-google',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 25,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'Coursera (Kursus + Sijil)', en: 'Coursera (Courses + Certificates)' },
+    desc: { ms: 'Kursus IT, data, design, business. Cari kursus yang ada financial aid jika perlu.', en: 'IT, data, design, business courses. Check financial aid options if needed.' },
+    amount: 'Percuma/berbayar',
+    link: 'https://www.coursera.org/',
+    icon: 'fas fa-book-open',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+
+  // === BUSINESS / ENTREPRENEUR (masuk sekali, tapi fokus “kerjaan” pun masih banyak) ===
+  {
+    id: 26,
+    cat: 'biz',
+    type: { ms: 'SSM', en: 'SSM' },
+    title: { ms: 'Pendaftaran & Pembaharuan Perniagaan OKU (SSM) – Percuma', en: 'Free SSM Registration & Renewal for PWD Owners' },
+    desc: { ms: 'Pengecualian bayaran pendaftaran/pembaharuan (jenis tertentu) untuk pemilik OKU. Semak syarat di portal manfaat MOF.', en: 'Fee waiver for registration/renewal (selected types) for PWD owners. Check MOF manfaat portal for requirements.' },
+    amount: 'Percuma (tertakluk syarat)',
+    link: 'https://manfaat.mof.gov.my/site/s1o1p',
+    icon: 'fas fa-receipt',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 27,
+    cat: 'biz',
+    type: { ms: 'Pembiayaan', en: 'Financing' },
+    title: { ms: 'TEKUN Nasional (Pembiayaan Mikro)', en: 'TEKUN Nasional (Micro Financing)' },
+    desc: { ms: 'Pilihan pembiayaan mikro untuk usahawan kecil. Semak skim yang sesuai untuk perniagaan anda.', en: 'Micro-financing option for small entrepreneurs. Check suitable schemes for your business.' },
+    amount: 'Ikut skim/kelulusan',
+    link: 'https://www.tekun.gov.my/',
+    icon: 'fas fa-hand-holding-usd',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 28,
+    cat: 'biz',
+    type: { ms: 'Pembiayaan', en: 'Financing' },
+    title: { ms: 'AIM (Amanah Ikhtiar Malaysia)', en: 'AIM (Amanah Ikhtiar Malaysia)' },
+    desc: { ms: 'Pembiayaan mikro & sokongan keusahawanan komuniti. Semak kelayakan mengikut program.', en: 'Micro-financing & community entrepreneurship support. Eligibility depends on program.' },
+    amount: 'Ikut program',
+    link: 'https://www.aim.gov.my/',
+    icon: 'fas fa-users',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 29,
+    cat: 'biz',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'SME Corp Malaysia (Pembangunan PKS)', en: 'SME Corp Malaysia (SME Development)' },
+    desc: { ms: 'Rujuk program pembangunan usahawan, pensijilan, dan jaringan sokongan PKS.', en: 'Entrepreneur development programs, certifications, and SME support networks.' },
+    amount: null,
+    link: 'https://www.smecorp.gov.my/',
+    icon: 'fas fa-chart-line',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 30,
+    cat: 'biz',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'MDEC (Digital Business / eCommerce)', en: 'MDEC (Digital Business / eCommerce)' },
+    desc: { ms: 'Program/latihan digital, eCommerce, pemasaran, dan transformasi perniagaan.', en: 'Digital, eCommerce, marketing, and business transformation programs/training.' },
+    amount: null,
+    link: 'https://mdec.my/',
+    icon: 'fas fa-store-alt',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+
+  // === LAGI “KERJAAN” (job) — tambah banyak lagi ===
+  {
+    id: 31,
+    cat: 'job',
+    type: { ms: 'Kerajaan', en: 'Government' },
+    title: { ms: 'Portal Rasmi JPA (Maklumat Perkhidmatan Awam)', en: 'JPA Portal (Public Service Info)' },
+    desc: { ms: 'Rujukan maklumat perkhidmatan awam, skim, dan hal ehwal berkaitan sektor awam.', en: 'Reference for public service info, schemes, and public sector matters.' },
+    amount: null,
+    link: 'https://www.jpa.gov.my/',
+    icon: 'fas fa-university',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 32,
+    cat: 'job',
+    type: { ms: 'Kerajaan', en: 'Government' },
+    title: { ms: 'MyGovernment Portal', en: 'MyGovernment Portal' },
+    desc: { ms: 'Rujukan perkhidmatan kerajaan dan pautan rasmi pelbagai agensi (sesuai untuk cari portal jawatan/permohonan).', en: 'Government services and official links hub (useful to find recruitment/application portals).' },
+    amount: null,
+    link: 'https://www.malaysia.gov.my/',
+    icon: 'fas fa-link',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 33,
+    cat: 'job',
+    type: { ms: 'Sokongan', en: 'Support' },
+    title: { ms: 'Talian Kasih 15999 (Rujukan Bantuan)', en: 'Talian Kasih 15999 (Help Line)' },
+    desc: { ms: 'Untuk rujukan bantuan kebajikan/JKM termasuk pertanyaan program sokongan pekerjaan.', en: 'For welfare/JKM help references including queries on job support programs.' },
+    amount: null,
+    link: 'https://www.kpwkm.gov.my/',
+    icon: 'fas fa-phone-alt',
+    bgClass: 'bg-purple-100 dark:bg-purple-900',
+    textClass: 'text-purple-600 dark:text-purple-300'
+  },
+  {
+    id: 34,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Bina Resume (Canva Resume)', en: 'Build Resume (Canva Resume)' },
+    desc: { ms: 'Template resume cepat + boleh export PDF. Sesuai untuk apply kerja/internship.', en: 'Fast resume templates + export to PDF. Great for job/internship applications.' },
+    amount: 'Percuma/berbayar',
+    link: 'https://www.canva.com/resumes/templates/',
+    icon: 'fas fa-file-alt',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 35,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Interview Practice (Big Interview)', en: 'Interview Practice (Big Interview)' },
+    desc: { ms: 'Latih jawab interview + contoh soalan mengikut bidang. Boleh guna sebagai latihan kendiri.', en: 'Practice interview answers + sample questions by field. Useful for self-practice.' },
+    amount: 'Percuma/berbayar',
+    link: 'https://biginterview.com/',
+    icon: 'fas fa-comments',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+
+  // === TRAIN — lagi sumber latihan yang mudah ===
+  {
+    id: 36,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'Microsoft Learn', en: 'Microsoft Learn' },
+    desc: { ms: 'Belajar Windows, Azure, data, security, dev. Banyak modul percuma + learning paths.', en: 'Learn Windows, Azure, data, security, dev. Many free modules + learning paths.' },
+    amount: 'Percuma',
+    link: 'https://learn.microsoft.com/',
+    icon: 'fab fa-microsoft',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 37,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'freeCodeCamp', en: 'freeCodeCamp' },
+    desc: { ms: 'Belajar web dev, JS, Python, data. Sesuai untuk bina portfolio & projek.', en: 'Learn web dev, JS, Python, data. Great for portfolio and projects.' },
+    amount: 'Percuma',
+    link: 'https://www.freecodecamp.org/',
+    icon: 'fas fa-code',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 38,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'Cisco Networking Academy', en: 'Cisco Networking Academy' },
+    desc: { ms: 'Kursus rangkaian, cybersecurity, IT essentials. Sesuai untuk laluan IT support/network.', en: 'Networking, cybersecurity, IT essentials courses. Good for IT support/network pathway.' },
+    amount: 'Percuma/berbayar (ikut kursus)',
+    link: 'https://www.netacad.com/',
+    icon: 'fas fa-network-wired',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+
+  // === Biz — lagi pilihan berniaga ===
+  {
+    id: 39,
+    cat: 'biz',
+    type: { ms: 'Platform', en: 'Platform' },
+    title: { ms: 'TikTok Shop (Jual Produk)', en: 'TikTok Shop (Sell Products)' },
+    desc: { ms: 'Mulakan jualan online melalui live/affiliate/produk sendiri. Sesuai untuk bisnes kecil.', en: 'Start selling via live/affiliate/own products. Great for small businesses.' },
+    amount: null,
+    link: 'https://seller-my.tiktok.com/',
+    icon: 'fas fa-video',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 40,
+    cat: 'biz',
+    type: { ms: 'Platform', en: 'Platform' },
+    title: { ms: 'Shopee Seller Centre', en: 'Shopee Seller Centre' },
+    desc: { ms: 'Buka kedai online dan guna tools pemasaran Shopee.', en: 'Open an online store and use Shopee marketing tools.' },
+    amount: null,
+    link: 'https://seller.shopee.com.my/',
+    icon: 'fas fa-shopping-bag',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 41,
+    cat: 'biz',
+    type: { ms: 'Platform', en: 'Platform' },
+    title: { ms: 'Lazada Seller Center', en: 'Lazada Seller Center' },
+    desc: { ms: 'Platform eCommerce untuk kembangkan jualan, termasuk tools promosi.', en: 'eCommerce platform to grow sales with promotion tools.' },
+    amount: null,
+    link: 'https://sellercenter.lazada.com.my/',
+    icon: 'fas fa-store',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+
+  // === Job — khusus untuk “cara kerja” (gig/part-time) ===
+  {
+    id: 42,
+    cat: 'job',
+    type: { ms: 'Gig', en: 'Gig' },
+    title: { ms: 'Servis Reka Grafik (Gig)', en: 'Graphic Design Services (Gig)' },
+    desc: { ms: 'Laluan kerja: design logo, poster, menu, resume. Bina portfolio & tetapkan harga pakej.', en: 'Path: logos, posters, menus, resumes. Build portfolio and set package pricing.' },
+    amount: 'Ikut servis',
+    link: 'https://www.behance.net/',
+    icon: 'fas fa-palette',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 43,
+    cat: 'job',
+    type: { ms: 'Gig', en: 'Gig' },
+    title: { ms: 'Servis Video Editing (Gig)', en: 'Video Editing Services (Gig)' },
+    desc: { ms: 'Laluan kerja: editing TikTok/IG reels, montage, corporate video. Letak contoh di portfolio.', en: 'Path: TikTok/IG reels editing, montage, corporate videos. Showcase examples in portfolio.' },
+    amount: 'Ikut servis',
+    link: 'https://vimeo.com/',
+    icon: 'fas fa-film',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 44,
+    cat: 'job',
+    type: { ms: 'Gig', en: 'Gig' },
+    title: { ms: 'Content Creator (Monetization)', en: 'Content Creator (Monetization)' },
+    desc: { ms: 'Laluan kerja: bina content niche (review, edukasi, vlog). Jana income dari affiliate/ads/sponsor.', en: 'Path: build niche content (reviews, education, vlog). Earn via affiliate/ads/sponsors.' },
+    amount: 'Ikut prestasi',
+    link: 'https://www.youtube.com/creators/',
+    icon: 'fab fa-youtube',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+
+  // === Train — lagi ===
+  {
+    id: 45,
+    cat: 'train',
+    type: { ms: 'Sijil', en: 'Certificate' },
+    title: { ms: 'IBM SkillsBuild', en: 'IBM SkillsBuild' },
+    desc: { ms: 'Latihan digital, AI, data, cybersecurity + badge/sijil tertentu.', en: 'Digital, AI, data, cybersecurity training + badges/certificates.' },
+    amount: 'Percuma (kebanyakan)',
+    link: 'https://skillsbuild.org/',
+    icon: 'fas fa-brain',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 46,
+    cat: 'train',
+    type: { ms: 'Sijil', en: 'Certificate' },
+    title: { ms: 'Meta Blueprint (Marketing)', en: 'Meta Blueprint (Marketing)' },
+    desc: { ms: 'Belajar Facebook/Instagram ads & pemasaran digital. Sesuai untuk bisnes kecil + kerjaya marketing.', en: 'Learn Facebook/Instagram ads & digital marketing. Good for small business and marketing careers.' },
+    amount: 'Percuma/berbayar',
+    link: 'https://www.facebook.com/business/learn',
+    icon: 'fab fa-facebook',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+
+  // === Job — lebih “kerjaan” (company career pages / inclusive hiring) ===
+  {
+    id: 47,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Careers' },
+    title: { ms: 'Career Page Majikan (Cari “inclusive hiring”)', en: 'Employer Career Pages (Search “inclusive hiring”)' },
+    desc: { ms: 'Tip: Pergi career page syarikat besar (GLC/MNC). Cari polisi “diversity & inclusion” dan apply terus.', en: 'Tip: Visit big companies’ career pages (GLC/MNC). Look for “diversity & inclusion” policies and apply directly.' },
+    amount: null,
+    link: 'https://www.malaysia.gov.my/',
+    icon: 'fas fa-building',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+  {
+    id: 48,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Careers' },
+    title: { ms: 'Internship / Protege (Cari Program Inklusif)', en: 'Internship / Protege (Find Inclusive Programs)' },
+    desc: { ms: 'Cari program internship/graduate trainee. Gunakan kata kunci “OKU/PWD”, “inclusive”, “accessibility”.', en: 'Look for internship/graduate trainee programs. Use keywords “PWD”, “inclusive”, “accessibility”.' },
+    amount: null,
+    link: 'https://www.jobstreet.com.my/',
+    icon: 'fas fa-user-graduate',
+    bgClass: 'bg-blue-100 dark:bg-blue-900',
+    textClass: 'text-blue-600 dark:text-blue-300'
+  },
+
+  // === Biz — lagi sumber ===
+  {
+    id: 49,
+    cat: 'biz',
+    type: { ms: 'Panduan', en: 'Guide' },
+    title: { ms: 'Portal SME Info (Rujuk Program & Bantuan)', en: 'SME Info Portal (Programs & Aid)' },
+    desc: { ms: 'Cari bantuan/geran/latihan berkaitan perniagaan dari agensi kerajaan dan rakan strategik.', en: 'Find business-related aid/grants/training from government agencies and partners.' },
+    amount: null,
+    link: 'https://www.smeinfo.com.my/',
+    icon: 'fas fa-info-circle',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 50,
+    cat: 'biz',
+    type: { ms: 'Kewangan', en: 'Finance' },
+    title: { ms: 'AKPK (Bimbingan Kewangan Usahawan)', en: 'AKPK (Financial Guidance for Entrepreneurs)' },
+    desc: { ms: 'Bimbingan kewangan & pengurusan hutang. Sangat berguna bila nak stabilkan cashflow bisnes.', en: 'Financial counselling & debt management. Useful for stabilizing business cashflow.' },
+    amount: 'Percuma',
+    link: 'https://www.akpk.org.my/',
+    icon: 'fas fa-calculator',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+
+  // === Job — sambung lagi (lebih banyak “pilihan haluan” kerja) ===
+  {
+    id: 51,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Resume Checker (Enhancv / Resume.io)', en: 'Resume Tools (Enhancv / Resume.io)' },
+    desc: { ms: 'Tools untuk kemaskan resume, ATS friendly, dan susun pengalaman kerja/projek.', en: 'Tools to polish resumes, make them ATS-friendly, and structure experience/projects.' },
+    amount: 'Percuma/berbayar',
+    link: 'https://resume.io/',
+    icon: 'fas fa-file-signature',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 52,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Portfolio (GitHub)', en: 'Portfolio (GitHub)' },
+    desc: { ms: 'Untuk IT: letak projek coding, README, demo. Portfolio kuat = mudah dapat interview.', en: 'For IT: showcase code projects, README, demos. Strong portfolio = more interviews.' },
+    amount: 'Percuma',
+    link: 'https://github.com/',
+    icon: 'fab fa-github',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 53,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Portfolio (Behance)', en: 'Portfolio (Behance)' },
+    desc: { ms: 'Untuk design: simpan projek terbaik, before-after, dan case study ringkas.', en: 'For design: showcase best projects, before-after, and short case studies.' },
+    amount: 'Percuma',
+    link: 'https://www.behance.net/',
+    icon: 'fab fa-behance',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 54,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Portfolio (Dribbble)', en: 'Portfolio (Dribbble)' },
+    desc: { ms: 'Untuk UI/UX & design cepat. Sesuai untuk cari client/kerja remote.', en: 'For UI/UX and quick design showcases. Good for clients/remote work.' },
+    amount: 'Percuma/berbayar',
+    link: 'https://dribbble.com/',
+    icon: 'fas fa-basketball-ball',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+
+  // === Train — lagi ===
+  {
+    id: 55,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'Udemy (Kursus Praktikal)', en: 'Udemy (Practical Courses)' },
+    desc: { ms: 'Kursus praktikal (video editing, design, coding, Excel). Tunggu sale untuk harga murah.', en: 'Practical courses (video editing, design, coding, Excel). Wait for sales for low prices.' },
+    amount: 'Berbayar (murah masa sale)',
+    link: 'https://www.udemy.com/',
+    icon: 'fas fa-play-circle',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+  {
+    id: 56,
+    cat: 'train',
+    type: { ms: 'Latihan', en: 'Training' },
+    title: { ms: 'edX (Kursus Universiti)', en: 'edX (University Courses)' },
+    desc: { ms: 'Kursus dari universiti. Sesuai untuk tambah kredibiliti dan ilmu asas.', en: 'Courses from universities. Good to add credibility and solid foundations.' },
+    amount: 'Percuma/berbayar',
+    link: 'https://www.edx.org/',
+    icon: 'fas fa-university',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900',
+    textClass: 'text-indigo-600 dark:text-indigo-300'
+  },
+
+  // === Biz — lagi ===
+  {
+    id: 57,
+    cat: 'biz',
+    type: { ms: 'Reka', en: 'Design' },
+    title: { ms: 'Canva (Branding Bisnes)', en: 'Canva (Business Branding)' },
+    desc: { ms: 'Buat logo, poster, menu, price list, content marketing untuk bisnes kecil.', en: 'Create logos, posters, menus, price lists, marketing content for small businesses.' },
+    amount: 'Percuma/Pro',
+    link: 'https://www.canva.com/',
+    icon: 'fas fa-pen-nib',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+  {
+    id: 58,
+    cat: 'biz',
+    type: { ms: 'Pembayaran', en: 'Payments' },
+    title: { ms: 'DuitNow QR (Terima Bayaran)', en: 'DuitNow QR (Accept Payments)' },
+    desc: { ms: 'Mudahkan bisnes terima bayaran melalui QR. Mohon melalui bank/penyedia eWallet yang berdaftar.', en: 'Make it easier to accept QR payments. Apply via banks/registered eWallet providers.' },
+    amount: null,
+    link: 'https://www.duitnow.my/',
+    icon: 'fas fa-qrcode',
+    bgClass: 'bg-orange-100 dark:bg-orange-900',
+    textClass: 'text-orange-600 dark:text-orange-300'
+  },
+
+  // === Job — penutup set 60 ===
+  {
+    id: 59,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Cari Kerja Remote (RemoteOK)', en: 'Find Remote Jobs (RemoteOK)' },
+    desc: { ms: 'Cari kerja remote global (IT, design, marketing). Sesuai kalau perlukan fleksibiliti.', en: 'Find global remote jobs (IT, design, marketing). Great if you need flexibility.' },
+    amount: null,
+    link: 'https://remoteok.com/',
+    icon: 'fas fa-wifi',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  {
+    id: 60,
+    cat: 'job',
+    type: { ms: 'Kerjaya', en: 'Career' },
+    title: { ms: 'Cari Kerja Remote (We Work Remotely)', en: 'Find Remote Jobs (We Work Remotely)' },
+    desc: { ms: 'Job board remote terbesar. Sesuai untuk dev, support, writing, customer service.', en: 'One of the biggest remote job boards. Great for dev, support, writing, customer service.' },
+    amount: null,
+    link: 'https://weworkremotely.com/',
+    icon: 'fas fa-globe-asia',
+    bgClass: 'bg-sky-100 dark:bg-sky-900',
+    textClass: 'text-sky-600 dark:text-sky-300'
+  },
+  // --- ADD-ON: TRAINING ITEMS ONLY (ID 61 → 120) ---
+// Paste all below INTO items: [ ... ]  (sambung lepas id 60)
+
+{
+  id: 61, cat: 'train', type: { ms: 'Latihan', en: 'Training' },
+  title: { ms: 'Sijil Profesional Google (Coursera)', en: 'Google Professional Certificates (Coursera)' },
+  desc: { ms: 'Laluan kerjaya (IT Support, Data Analytics, UX Design, Project Management, Cybersecurity). Sesuai untuk portfolio & kerja entry-level.', en: 'Career pathways (IT Support, Data Analytics, UX Design, Project Management, Cybersecurity). Great for portfolio & entry-level jobs.' },
+  amount: 'Berbayar / Financial Aid',
+  link: 'https://www.coursera.org/google-career-certificates',
+  icon: 'fab fa-google',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 62, cat: 'train', type: { ms: 'Latihan', en: 'Training' },
+  title: { ms: 'Google Skillshop (Ads, Analytics)', en: 'Google Skillshop (Ads, Analytics)' },
+  desc: { ms: 'Latihan rasmi Google untuk Google Ads, Analytics, dan tools pemasaran. Banyak modul percuma.', en: 'Official Google training for Google Ads, Analytics, and marketing tools. Many free modules.' },
+  amount: 'Percuma',
+  link: 'https://skillshop.exceedlms.com/student/catalog',
+  icon: 'fas fa-chart-bar',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 63, cat: 'train', type: { ms: 'Latihan', en: 'Training' },
+  title: { ms: 'AWS Skill Builder', en: 'AWS Skill Builder' },
+  desc: { ms: 'Belajar cloud AWS (foundation, architect, cloud practitioner). Sesuai untuk kerja cloud/IT infra.', en: 'Learn AWS cloud (foundation, architect, cloud practitioner). Good for cloud/IT infra roles.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://skillbuilder.aws/',
+  icon: 'fab fa-aws',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 64, cat: 'train', type: { ms: 'Latihan', en: 'Training' },
+  title: { ms: 'AWS Educate', en: 'AWS Educate' },
+  desc: { ms: 'Laluan pembelajaran cloud untuk pelajar + badge tertentu.', en: 'Cloud learning pathways for students + badges.' },
+  amount: 'Percuma',
+  link: 'https://aws.amazon.com/education/awseducate/',
+  icon: 'fas fa-cloud',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 65, cat: 'train', type: { ms: 'Cybersecurity', en: 'Cybersecurity' },
+  title: { ms: 'TryHackMe', en: 'TryHackMe' },
+  desc: { ms: 'Latihan cybersecurity hands-on (beginner → advanced). Bagus untuk skill practical.', en: 'Hands-on cybersecurity training (beginner → advanced). Great for practical skills.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://tryhackme.com/',
+  icon: 'fas fa-shield-alt',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 66, cat: 'train', type: { ms: 'Cybersecurity', en: 'Cybersecurity' },
+  title: { ms: 'Hack The Box Academy', en: 'Hack The Box Academy' },
+  desc: { ms: 'Modul pembelajaran keselamatan siber yang sangat praktikal. Sesuai untuk pentesting/cyber.', en: 'Very practical cybersecurity learning modules. Good for pentesting/cyber roles.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://academy.hackthebox.com/',
+  icon: 'fas fa-user-secret',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 67, cat: 'train', type: { ms: 'Coding', en: 'Coding' },
+  title: { ms: 'The Odin Project (Web Dev)', en: 'The Odin Project (Web Dev)' },
+  desc: { ms: 'Full roadmap web dev (HTML/CSS/JS, Git, Node). Sangat sesuai untuk bina portfolio.', en: 'Full web dev roadmap (HTML/CSS/JS, Git, Node). Great for portfolio building.' },
+  amount: 'Percuma',
+  link: 'https://www.theodinproject.com/',
+  icon: 'fas fa-code',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 68, cat: 'train', type: { ms: 'Coding', en: 'Coding' },
+  title: { ms: 'Frontend Mentor (UI Practice)', en: 'Frontend Mentor (UI Practice)' },
+  desc: { ms: 'Latihan buat UI dari design brief + deploy projek. Bagus untuk skill front-end.', en: 'Practice building UIs from design briefs + deploy projects. Great for front-end skills.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.frontendmentor.io/',
+  icon: 'fas fa-laptop-code',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 69, cat: 'train', type: { ms: 'Coding', en: 'Coding' },
+  title: { ms: 'MDN Web Docs (Web Reference)', en: 'MDN Web Docs (Web Reference)' },
+  desc: { ms: 'Rujukan paling solid untuk HTML/CSS/JavaScript. Sesuai untuk ulangkaji dan fix bug.', en: 'One of the best references for HTML/CSS/JavaScript. Great for studying and debugging.' },
+  amount: 'Percuma',
+  link: 'https://developer.mozilla.org/',
+  icon: 'fas fa-book',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 70, cat: 'train', type: { ms: 'Data', en: 'Data' },
+  title: { ms: 'Kaggle Learn', en: 'Kaggle Learn' },
+  desc: { ms: 'Micro-course data science (Python, pandas, ML basics). Ada dataset untuk latihan.', en: 'Data science micro-courses (Python, pandas, ML basics). Includes datasets for practice.' },
+  amount: 'Percuma',
+  link: 'https://www.kaggle.com/learn',
+  icon: 'fas fa-database',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 71, cat: 'train', type: { ms: 'Design', en: 'Design' },
+  title: { ms: 'Figma Learn', en: 'Figma Learn' },
+  desc: { ms: 'Belajar UI/UX dan prototyping dalam Figma (komponen, auto-layout, design systems).', en: 'Learn UI/UX and prototyping in Figma (components, auto-layout, design systems).' },
+  amount: 'Percuma',
+  link: 'https://help.figma.com/hc/en-us/categories/360002042553-Learn-design',
+  icon: 'fab fa-figma',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 72, cat: 'train', type: { ms: 'Design', en: 'Design' },
+  title: { ms: 'Interaction Design Foundation', en: 'Interaction Design Foundation' },
+  desc: { ms: 'Kursus UX theory + practical. Sesuai untuk naikkan ilmu UX & case study.', en: 'UX theory + practical courses. Great for strengthening UX knowledge and case studies.' },
+  amount: 'Berbayar',
+  link: 'https://www.interaction-design.org/',
+  icon: 'fas fa-object-group',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 73, cat: 'train', type: { ms: 'Video', en: 'Video' },
+  title: { ms: 'DaVinci Resolve Training', en: 'DaVinci Resolve Training' },
+  desc: { ms: 'Belajar color grading + editing profesional (sesuai untuk videography).', en: 'Learn professional editing + color grading (great for videography).' },
+  amount: 'Percuma (banyak sumber)',
+  link: 'https://www.blackmagicdesign.com/products/davinciresolve/training',
+  icon: 'fas fa-film',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 74, cat: 'train', type: { ms: 'Video', en: 'Video' },
+  title: { ms: 'Adobe Premiere Pro Tutorials', en: 'Adobe Premiere Pro Tutorials' },
+  desc: { ms: 'Tutorial rasmi Premiere Pro (editing workflow, audio, effects).', en: 'Official Premiere Pro tutorials (workflow, audio, effects).' },
+  amount: 'Percuma',
+  link: 'https://helpx.adobe.com/premiere-pro/tutorials.html',
+  icon: 'fas fa-video',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 75, cat: 'train', type: { ms: 'Design', en: 'Design' },
+  title: { ms: 'Adobe Illustrator Tutorials', en: 'Adobe Illustrator Tutorials' },
+  desc: { ms: 'Belajar vector design (logo, branding, poster).', en: 'Learn vector design (logos, branding, posters).' },
+  amount: 'Percuma',
+  link: 'https://helpx.adobe.com/illustrator/tutorials.html',
+  icon: 'fas fa-pen-nib',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 76, cat: 'train', type: { ms: 'IT', en: 'IT' },
+  title: { ms: 'CompTIA (Roadmap Pensijilan)', en: 'CompTIA (Certification Roadmap)' },
+  desc: { ms: 'Rujukan laluan sijil A+, Network+, Security+. Sesuai untuk IT support & cybersecurity.', en: 'Reference roadmap for A+, Network+, Security+. Great for IT support & cybersecurity.' },
+  amount: 'Rujukan (exam berbayar)',
+  link: 'https://www.comptia.org/',
+  icon: 'fas fa-certificate',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 77, cat: 'train', type: { ms: 'IT', en: 'IT' },
+  title: { ms: 'Linux Journey', en: 'Linux Journey' },
+  desc: { ms: 'Belajar Linux dari basic sampai admin. Berguna untuk server, devops, dan IT.', en: 'Learn Linux from basics to admin. Useful for servers, devops, and IT.' },
+  amount: 'Percuma',
+  link: 'https://linuxjourney.com/',
+  icon: 'fab fa-linux',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 78, cat: 'train', type: { ms: 'DevOps', en: 'DevOps' },
+  title: { ms: 'Docker Official Docs + Tutorials', en: 'Docker Official Docs + Tutorials' },
+  desc: { ms: 'Belajar container, image, compose. Skill penting untuk devops & deployment.', en: 'Learn containers, images, compose. Key skills for devops & deployment.' },
+  amount: 'Percuma',
+  link: 'https://docs.docker.com/get-started/',
+  icon: 'fab fa-docker',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 79, cat: 'train', type: { ms: 'AI', en: 'AI' },
+  title: { ms: 'DeepLearning.AI (AI Courses)', en: 'DeepLearning.AI (AI Courses)' },
+  desc: { ms: 'Kursus AI/ML yang popular (foundation hingga applied).', en: 'Popular AI/ML courses (foundation to applied).' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.deeplearning.ai/',
+  icon: 'fas fa-robot',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 80, cat: 'train', type: { ms: 'AI', en: 'AI' },
+  title: { ms: 'Elements of AI', en: 'Elements of AI' },
+  desc: { ms: 'Kursus AI asas yang sangat beginner-friendly.', en: 'Beginner-friendly introduction to AI.' },
+  amount: 'Percuma',
+  link: 'https://www.elementsofai.com/',
+  icon: 'fas fa-brain',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== SOFT SKILLS / CAREER SKILLS (masuk kategori train) ======
+{
+  id: 81, cat: 'train', type: { ms: 'Soft Skills', en: 'Soft Skills' },
+  title: { ms: 'LinkedIn Learning', en: 'LinkedIn Learning' },
+  desc: { ms: 'Kursus komunikasi, leadership, Excel, project mgmt, design, coding. Sesuai untuk upskill cepat.', en: 'Courses on communication, leadership, Excel, PM, design, coding. Great for fast upskilling.' },
+  amount: 'Berbayar (trial ada)',
+  link: 'https://www.linkedin.com/learning/',
+  icon: 'fab fa-linkedin',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 82, cat: 'train', type: { ms: 'Soft Skills', en: 'Soft Skills' },
+  title: { ms: 'Toastmasters (Public Speaking)', en: 'Toastmasters (Public Speaking)' },
+  desc: { ms: 'Komuniti latihan public speaking & leadership. Cari kelab berdekatan untuk join.', en: 'Community for public speaking & leadership practice. Find a nearby club to join.' },
+  amount: 'Yuran ahli (ikut kelab)',
+  link: 'https://www.toastmasters.org/',
+  icon: 'fas fa-microphone',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 83, cat: 'train', type: { ms: 'Produktiviti', en: 'Productivity' },
+  title: { ms: 'Notion Templates (Study/Work System)', en: 'Notion Templates (Study/Work System)' },
+  desc: { ms: 'Template untuk task, habit, study planner. Boleh bantu susun kerja & belajar.', en: 'Templates for tasks, habits, study planners. Helps organize work & study.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.notion.so/templates',
+  icon: 'fas fa-tasks',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== TVET & LOCAL TRAINING HUBS (general links) ======
+{
+  id: 84, cat: 'train', type: { ms: 'TVET', en: 'TVET' },
+  title: { ms: 'GiatMARA (Latihan Kemahiran)', en: 'GiatMARA (Skills Training)' },
+  desc: { ms: 'Latihan kemahiran praktikal (elektrik, automotif, bakeri, multimedia, dll). Semak pusat terdekat.', en: 'Practical skills training (electrical, automotive, bakery, multimedia, etc). Check nearest centre.' },
+  amount: 'Ikut program',
+  link: 'https://giatmara.edu.my/',
+  icon: 'fas fa-tools',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 85, cat: 'train', type: { ms: 'TVET', en: 'TVET' },
+  title: { ms: 'IKBN / IKTBN', en: 'IKBN / IKTBN' },
+  desc: { ms: 'Institut Kemahiran Belia Negara / Institut Kemahiran Tinggi Belia Negara untuk kemahiran teknikal.', en: 'Youth skills institutes for technical skills training.' },
+  amount: 'Ikut program',
+  link: 'https://www.jbsm.gov.my/',
+  icon: 'fas fa-hammer',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 86, cat: 'train', type: { ms: 'TVET', en: 'TVET' },
+  title: { ms: 'Kolej Komuniti (TVET)', en: 'Community Colleges (TVET)' },
+  desc: { ms: 'Program sijil/kemahiran untuk pelbagai bidang. Sesuai untuk sambung skill selepas sekolah/diploma.', en: 'Certificate/skills programs in many fields. Good for skill pathways after school/diploma.' },
+  amount: 'Yuran rendah (biasanya)',
+  link: 'https://www.mypolycc.edu.my/',
+  icon: 'fas fa-school',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== MORE CODING / IT ======
+{
+  id: 87, cat: 'train', type: { ms: 'Coding', en: 'Coding' },
+  title: { ms: 'Codecademy', en: 'Codecademy' },
+  desc: { ms: 'Belajar coding interaktif (JS, Python, SQL). Sesuai untuk beginner yang nak cepat faham.', en: 'Interactive coding lessons (JS, Python, SQL). Great for beginners.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.codecademy.com/',
+  icon: 'fas fa-laptop-code',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 88, cat: 'train', type: { ms: 'Coding', en: 'Coding' },
+  title: { ms: 'W3Schools', en: 'W3Schools' },
+  desc: { ms: 'Rujukan cepat HTML/CSS/JS/SQL + contoh ringkas. Sesuai untuk ulangkaji laju.', en: 'Quick reference for HTML/CSS/JS/SQL + simple examples. Good for fast revision.' },
+  amount: 'Percuma',
+  link: 'https://www.w3schools.com/',
+  icon: 'fas fa-book',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 89, cat: 'train', type: { ms: 'Coding', en: 'Coding' },
+  title: { ms: 'LeetCode (Coding Interview)', en: 'LeetCode (Coding Interview)' },
+  desc: { ms: 'Latihan problem solving untuk interview (DSA). Sesuai bila dah ada basic programming.', en: 'Problem-solving practice for interviews (DSA). Great once you know programming basics.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://leetcode.com/',
+  icon: 'fas fa-puzzle-piece',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 90, cat: 'train', type: { ms: 'Coding', en: 'Coding' },
+  title: { ms: 'HackerRank', en: 'HackerRank' },
+  desc: { ms: 'Latihan coding + skill assessment. Boleh guna untuk improve coding & test diri.', en: 'Coding practice + skills assessments. Great to improve and test yourself.' },
+  amount: 'Percuma',
+  link: 'https://www.hackerrank.com/',
+  icon: 'fas fa-keyboard',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== DESIGN / CONTENT ======
+{
+  id: 91, cat: 'train', type: { ms: 'Design', en: 'Design' },
+  title: { ms: 'Canva Design School', en: 'Canva Design School' },
+  desc: { ms: 'Belajar asas design, typography, layout, branding + content marketing.', en: 'Learn design basics, typography, layout, branding + content marketing.' },
+  amount: 'Percuma',
+  link: 'https://www.canva.com/learn/',
+  icon: 'fas fa-paint-brush',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 92, cat: 'train', type: { ms: 'Photo', en: 'Photo' },
+  title: { ms: 'Adobe Lightroom Tutorials', en: 'Adobe Lightroom Tutorials' },
+  desc: { ms: 'Belajar editing gambar, color grading, preset, workflow fotografi.', en: 'Learn photo editing, color grading, presets, photography workflow.' },
+  amount: 'Percuma',
+  link: 'https://helpx.adobe.com/lightroom/tutorials.html',
+  icon: 'fas fa-camera',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 93, cat: 'train', type: { ms: 'Video', en: 'Video' },
+  title: { ms: 'YouTube Creator Academy', en: 'YouTube Creator Academy' },
+  desc: { ms: 'Belajar content strategy, growth, monetization, dan best practices YouTube.', en: 'Learn content strategy, growth, monetization, and YouTube best practices.' },
+  amount: 'Percuma',
+  link: 'https://www.youtube.com/creators/creatoracademy/',
+  icon: 'fab fa-youtube',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== BUSINESS SKILLS (still training) ======
+{
+  id: 94, cat: 'train', type: { ms: 'Bisnes', en: 'Business' },
+  title: { ms: 'Google for Small Business', en: 'Google for Small Business' },
+  desc: { ms: 'Panduan pemasaran digital, Google Business Profile, dan growth untuk bisnes kecil.', en: 'Guides on digital marketing, Google Business Profile, and growth for small businesses.' },
+  amount: 'Percuma',
+  link: 'https://smallbusiness.withgoogle.com/',
+  icon: 'fas fa-store',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 95, cat: 'train', type: { ms: 'Bisnes', en: 'Business' },
+  title: { ms: 'HubSpot Academy', en: 'HubSpot Academy' },
+  desc: { ms: 'Kursus percuma marketing, sales, CRM, content, dan email marketing + sijil.', en: 'Free courses on marketing, sales, CRM, content, and email marketing + certificates.' },
+  amount: 'Percuma',
+  link: 'https://academy.hubspot.com/',
+  icon: 'fas fa-bullhorn',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 96, cat: 'train', type: { ms: 'Bisnes', en: 'Business' },
+  title: { ms: 'Meta Business Learn (FB/IG)', en: 'Meta Business Learn (FB/IG)' },
+  desc: { ms: 'Belajar set up page, ads, pixel/analytics asas, dan content strategy untuk FB/IG.', en: 'Learn page setup, ads, basic pixel/analytics, and content strategy for FB/IG.' },
+  amount: 'Percuma',
+  link: 'https://www.facebook.com/business/learn',
+  icon: 'fab fa-facebook',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== GENERAL LEARNING ======
+{
+  id: 97, cat: 'train', type: { ms: 'Pembelajaran', en: 'Learning' },
+  title: { ms: 'OpenLearn (The Open University)', en: 'OpenLearn (The Open University)' },
+  desc: { ms: 'Banyak kursus percuma pelbagai bidang: IT, business, psychology, study skills.', en: 'Many free courses across fields: IT, business, psychology, study skills.' },
+  amount: 'Percuma',
+  link: 'https://www.open.edu/openlearn/',
+  icon: 'fas fa-book-reader',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 98, cat: 'train', type: { ms: 'Pembelajaran', en: 'Learning' },
+  title: { ms: 'MIT OpenCourseWare', en: 'MIT OpenCourseWare' },
+  desc: { ms: 'Kursus universiti percuma (lecture notes, assignments). Bagus untuk deep learning ilmu.', en: 'Free university courses (notes, assignments). Great for deep learning.' },
+  amount: 'Percuma',
+  link: 'https://ocw.mit.edu/',
+  icon: 'fas fa-university',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 99, cat: 'train', type: { ms: 'Pembelajaran', en: 'Learning' },
+  title: { ms: 'Khan Academy', en: 'Khan Academy' },
+  desc: { ms: 'Belajar matematik, sains, ekonomi, asas programming. Sesuai untuk strengthen basic.', en: 'Learn math, science, economics, basic programming. Great for strengthening fundamentals.' },
+  amount: 'Percuma',
+  link: 'https://www.khanacademy.org/',
+  icon: 'fas fa-school',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== ACCESSIBILITY / OKU-FRIENDLY SKILLS ======
+{
+  id: 100, cat: 'train', type: { ms: 'Akses', en: 'Accessibility' },
+  title: { ms: 'WebAIM (Asas Accessibility)', en: 'WebAIM (Accessibility Basics)' },
+  desc: { ms: 'Belajar asas accessibility web (WCAG basic, contrast, alt text). Bagus untuk UI/UX & dev.', en: 'Learn web accessibility basics (WCAG, contrast, alt text). Great for UI/UX & dev.' },
+  amount: 'Percuma',
+  link: 'https://webaim.org/',
+  icon: 'fas fa-universal-access',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 101, cat: 'train', type: { ms: 'Akses', en: 'Accessibility' },
+  title: { ms: 'W3C WAI (Guides)', en: 'W3C WAI (Guides)' },
+  desc: { ms: 'Panduan accessibility rasmi W3C. Sesuai untuk standard dan best practices.', en: 'Official W3C accessibility guides. Great for standards and best practices.' },
+  amount: 'Percuma',
+  link: 'https://www.w3.org/WAI/',
+  icon: 'fas fa-wheelchair',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== MORE DIGITAL SKILLS ======
+{
+  id: 102, cat: 'train', type: { ms: 'Data', en: 'Data' },
+  title: { ms: 'Microsoft Excel Training (Support)', en: 'Microsoft Excel Training (Support)' },
+  desc: { ms: 'Belajar Excel dari basic ke advanced (formula, pivot, charts). Sangat useful untuk kerja pejabat.', en: 'Learn Excel from basic to advanced (formulas, pivots, charts). Very useful for office jobs.' },
+  amount: 'Percuma',
+  link: 'https://support.microsoft.com/excel',
+  icon: 'fas fa-table',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 103, cat: 'train', type: { ms: 'Produktiviti', en: 'Productivity' },
+  title: { ms: 'Google Workspace Learning Center', en: 'Google Workspace Learning Center' },
+  desc: { ms: 'Belajar Docs, Sheets, Slides, Drive, Gmail. Skill penting untuk kerja admin/office.', en: 'Learn Docs, Sheets, Slides, Drive, Gmail. Essential for admin/office jobs.' },
+  amount: 'Percuma',
+  link: 'https://support.google.com/a/users',
+  icon: 'fas fa-folder-open',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 104, cat: 'train', type: { ms: 'Produktiviti', en: 'Productivity' },
+  title: { ms: 'Trello Guide (Project Tracking)', en: 'Trello Guide (Project Tracking)' },
+  desc: { ms: 'Belajar urus task guna board (To Do/Doing/Done). Sesuai untuk project dan kerja.', en: 'Learn task management with boards (To Do/Doing/Done). Great for projects and work.' },
+  amount: 'Percuma',
+  link: 'https://trello.com/guide',
+  icon: 'fas fa-columns',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== MORE VIDEO / CREATIVE ======
+{
+  id: 105, cat: 'train', type: { ms: 'Video', en: 'Video' },
+  title: { ms: 'CapCut Tutorials', en: 'CapCut Tutorials' },
+  desc: { ms: 'Belajar edit video pendek (TikTok/Reels), template, subtitle, effects. Senang untuk beginner.', en: 'Learn short video editing (TikTok/Reels), templates, subtitles, effects. Beginner-friendly.' },
+  amount: 'Percuma',
+  link: 'https://www.capcut.com/',
+  icon: 'fas fa-scissors',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 106, cat: 'train', type: { ms: 'Audio', en: 'Audio' },
+  title: { ms: 'Audacity Tutorials', en: 'Audacity Tutorials' },
+  desc: { ms: 'Belajar edit audio (noise reduction, voice cleaning, podcast basic).', en: 'Learn audio editing (noise reduction, voice cleaning, podcast basics).' },
+  amount: 'Percuma',
+  link: 'https://www.audacityteam.org/',
+  icon: 'fas fa-volume-up',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== MORE CERT/LEARNING ======
+{
+  id: 107, cat: 'train', type: { ms: 'Sijil', en: 'Certificate' },
+  title: { ms: 'ISC2 (Cybersecurity Education)', en: 'ISC2 (Cybersecurity Education)' },
+  desc: { ms: 'Rujukan laluan pensijilan cybersecurity (termasuk entry-level).', en: 'Reference for cybersecurity certification pathways (including entry-level).' },
+  amount: 'Rujukan (exam berbayar)',
+  link: 'https://www.isc2.org/',
+  icon: 'fas fa-shield-virus',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 108, cat: 'train', type: { ms: 'Sijil', en: 'Certificate' },
+  title: { ms: 'Google Cloud Skills Boost', en: 'Google Cloud Skills Boost' },
+  desc: { ms: 'Hands-on labs untuk Google Cloud. Bagus untuk cloud basic sampai intermediate.', en: 'Hands-on labs for Google Cloud. Great for cloud learning.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.cloudskillsboost.google/',
+  icon: 'fas fa-cloud',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 109, cat: 'train', type: { ms: 'Sijil', en: 'Certificate' },
+  title: { ms: 'Unity Learn (Game Dev)', en: 'Unity Learn (Game Dev)' },
+  desc: { ms: 'Belajar buat game, 2D/3D, scripting. Sesuai untuk kreatif + coding.', en: 'Learn game development, 2D/3D, scripting. Great for creative + coding.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://learn.unity.com/',
+  icon: 'fas fa-gamepad',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 110, cat: 'train', type: { ms: 'Sijil', en: 'Certificate' },
+  title: { ms: 'Blender (3D) Tutorials', en: 'Blender (3D) Tutorials' },
+  desc: { ms: 'Belajar 3D modeling/animation. Sesuai untuk graphic/motion/produk 3D.', en: 'Learn 3D modeling/animation. Great for graphics/motion/3D product work.' },
+  amount: 'Percuma',
+  link: 'https://www.blender.org/support/tutorials/',
+  icon: 'fas fa-cube',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== COMMUNICATION & WORKPLACE ======
+{
+  id: 111, cat: 'train', type: { ms: 'Soft Skills', en: 'Soft Skills' },
+  title: { ms: 'British Council (English Learning)', en: 'British Council (English Learning)' },
+  desc: { ms: 'Latihan English untuk kerja (speaking, writing, grammar). Bagus untuk interview & email rasmi.', en: 'English practice for work (speaking, writing, grammar). Great for interviews and professional emails.' },
+  amount: 'Percuma',
+  link: 'https://learnenglish.britishcouncil.org/',
+  icon: 'fas fa-language',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 112, cat: 'train', type: { ms: 'Soft Skills', en: 'Soft Skills' },
+  title: { ms: 'Grammarly Handbook (Writing)', en: 'Grammarly Handbook (Writing)' },
+  desc: { ms: 'Panduan menulis email, ayat profesional, dan grammar. Bantu kemaskan komunikasi kerja.', en: 'Guides for emails, professional writing, and grammar. Helps polish workplace communication.' },
+  amount: 'Percuma',
+  link: 'https://www.grammarly.com/blog/',
+  icon: 'fas fa-pen',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== LOCAL / COMMUNITY ======
+{
+  id: 113, cat: 'train', type: { ms: 'Komuniti', en: 'Community' },
+  title: { ms: 'Meetup (Komuniti Tech/Design)', en: 'Meetup (Tech/Design Communities)' },
+  desc: { ms: 'Cari komuniti belajar/mentor (web dev, UI/UX, business). Network boleh bantu dapat kerja.', en: 'Find learning/mentor communities (web dev, UI/UX, business). Networking helps job opportunities.' },
+  amount: 'Percuma/ikut event',
+  link: 'https://www.meetup.com/',
+  icon: 'fas fa-users',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 114, cat: 'train', type: { ms: 'Komuniti', en: 'Community' },
+  title: { ms: 'Google Developer Groups (GDG)', en: 'Google Developer Groups (GDG)' },
+  desc: { ms: 'Komuniti developer untuk belajar & event. Sesuai untuk networking dan projek.', en: 'Developer community for learning & events. Great for networking and projects.' },
+  amount: 'Percuma/ikut event',
+  link: 'https://developers.google.com/community/gdg',
+  icon: 'fas fa-code-branch',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== MORE PRACTICE & PORTFOLIO ======
+{
+  id: 115, cat: 'train', type: { ms: 'Portfolio', en: 'Portfolio' },
+  title: { ms: 'GitHub Pages (Deploy Portfolio)', en: 'GitHub Pages (Deploy Portfolio)' },
+  desc: { ms: 'Host portfolio/website percuma. Bagus untuk tunjuk projek kepada interviewer/clients.', en: 'Host a portfolio website for free. Great to showcase projects to interviewers/clients.' },
+  amount: 'Percuma',
+  link: 'https://pages.github.com/',
+  icon: 'fas fa-globe',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 116, cat: 'train', type: { ms: 'Portfolio', en: 'Portfolio' },
+  title: { ms: 'Netlify (Deploy Web)', en: 'Netlify (Deploy Web)' },
+  desc: { ms: 'Deploy website secara mudah (drag & drop / Git). Sesuai untuk beginner.', en: 'Easy website deployment (drag & drop / Git). Beginner-friendly.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.netlify.com/',
+  icon: 'fas fa-upload',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 117, cat: 'train', type: { ms: 'Portfolio', en: 'Portfolio' },
+  title: { ms: 'Vercel (Deploy Frontend)', en: 'Vercel (Deploy Frontend)' },
+  desc: { ms: 'Deploy Next.js/React. Bagus untuk portfolio modern dan project demo.', en: 'Deploy Next.js/React. Great for modern portfolio and project demos.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://vercel.com/',
+  icon: 'fas fa-rocket',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+
+// ====== FINAL EXTRA TRAINING ======
+{
+  id: 118, cat: 'train', type: { ms: 'Digital', en: 'Digital' },
+  title: { ms: 'Google Analytics Academy', en: 'Google Analytics Academy' },
+  desc: { ms: 'Belajar analytics untuk website/apps. Skill penting untuk marketing & product.', en: 'Learn analytics for websites/apps. Key skill for marketing & product roles.' },
+  amount: 'Percuma',
+  link: 'https://analytics.google.com/analytics/academy/',
+  icon: 'fas fa-chart-line',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 119, cat: 'train', type: { ms: 'Digital', en: 'Digital' },
+  title: { ms: 'Shopify Learn (eCommerce)', en: 'Shopify Learn (eCommerce)' },
+  desc: { ms: 'Belajar asas eCommerce, marketing, product, dan store setup.', en: 'Learn eCommerce basics, marketing, product, and store setup.' },
+  amount: 'Percuma',
+  link: 'https://www.shopify.com/learn',
+  icon: 'fas fa-shopping-cart',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+{
+  id: 120, cat: 'train', type: { ms: 'Soft Skills', en: 'Soft Skills' },
+  title: { ms: 'Harvard Online (Free Resources)', en: 'Harvard Online (Free Resources)' },
+  desc: { ms: 'Koleksi kursus/kelas online (ada yang percuma). Sesuai untuk tambah kredibiliti pembelajaran.', en: 'Collection of online courses (some free). Good for learning credibility.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://online.harvard.edu/',
+  icon: 'fas fa-graduation-cap',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-600 dark:text-indigo-300'
+},
+// --- ADD-ON: BUSINESS ITEMS ONLY (ID 121 → 180) ---
+// Paste all below INTO items: [ ... ]  (sambung lepas id 120)
+// IMPORTANT: Semua text yang dipaparkan ada ms & en. Jangan letak string plain selain amount (amount memang string biasa).
+
+{
+  id: 121, cat: 'biz', type: { ms: 'Geran', en: 'Grant' },
+  title: { ms: 'Geran Pelancaran (GP) JKM', en: 'JKM Launch Grant (GP)' },
+  desc: { ms: 'Bantuan kewangan one-off untuk OKU memulakan atau mengembangkan perniagaan kecil (ikut kelayakan & penilaian).', en: 'One-off financial aid for PWDs to start or expand small businesses (subject to eligibility & assessment).' },
+  amount: 'Maks RM2,700',
+  link: 'https://www.jkm.gov.my/',
+  icon: 'fas fa-rocket',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 122, cat: 'biz', type: { ms: 'Pembiayaan', en: 'Financing' },
+  title: { ms: 'Skim 1OKU (Bank Simpanan Nasional)', en: '1OKU Scheme (Bank Simpanan Nasional)' },
+  desc: { ms: 'Pembiayaan mikro khas untuk usahawan OKU. Rujuk BSN untuk syarat, dokumen dan had pembiayaan terkini.', en: 'Special micro-financing for PWD entrepreneurs. Check BSN for the latest eligibility, documents, and financing limits.' },
+  amount: 'Sehingga RM50,000',
+  link: 'https://www.bsn.com.my/BusinessBanking/Micro/scheme-1oku?lang=ms',
+  icon: 'fas fa-bank',
+  bgClass: 'bg-emerald-100 dark:bg-emerald-900', textClass: 'text-emerald-700 dark:text-emerald-300'
+},
+{
+  id: 123, cat: 'biz', type: { ms: 'Latihan', en: 'Training' },
+  title: { ms: 'SME Corp Malaysia (Pembangunan PKS)', en: 'SME Corp Malaysia (SME Development)' },
+  desc: { ms: 'Direktori program pembangunan PKS, bimbingan, dan pautan ekosistem bantuan perniagaan (semak program yang sesuai).', en: 'Directory of SME development programs, mentorship, and ecosystem links (check suitable programs).' },
+  amount: 'Ikut program',
+  link: 'https://www.smecorp.gov.my/',
+  icon: 'fas fa-briefcase',
+  bgClass: 'bg-sky-100 dark:bg-sky-900', textClass: 'text-sky-700 dark:text-sky-300'
+},
+{
+  id: 124, cat: 'biz', type: { ms: 'Latihan', en: 'Training' },
+  title: { ms: 'TEKUN Nasional (Pembiayaan Mikro)', en: 'TEKUN Nasional (Micro Financing)' },
+  desc: { ms: 'Pembiayaan mikro untuk usahawan kecil. Semak skim, kadar, dan kelayakan yang tersedia.', en: 'Micro financing for small entrepreneurs. Check available schemes, rates, and eligibility.' },
+  amount: 'Ikut skim',
+  link: 'https://www.tekun.gov.my/',
+  icon: 'fas fa-hand-holding-usd',
+  bgClass: 'bg-indigo-100 dark:bg-indigo-900', textClass: 'text-indigo-700 dark:text-indigo-300'
+},
+{
+  id: 125, cat: 'biz', type: { ms: 'Bimbingan', en: 'Mentorship' },
+  title: { ms: 'MaGIC / MyDIGITAL (Program Keusahawanan)', en: 'MaGIC / MyDIGITAL (Entrepreneurship Programs)' },
+  desc: { ms: 'Program bimbingan, startup, dan pembangunan keusahawanan. Cari inisiatif aktif yang terkini.', en: 'Mentorship, startup, and entrepreneurship development programs. Look for currently active initiatives.' },
+  amount: 'Ikut program',
+  link: 'https://www.malaysia.gov.my/',
+  icon: 'fas fa-lightbulb',
+  bgClass: 'bg-violet-100 dark:bg-violet-900', textClass: 'text-violet-700 dark:text-violet-300'
+},
+{
+  id: 126, cat: 'biz', type: { ms: 'Sokongan', en: 'Support' },
+  title: { ms: 'SSM (Daftar Perniagaan)', en: 'SSM (Business Registration)' },
+  desc: { ms: 'Daftar perniagaan (enterprise/syarikat) dan semak keperluan asas pematuhan. Penting untuk mohon geran/kontrak.', en: 'Register a business (enterprise/company) and check basic compliance. Important for grants/contract applications.' },
+  amount: 'Fi ikut jenis',
+  link: 'https://www.ssm.com.my/',
+  icon: 'fas fa-file-signature',
+  bgClass: 'bg-slate-100 dark:bg-slate-900', textClass: 'text-slate-700 dark:text-slate-300'
+},
+{
+  id: 127, cat: 'biz', type: { ms: 'Sokongan', en: 'Support' },
+  title: { ms: 'MyIPO (Cap Dagangan & Harta Intelek)', en: 'MyIPO (Trademarks & Intellectual Property)' },
+  desc: { ms: 'Lindungi brand (cap dagangan), reka bentuk, dan hak cipta. Berguna bila bisnes dah mula grow.', en: 'Protect your brand (trademarks), designs, and copyrights. Useful when your business starts growing.' },
+  amount: 'Fi ikut permohonan',
+  link: 'https://www.myipo.gov.my/',
+  icon: 'fas fa-copyright',
+  bgClass: 'bg-slate-100 dark:bg-slate-900', textClass: 'text-slate-700 dark:text-slate-300'
+},
+{
+  id: 128, cat: 'biz', type: { ms: 'E-Dagang', en: 'E-Commerce' },
+  title: { ms: 'Shopee Seller Education', en: 'Shopee Seller Education' },
+  desc: { ms: 'Panduan buka kedai, listing produk, iklan, dan pengurusan order untuk penjual baru.', en: 'Guides on store setup, product listings, ads, and order management for new sellers.' },
+  amount: 'Percuma',
+  link: 'https://seller.shopee.com.my/edu',
+  icon: 'fas fa-shopping-bag',
+  bgClass: 'bg-orange-100 dark:bg-orange-900', textClass: 'text-orange-700 dark:text-orange-300'
+},
+{
+  id: 129, cat: 'biz', type: { ms: 'E-Dagang', en: 'E-Commerce' },
+  title: { ms: 'TikTok Shop Seller Center', en: 'TikTok Shop Seller Center' },
+  desc: { ms: 'Bina bisnes melalui live, affiliate, dan katalog produk. Semak syarat & onboarding dalam Seller Center.', en: 'Build a business via live, affiliates, and product catalog. Check requirements & onboarding in Seller Center.' },
+  amount: 'Ikut platform',
+  link: 'https://seller.tiktokglobalshop.com/',
+  icon: 'fab fa-tiktok',
+  bgClass: 'bg-rose-100 dark:bg-rose-900', textClass: 'text-rose-700 dark:text-rose-300'
+},
+{
+  id: 130, cat: 'biz', type: { ms: 'E-Dagang', en: 'E-Commerce' },
+  title: { ms: 'Lazada University', en: 'Lazada University' },
+  desc: { ms: 'Kursus percuma untuk seller Lazada (operasi, marketing, ads, fulfilment).', en: 'Free courses for Lazada sellers (operations, marketing, ads, fulfilment).' },
+  amount: 'Percuma',
+  link: 'https://university.lazada.com/',
+  icon: 'fas fa-store',
+  bgClass: 'bg-blue-100 dark:bg-blue-900', textClass: 'text-blue-700 dark:text-blue-300'
+},
+
+// ====== BUSINESS FUNDAMENTALS (all bilingual) ======
+{
+  id: 131, cat: 'biz', type: { ms: 'Asas Bisnes', en: 'Business Basics' },
+  title: { ms: 'Model Perniagaan (Business Model Canvas)', en: 'Business Model Canvas' },
+  desc: { ms: 'Template untuk susun value proposition, pelanggan, kos, dan revenue. Sesuai untuk bisnes baru.', en: 'A template to structure value proposition, customers, costs, and revenue. Great for new businesses.' },
+  amount: 'Percuma',
+  link: 'https://www.strategyzer.com/canvas/business-model-canvas',
+  icon: 'fas fa-layer-group',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 132, cat: 'biz', type: { ms: 'Pemasaran', en: 'Marketing' },
+  title: { ms: 'Google Business Profile', en: 'Google Business Profile' },
+  desc: { ms: 'Bina kehadiran bisnes di Google Search/Maps. Penting untuk pelanggan jumpa bisnes anda.', en: 'Build your presence on Google Search/Maps. Helps customers find your business.' },
+  amount: 'Percuma',
+  link: 'https://www.google.com/business/',
+  icon: 'fas fa-map-marker-alt',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 133, cat: 'biz', type: { ms: 'Pemasaran', en: 'Marketing' },
+  title: { ms: 'Meta Business Suite (FB/IG)', en: 'Meta Business Suite (FB/IG)' },
+  desc: { ms: 'Urus posting, mesej pelanggan, dan iklan untuk Facebook/Instagram dalam satu tempat.', en: 'Manage posts, customer messages, and ads for Facebook/Instagram in one place.' },
+  amount: 'Percuma',
+  link: 'https://business.facebook.com/',
+  icon: 'fab fa-facebook-f',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 134, cat: 'biz', type: { ms: 'Kewangan', en: 'Finance' },
+  title: { ms: 'AKPK (Nasihat Kewangan)', en: 'AKPK (Financial Advisory)' },
+  desc: { ms: 'Bimbingan kewangan, pengurusan hutang, dan pendidikan kewangan. Berguna untuk bisnes yang nak stabil.', en: 'Financial guidance, debt management, and financial education. Helpful for stabilizing a business.' },
+  amount: 'Percuma',
+  link: 'https://www.akpk.org.my/',
+  icon: 'fas fa-calculator',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 135, cat: 'biz', type: { ms: 'Operasi', en: 'Operations' },
+  title: { ms: 'Panduan SOP Ringkas', en: 'Simple SOP Guide' },
+  desc: { ms: 'Bina SOP untuk order, packing, refund, dan customer service supaya bisnes senang scale.', en: 'Create SOPs for orders, packing, refunds, and customer service to scale easier.' },
+  amount: 'Percuma',
+  link: 'https://asana.com/resources/standard-operating-procedures',
+  icon: 'fas fa-clipboard-list',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 136, cat: 'biz', type: { ms: 'Kontrak', en: 'Contracts' },
+  title: { ms: 'Contoh Invoice & Quotation', en: 'Invoice & Quotation Templates' },
+  desc: { ms: 'Template dokumen bisnes (quotation/invoice) untuk nampak profesional bila urus klien.', en: 'Business document templates (quotations/invoices) to look professional with clients.' },
+  amount: 'Percuma',
+  link: 'https://www.invoiceberry.com/',
+  icon: 'fas fa-file-invoice',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== BUSINESS DIGITAL TOOLS ======
+{
+  id: 137, cat: 'biz', type: { ms: 'Alat Digital', en: 'Digital Tools' },
+  title: { ms: 'Canva (Branding & Content)', en: 'Canva (Branding & Content)' },
+  desc: { ms: 'Bina poster, video, logo simple, dan template content untuk marketing bisnes.', en: 'Create posters, videos, simple logos, and content templates for business marketing.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.canva.com/',
+  icon: 'fas fa-palette',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 138, cat: 'biz', type: { ms: 'Alat Digital', en: 'Digital Tools' },
+  title: { ms: 'Notion (Sistem Operasi Bisnes)', en: 'Notion (Business Operating System)' },
+  desc: { ms: 'Urus inventori, content calendar, CRM ringkas, dan task team dalam satu workspace.', en: 'Manage inventory, content calendar, simple CRM, and team tasks in one workspace.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.notion.so/',
+  icon: 'fas fa-th-large',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 139, cat: 'biz', type: { ms: 'Alat Digital', en: 'Digital Tools' },
+  title: { ms: 'Trello (Pengurusan Tugasan)', en: 'Trello (Task Management)' },
+  desc: { ms: 'Board mudah untuk urus kerja harian bisnes: order, content, support, dan planning.', en: 'Simple boards to manage daily business tasks: orders, content, support, and planning.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://trello.com/',
+  icon: 'fas fa-columns',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 140, cat: 'biz', type: { ms: 'Pembayaran', en: 'Payments' },
+  title: { ms: 'DuitNow QR (Rujukan Bank)', en: 'DuitNow QR (Bank Reference)' },
+  desc: { ms: 'Terima bayaran QR untuk pelanggan. Rujuk bank anda untuk aktivasi akaun merchant.', en: 'Accept QR payments. Check your bank for merchant activation steps.' },
+  amount: 'Ikut bank',
+  link: 'https://www.paynet.my/duitnow/duitnow-qr.html',
+  icon: 'fas fa-qrcode',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== MORE BUSINESS SOURCES (generic but bilingual) ======
+{
+  id: 141, cat: 'biz', type: { ms: 'Pemasaran', en: 'Marketing' },
+  title: { ms: 'HubSpot Academy (Marketing & Sales)', en: 'HubSpot Academy (Marketing & Sales)' },
+  desc: { ms: 'Kursus percuma marketing/sales/CRM + sijil. Bagus untuk bisnes service & online.', en: 'Free marketing/sales/CRM courses + certificates. Great for service and online businesses.' },
+  amount: 'Percuma',
+  link: 'https://academy.hubspot.com/',
+  icon: 'fas fa-bullhorn',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 142, cat: 'biz', type: { ms: 'Pemasaran', en: 'Marketing' },
+  title: { ms: 'Mailchimp (Email Marketing)', en: 'Mailchimp (Email Marketing)' },
+  desc: { ms: 'Bina list pelanggan dan hantar promosi/kempen email. Sesuai untuk repeat customers.', en: 'Build customer lists and send promotions/email campaigns. Great for repeat customers.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://mailchimp.com/',
+  icon: 'fas fa-envelope-open-text',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 143, cat: 'biz', type: { ms: 'Website', en: 'Website' },
+  title: { ms: 'Shopify (Bina Kedai Online)', en: 'Shopify (Build an Online Store)' },
+  desc: { ms: 'Platform untuk bina store sendiri (produk, checkout, shipping). Sesuai bila nak brand kuat.', en: 'Platform to build your own store (products, checkout, shipping). Great for strong branding.' },
+  amount: 'Berbayar (trial ada)',
+  link: 'https://www.shopify.com/',
+  icon: 'fas fa-shopping-cart',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 144, cat: 'biz', type: { ms: 'Website', en: 'Website' },
+  title: { ms: 'Google Sites (Website Ringkas)', en: 'Google Sites (Simple Website)' },
+  desc: { ms: 'Bina website ringkas untuk bisnes (info, portfolio, contact). Sesuai untuk mula cepat.', en: 'Build a simple business website (info, portfolio, contact). Great for quick start.' },
+  amount: 'Percuma',
+  link: 'https://sites.google.com/',
+  icon: 'fas fa-globe',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 145, cat: 'biz', type: { ms: 'Analitik', en: 'Analytics' },
+  title: { ms: 'Google Analytics', en: 'Google Analytics' },
+  desc: { ms: 'Track trafik website dan conversion. Penting untuk buat keputusan marketing berdasarkan data.', en: 'Track website traffic and conversions. Important for data-driven marketing decisions.' },
+  amount: 'Percuma',
+  link: 'https://analytics.google.com/',
+  icon: 'fas fa-chart-line',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== BUSINESS GROWTH / BRAND ======
+{
+  id: 146, cat: 'biz', type: { ms: 'Brand', en: 'Brand' },
+  title: { ms: 'Panduan Brand Identity', en: 'Brand Identity Guide' },
+  desc: { ms: 'Susun logo, warna, font, tone ayat, dan guideline supaya brand konsisten di semua platform.', en: 'Define logo, colors, fonts, tone, and guidelines to keep your brand consistent everywhere.' },
+  amount: 'Percuma',
+  link: 'https://www.canva.com/learn/brand-style-guide/',
+  icon: 'fas fa-fingerprint',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 147, cat: 'biz', type: { ms: 'Brand', en: 'Brand' },
+  title: { ms: 'MyIPO (Cap Dagangan)', en: 'MyIPO (Trademarks)' },
+  desc: { ms: 'Daftar cap dagangan untuk lindungi nama dan logo bisnes anda. Berguna bila bisnes grow.', en: 'Register a trademark to protect your business name and logo. Useful as you grow.' },
+  amount: 'Fi ikut permohonan',
+  link: 'https://www.myipo.gov.my/',
+  icon: 'fas fa-stamp',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 148, cat: 'biz', type: { ms: 'Dokumen', en: 'Documentation' },
+  title: { ms: 'SSM e-Info (Semak Maklumat Syarikat)', en: 'SSM e-Info (Company Info Check)' },
+  desc: { ms: 'Semak status syarikat/enterprise untuk keyakinan urus niaga dan proses onboarding vendor.', en: 'Check company/enterprise status for safer dealings and vendor onboarding.' },
+  amount: 'Berbayar (ikut carian)',
+  link: 'https://www.ssm.com.my/',
+  icon: 'fas fa-search',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== MORE IDEAS / START SMALL ======
+{
+  id: 149, cat: 'biz', type: { ms: 'Idea', en: 'Idea' },
+  title: { ms: 'Servis Freelance (Reka Bentuk/IT)', en: 'Freelance Services (Design/IT)' },
+  desc: { ms: 'Mulakan servis: design poster, logo, edit video, buat website, support IT. Boleh guna platform freelance.', en: 'Start services: poster/logo design, video editing, websites, IT support. Use freelance platforms.' },
+  amount: 'Ikut servis',
+  link: 'https://www.upwork.com/',
+  icon: 'fas fa-user-tie',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 150, cat: 'biz', type: { ms: 'Idea', en: 'Idea' },
+  title: { ms: 'Jual Produk Digital (Template/Design)', en: 'Sell Digital Products (Templates/Design)' },
+  desc: { ms: 'Jual template Canva, UI kit, resume template, preset Lightroom. Modal rendah, scalable.', en: 'Sell Canva templates, UI kits, resume templates, Lightroom presets. Low cost, scalable.' },
+  amount: 'Ikut produk',
+  link: 'https://www.etsy.com/',
+  icon: 'fas fa-file-download',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== BUSINESS COMPLIANCE / TAX ======
+{
+  id: 151, cat: 'biz', type: { ms: 'Cukai', en: 'Tax' },
+  title: { ms: 'LHDN (Rujukan Cukai Perniagaan)', en: 'LHDN (Business Tax Reference)' },
+  desc: { ms: 'Rujuk panduan cukai untuk enterprise/syarikat (e-Filing, PCB, rekod). Penting untuk patuh undang-undang.', en: 'Refer to business tax guides (e-Filing, payroll deductions, records). Important for compliance.' },
+  amount: 'Percuma',
+  link: 'https://www.hasil.gov.my/',
+  icon: 'fas fa-file-invoice-dollar',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 152, cat: 'biz', type: { ms: 'Rekod', en: 'Records' },
+  title: { ms: 'Asas Rekod Kewangan Bisnes', en: 'Basic Business Bookkeeping' },
+  desc: { ms: 'Bina rekod jualan, kos, untung rugi, dan aliran tunai. Rekod bagus = senang mohon bantuan/loan.', en: 'Track sales, costs, profit/loss, and cash flow. Good records help with grants/loans.' },
+  amount: 'Percuma',
+  link: 'https://www.investopedia.com/terms/b/bookkeeping.asp',
+  icon: 'fas fa-receipt',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== QUICK MARKETPLACES / PAYMENT ======
+{
+  id: 153, cat: 'biz', type: { ms: 'Platform', en: 'Platform' },
+  title: { ms: 'Facebook Marketplace', en: 'Facebook Marketplace' },
+  desc: { ms: 'Jual barang/produk tempatan. Sesuai untuk mula kecil dan test permintaan.', en: 'Sell locally. Great for starting small and testing demand.' },
+  amount: 'Percuma',
+  link: 'https://www.facebook.com/marketplace/',
+  icon: 'fas fa-tags',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 154, cat: 'biz', type: { ms: 'Platform', en: 'Platform' },
+  title: { ms: 'Carousell Malaysia', en: 'Carousell Malaysia' },
+  desc: { ms: 'Platform jual beli. Sesuai untuk resell, preloved, dan produk handmade.', en: 'Buy/sell platform. Great for reselling, preloved items, and handmade products.' },
+  amount: 'Percuma',
+  link: 'https://www.carousell.com.my/',
+  icon: 'fas fa-exchange-alt',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== EXTRA (keep bilingual) ======
+{
+  id: 155, cat: 'biz', type: { ms: 'Strategi', en: 'Strategy' },
+  title: { ms: 'Panduan Harga (Pricing Strategy)', en: 'Pricing Strategy Guide' },
+  desc: { ms: 'Cara kira kos + margin, elak rugi, dan set harga yang kompetitif. Penting untuk bisnes sustain.', en: 'How to calculate costs + margins, avoid losses, and set competitive prices. Key for sustainability.' },
+  amount: 'Percuma',
+  link: 'https://www.shopify.com/blog/pricing-strategy',
+  icon: 'fas fa-percentage',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 156, cat: 'biz', type: { ms: 'Pemasaran', en: 'Marketing' },
+  title: { ms: 'Content Calendar (Template)', en: 'Content Calendar (Template)' },
+  desc: { ms: 'Susun jadual posting (Reels, TikTok, IG, FB) supaya marketing konsisten dan senang track.', en: 'Plan posting schedules (Reels, TikTok, IG, FB) to stay consistent and track performance.' },
+  amount: 'Percuma',
+  link: 'https://www.notion.so/templates/content-calendar',
+  icon: 'fas fa-calendar-alt',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 157, cat: 'biz', type: { ms: 'Khidmat', en: 'Service' },
+  title: { ms: 'Contoh SLA / Polisi Refund', en: 'SLA / Refund Policy Examples' },
+  desc: { ms: 'Set expectation pelanggan (tempoh siap, revision, refund). Bantu elak konflik dengan customer.', en: 'Set customer expectations (delivery time, revisions, refunds). Helps prevent disputes.' },
+  amount: 'Percuma',
+  link: 'https://www.shopify.com/blog/return-policy',
+  icon: 'fas fa-handshake',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 158, cat: 'biz', type: { ms: 'Logistik', en: 'Logistics' },
+  title: { ms: 'Pos Laju / Courier Rate Check', en: 'Pos Laju / Courier Rate Check' },
+  desc: { ms: 'Semak kadar penghantaran supaya anda boleh kira kos shipping dengan tepat.', en: 'Check shipping rates so you can calculate shipping costs accurately.' },
+  amount: 'Ikut courier',
+  link: 'https://www.pos.com.my/',
+  icon: 'fas fa-truck',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 159, cat: 'biz', type: { ms: 'Pembayaran', en: 'Payments' },
+  title: { ms: 'ToyyibPay (Payment Gateway)', en: 'ToyyibPay (Payment Gateway)' },
+  desc: { ms: 'Terima bayaran online (link payment, FPX). Sesuai untuk bisnes kecil dan servis.', en: 'Accept online payments (payment links, FPX). Great for small businesses and services.' },
+  amount: 'Ikut pelan',
+  link: 'https://toyyibpay.com/',
+  icon: 'fas fa-link',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 160, cat: 'biz', type: { ms: 'Pembayaran', en: 'Payments' },
+  title: { ms: 'Billplz (Payment Gateway)', en: 'Billplz (Payment Gateway)' },
+  desc: { ms: 'Payment link, invois, dan integrasi untuk kutip bayaran. Sesuai untuk bisnes digital.', en: 'Payment links, invoices, and integrations to collect payments. Great for digital businesses.' },
+  amount: 'Ikut pelan',
+  link: 'https://www.billplz.com/',
+  icon: 'fas fa-money-check-alt',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+
+// ====== LAST BATCH to reach 180 quickly (still bilingual) ======
+{
+  id: 161, cat: 'biz', type: { ms: 'Analitik', en: 'Analytics' },
+  title: { ms: 'Meta Pixel (Tracking Iklan)', en: 'Meta Pixel (Ad Tracking)' },
+  desc: { ms: 'Pasang pixel untuk track conversion iklan FB/IG dan optimize kempen.', en: 'Install pixel to track FB/IG ad conversions and optimize campaigns.' },
+  amount: 'Percuma',
+  link: 'https://www.facebook.com/business/tools/meta-pixel',
+  icon: 'fas fa-bullseye',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 162, cat: 'biz', type: { ms: 'Brand', en: 'Brand' },
+  title: { ms: 'Unsplash (Gambar Percuma)', en: 'Unsplash (Free Images)' },
+  desc: { ms: 'Sumber gambar untuk content marketing, banner, dan poster.', en: 'A source of images for content marketing, banners, and posters.' },
+  amount: 'Percuma',
+  link: 'https://unsplash.com/',
+  icon: 'fas fa-image',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 163, cat: 'biz', type: { ms: 'Brand', en: 'Brand' },
+  title: { ms: 'Pexels (Video/Gambar Percuma)', en: 'Pexels (Free Photos/Videos)' },
+  desc: { ms: 'Sumber visual untuk iklan dan content video pendek.', en: 'Visual resources for ads and short-form video content.' },
+  amount: 'Percuma',
+  link: 'https://www.pexels.com/',
+  icon: 'fas fa-photo-video',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 164, cat: 'biz', type: { ms: 'Operasi', en: 'Operations' },
+  title: { ms: 'Zendesk (Customer Support)', en: 'Zendesk (Customer Support)' },
+  desc: { ms: 'Sistem ticket customer support untuk bisnes yang dah mula ramai pelanggan.', en: 'Customer support ticketing system for growing businesses.' },
+  amount: 'Berbayar',
+  link: 'https://www.zendesk.com/',
+  icon: 'fas fa-headset',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 165, cat: 'biz', type: { ms: 'Operasi', en: 'Operations' },
+  title: { ms: 'WhatsApp Business', en: 'WhatsApp Business' },
+  desc: { ms: 'Catalog produk, auto-reply, label pelanggan. Sesuai untuk bisnes kecil & servis.', en: 'Product catalog, auto-replies, customer labels. Great for small businesses & services.' },
+  amount: 'Percuma',
+  link: 'https://www.whatsapp.com/business/',
+  icon: 'fab fa-whatsapp',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 166, cat: 'biz', type: { ms: 'Brand', en: 'Brand' },
+  title: { ms: 'Coolors (Palette Warna)', en: 'Coolors (Color Palette)' },
+  desc: { ms: 'Bina palette warna brand yang nampak premium dan konsisten untuk semua design.', en: 'Generate premium-looking brand color palettes for consistent designs.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://coolors.co/',
+  icon: 'fas fa-fill-drip',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 167, cat: 'biz', type: { ms: 'Legal', en: 'Legal' },
+  title: { ms: 'PDPA (Privasi Data) - Rujukan Umum', en: 'PDPA (Data Privacy) - General Reference' },
+  desc: { ms: 'Jika anda simpan data pelanggan (nama, phone, alamat), pastikan urus ikut amalan privasi yang baik.', en: 'If you store customer data (name, phone, address), follow good privacy practices.' },
+  amount: 'Rujukan',
+  link: 'https://www.pdp.gov.my/',
+  icon: 'fas fa-user-shield',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 168, cat: 'biz', type: { ms: 'Operasi', en: 'Operations' },
+  title: { ms: 'Google Forms (Order Form)', en: 'Google Forms (Order Form)' },
+  desc: { ms: 'Buat borang tempahan untuk servis/produk. Sesuai untuk bisnes yang belum ada website.', en: 'Create order forms for services/products. Great if you don’t have a website yet.' },
+  amount: 'Percuma',
+  link: 'https://www.google.com/forms/about/',
+  icon: 'fas fa-clipboard-check',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 169, cat: 'biz', type: { ms: 'Operasi', en: 'Operations' },
+  title: { ms: 'Google Sheets (Inventory & Sales)', en: 'Google Sheets (Inventory & Sales)' },
+  desc: { ms: 'Track inventori, jualan, kos, dan untung rugi guna template ringkas.', en: 'Track inventory, sales, costs, and profit/loss using simple templates.' },
+  amount: 'Percuma',
+  link: 'https://www.google.com/sheets/about/',
+  icon: 'fas fa-table',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 170, cat: 'biz', type: { ms: 'Brand', en: 'Brand' },
+  title: { ms: 'Behance (Showcase Portfolio)', en: 'Behance (Showcase Portfolio)' },
+  desc: { ms: 'Pamer portfolio design/foto/video untuk tarik klien dan bina trust.', en: 'Showcase design/photo/video portfolios to attract clients and build trust.' },
+  amount: 'Percuma',
+  link: 'https://www.behance.net/',
+  icon: 'fab fa-behance',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 171, cat: 'biz', type: { ms: 'Brand', en: 'Brand' },
+  title: { ms: 'Dribbble (UI Showcase)', en: 'Dribbble (UI Showcase)' },
+  desc: { ms: 'Pamer UI/UX untuk tarik peluang freelance/kerja. Sesuai untuk designer.', en: 'Showcase UI/UX work to attract freelance/jobs. Great for designers.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://dribbble.com/',
+  icon: 'fas fa-basketball-ball',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 172, cat: 'biz', type: { ms: 'Kontrak', en: 'Contracts' },
+  title: { ms: 'Contoh Kontrak Freelance', en: 'Freelance Contract Examples' },
+  desc: { ms: 'Rujukan kontrak untuk protect anda & klien (scope, timeline, payment).', en: 'Contract references to protect you and clients (scope, timeline, payment).' },
+  amount: 'Percuma',
+  link: 'https://www.rocketlawyer.com/',
+  icon: 'fas fa-file-contract',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 173, cat: 'biz', type: { ms: 'Pemasaran', en: 'Marketing' },
+  title: { ms: 'Ubersuggest (SEO Tools)', en: 'Ubersuggest (SEO Tools)' },
+  desc: { ms: 'Cari keyword, audit SEO, dan idea content. Sesuai untuk bisnes yang ada website.', en: 'Find keywords, run SEO audits, and get content ideas. Good for businesses with websites.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://neilpatel.com/ubersuggest/',
+  icon: 'fas fa-search',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 174, cat: 'biz', type: { ms: 'Pemasaran', en: 'Marketing' },
+  title: { ms: 'Google Trends (Semak Permintaan)', en: 'Google Trends (Check Demand)' },
+  desc: { ms: 'Semak trend carian untuk pilih produk/niche yang ada demand.', en: 'Check search trends to choose products/niches with demand.' },
+  amount: 'Percuma',
+  link: 'https://trends.google.com/',
+  icon: 'fas fa-chart-area',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 175, cat: 'biz', type: { ms: 'Logistik', en: 'Logistics' },
+  title: { ms: 'EasyParcel (Banding Courier)', en: 'EasyParcel (Compare Couriers)' },
+  desc: { ms: 'Banding harga courier dan buat booking pickup. Sesuai untuk eCommerce kecil.', en: 'Compare courier rates and book pickups. Great for small eCommerce.' },
+  amount: 'Ikut courier',
+  link: 'https://easyparcel.com/my/en/',
+  icon: 'fas fa-box',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 176, cat: 'biz', type: { ms: 'Operasi', en: 'Operations' },
+  title: { ms: 'Google Drive (Fail & Dokumen)', en: 'Google Drive (Files & Docs)' },
+  desc: { ms: 'Susun dokumen bisnes (invoice, resit, design) ikut folder supaya senang audit & cari.', en: 'Organize business documents (invoices, receipts, designs) with folders for easier audits and searching.' },
+  amount: 'Percuma/berbayar',
+  link: 'https://www.google.com/drive/',
+  icon: 'fas fa-folder',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 177, cat: 'biz', type: { ms: 'Pembayaran', en: 'Payments' },
+  title: { ms: 'Stripe (Pembayaran Antarabangsa)', en: 'Stripe (International Payments)' },
+  desc: { ms: 'Terima bayaran kad antarabangsa untuk servis digital. Semak ketersediaan dan syarat di Malaysia.', en: 'Accept international card payments for digital services. Check availability and requirements in Malaysia.' },
+  amount: 'Ikut pelan',
+  link: 'https://stripe.com/',
+  icon: 'fas fa-credit-card',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 178, cat: 'biz', type: { ms: 'Pembayaran', en: 'Payments' },
+  title: { ms: 'PayMaster / Merchant Bank (Rujukan)', en: 'PayMaster / Bank Merchant (Reference)' },
+  desc: { ms: 'Untuk bisnes fizikal, tanya bank tentang terminal kad (EDC) & akaun merchant.', en: 'For physical stores, ask your bank about card terminals (EDC) and merchant accounts.' },
+  amount: 'Ikut bank',
+  link: 'https://www.bnm.gov.my/',
+  icon: 'fas fa-cash-register',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 179, cat: 'biz', type: { ms: 'Strategi', en: 'Strategy' },
+  title: { ms: 'Analisis SWOT (Template)', en: 'SWOT Analysis (Template)' },
+  desc: { ms: 'Kenal pasti Strength, Weakness, Opportunity, Threat untuk buat keputusan bisnes lebih tepat.', en: 'Identify Strengths, Weaknesses, Opportunities, Threats to make better business decisions.' },
+  amount: 'Percuma',
+  link: 'https://miro.com/templates/swot-analysis/',
+  icon: 'fas fa-balance-scale',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+{
+  id: 180, cat: 'biz', type: { ms: 'Strategi', en: 'Strategy' },
+  title: { ms: 'Pitch Deck (Template)', en: 'Pitch Deck (Template)' },
+  desc: { ms: 'Template untuk bentang bisnes kepada grant/investor (masalah, solusi, market, model, traction).', en: 'Template to pitch your business for grants/investors (problem, solution, market, model, traction).' },
+  amount: 'Percuma',
+  link: 'https://www.canva.com/templates/search/pitch-deck/',
+  icon: 'fas fa-presentation',
+  bgClass: 'bg-amber-100 dark:bg-amber-900', textClass: 'text-amber-700 dark:text-amber-300'
+},
+],  // ✅ Data kekal sama (tak payah repeat - semua items 1-180)
+
+                // COMPUTED: FILTER ITEMS
+                get filteredItems() {
+                    if (this.activeFilter === 'all') return this.items;
+                    return this.items.filter(i => i.cat === this.activeFilter);
+                },
+
+                // FUNCTIONS
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                applyTheme() {
+    if (this.isDark) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+},
+
+scrollToBottom() {
+    this.$nextTick(() => {
+        const container = document.getElementById('chat-messages');
+        if (container) container.scrollTop = container.scrollHeight;
+    });
+},
+
+async sendMessage() {
+    if (this.userMsg.trim() === '') return;
+
+    const userText = this.userMsg;
+
+    this.messages.push({
+        id: Date.now(),
+        text: userText,
+        sender: 'user'
+    });
+
+    this.chatHistory.push({
+        role: "user",
+        content: userText
+    });
+
+    this.userMsg = '';
+    this.isTyping = true;
+    this.scrollToBottom();
+
+    try {
+        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': 'Bearer YOUR_MISTRAL_API_KEY'
+            },
+            body: JSON.stringify({
+                model: "mistral-small-latest",
+                messages: this.chatHistory,
+                max_tokens: 1000,
+                temperature: 0.7
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            throw new Error('Respons API tidak sah');
+        }
+
+        const botReply = data.choices[0].message.content;
+
+        this.chatHistory.push({
+            role: "assistant",
+            content: botReply
+        });
+
+        this.messages.push({
+            id: Date.now() + 1,
+            text: marked.parse(botReply),
+            sender: 'bot'
+        });
+
+    } catch (error) {
+        console.error("Ralat Mistral AI:", error);
+
+        this.messages.push({
+            id: Date.now() + 1,
+            text: "Maaf, sistem AI sedang sibuk. Cuba lagi sebentar.",
+            sender: 'bot'
+        });
+    } finally {
+        this.isTyping = false;
+        this.scrollToBottom();
+    }
+}
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hak & Undang-undang OKU - MY OKU SENTRAL</title>
+    <meta name="description" content="20 Hak Asasi OKU, 15+ Bantuan Guaman, Akta OKU 2008 - Paling Lengkap di Malaysia">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+        
+        /* BUANG SCROLLBAR HORIZONTAL */
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="appData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <!-- SETTINGS MODAL - BILINGUAL COMPLETE -->
+    <div x-show="showSettings" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative max-h-[90vh] overflow-y-auto">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title"></span>
+            </h2>
+            
+            <!-- Language Selection -->
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang"></label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white dark:bg-gray-600 text-gray-600 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500'" 
+                            class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        <span>🇲🇾</span> <span x-text="txt[lang].lang_ms"></span>
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white dark:bg-gray-600 text-gray-600 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500'" 
+                            class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        <span>🇬🇧</span> <span x-text="txt[lang].lang_en"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dark/Light Mode -->
+            <div class="mb-8">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_mode"></label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition" 
+                            :class="!isDark ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30' : 'border-gray-200 dark:border-gray-700'">
+                        <i class="fas fa-sun text-2xl text-orange-500"></i>
+                        <span class="font-bold" x-text="txt[lang].mode_light"></span>
+                    </button>
+                    <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition" 
+                            :class="isDark ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30' : 'border-gray-200 dark:border-gray-700'">
+                        <i class="fas fa-moon text-2xl text-purple-400"></i>
+                        <span class="font-bold" x-text="txt[lang].mode_dark"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Text Size Options -->
+            <div class="mb-8">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_textsize"></label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button @click="setFontSize(14)" class="p-3 rounded-lg border-2 flex items-center justify-center" 
+                            :class="currentFontSize === 14 ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30' : 'border-gray-200 dark:border-gray-700'">
+                        <span class="text-sm font-bold">A</span>
+                    </button>
+                    <button @click="setFontSize(16)" class="p-3 rounded-lg border-2 flex items-center justify-center" 
+                            :class="currentFontSize === 16 ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30' : 'border-gray-200 dark:border-gray-700'">
+                        <span class="text-base font-bold">A</span>
+                    </button>
+                    <button @click="setFontSize(20)" class="p-3 rounded-lg border-2 flex items-center justify-center" 
+                            :class="currentFontSize === 20 ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30' : 'border-gray-200 dark:border-gray-700'">
+                        <span class="text-lg font-bold">A</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Accessibility Features -->
+            <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                <h3 class="font-bold mb-3 flex items-center gap-2"><i class="fas fa-heart text-red-500"></i> <span x-text="txt[lang].access_features"></span></h3>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" x-model="highContrast" class="w-5 h-5 text-brand-600">
+                        <span x-text="txt[lang].high_contrast"></span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" x-model="largeCursor" class="w-5 h-5 text-brand-600">
+                        <span x-text="txt[lang].large_cursor"></span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" x-model="screenReader" class="w-5 h-5 text-brand-600">
+                        <span x-text="txt[lang].screen_reader"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION - SAMA DENGAN PAGE LAIN & BILINGUAL -->
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                    <i class="fas fa-gavel"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500" x-text="txt[lang].nav_subtitle">Undang-Undang</span>
+                </div>
+            </a>
+
+            <div class="flex items-center gap-3 md:gap-6">
+                <a href="index.html" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_home">Utama</a>
+                <a href="#akta" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_akta">Akta OKU</a>
+                <a href="#hak" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_hak">20 Hak</a>
+                <a href="#guaman" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_guaman">Bantuan Guaman</a>
+                
+               <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HEADER - BILINGUAL -->
+    <header class="pt-32 pb-16 px-4 bg-gradient-to-br from-brand-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-brand-200/50 rounded-full blur-3xl -translate-y-20 translate-x-20"></div>
+        <div class="container mx-auto max-w-4xl relative z-10 text-center">
+            <div class="w-20 h-20 bg-brand-600 text-white rounded-2xl flex items-center justify-center text-4xl shadow-xl mx-auto mb-6 transform rotate-3">
+                <i class="fas fa-balance-scale"></i>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black mb-4 leading-tight text-gray-900 dark:text-white" x-text="txt[lang].law_title"></h1>
+            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto" x-text="txt[lang].law_desc"></p>
+            
+            <!-- Quick Stats - BILINGUAL -->
+            <div class="flex flex-wrap justify-center gap-4 mt-8">
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm border border-gray-200 dark:border-gray-700">
+                    <span class="font-bold text-brand-600">20</span> <span x-text="txt[lang].stat_rights"></span>
+                </div>
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm border border-gray-200 dark:border-gray-700">
+                    <span class="font-bold text-brand-600">15+</span> <span x-text="txt[lang].stat_legal"></span>
+                </div>
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm border border-gray-200 dark:border-gray-700">
+                    <span class="font-bold text-brand-600">2008</span> <span x-text="txt[lang].stat_act"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- AKTA OKU SECTION - BILINGUAL -->
+    <section id="akta" class="py-16 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <div class="bg-brand-50 dark:bg-gray-800 rounded-3xl p-8 md:p-12 shadow-sm border border-brand-100 dark:border-gray-700">
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="w-full md:w-1/3 flex justify-center">
+                        <i class="fas fa-book-open text-8xl text-brand-500 opacity-80"></i>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <span class="bg-brand-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4 inline-block">Akta 685</span>
+                        <h2 class="text-3xl font-black mb-4 dark:text-white" x-text="txt[lang].akta_title"></h2>
+                        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4" x-text="txt[lang].akta_desc"></p>
+                        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6" x-text="txt[lang].akta_desc2"></p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl">
+                                <div class="font-bold text-brand-600 mb-1" x-text="txt[lang].akta_part1"></div>
+                                <div class="text-sm" x-text="txt[lang].akta_part1_desc"></div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl">
+                                <div class="font-bold text-brand-600 mb-1" x-text="txt[lang].akta_part2"></div>
+                                <div class="text-sm" x-text="txt[lang].akta_part2_desc"></div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl">
+                                <div class="font-bold text-brand-600 mb-1" x-text="txt[lang].akta_part3"></div>
+                                <div class="text-sm" x-text="txt[lang].akta_part3_desc"></div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl">
+                                <div class="font-bold text-brand-600 mb-1" x-text="txt[lang].akta_part4"></div>
+                                <div class="text-sm" x-text="txt[lang].akta_part4_desc"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3">
+                            <a href="https://www.jkm.gov.my/jkm/uploads/files/JPOKU/Akta%20OKU%202008.pdf" target="_blank" class="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl font-bold hover:opacity-80 transition shadow-lg">
+                                <i class="fas fa-file-pdf"></i> <span x-text="txt[lang].btn_download_akta"></span>
+                            </a>
+                            <a href="https://www.parlimen.gov.my/akta-oku-2008.html" target="_blank" class="inline-flex items-center gap-2 bg-brand-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-80 transition shadow-lg">
+                                <i class="fas fa-external-link-alt"></i> <span x-text="txt[lang].btn_parlimen"></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 20 HAK ASASI - BILINGUAL COMPLETE -->
+    <section id="hak" class="py-16 bg-gray-50 dark:bg-gray-800/50">
+        <div class="container mx-auto px-4 max-w-7xl">
+            <!-- Section Header -->
+            <div class="text-center mb-12">
+                <span class="bg-brand-600 text-white text-sm font-bold px-4 py-2 rounded-full uppercase tracking-wider mb-4 inline-block" x-text="txt[lang].crpd_badge"></span>
+                <h2 class="text-4xl md:text-5xl font-black mb-4 dark:text-white flex items-center justify-center gap-3">
+                    <i class="fas fa-shield-alt text-brand-600"></i>
+                    <span x-text="txt[lang].hak_title"></span>
+                </h2>
+                <p class="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto" x-text="txt[lang].hak_subtitle"></p>
+            </div>
+            
+            <!-- Statistics Grid - BILINGUAL -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center border border-gray-100 dark:border-gray-700">
+                    <div class="text-2xl font-black text-brand-600">28</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="txt[lang].stat_edu"></div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center border border-gray-100 dark:border-gray-700">
+                    <div class="text-2xl font-black text-brand-600">35</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="txt[lang].stat_emp"></div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center border border-gray-100 dark:border-gray-700">
+                    <div class="text-2xl font-black text-brand-600">26</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="txt[lang].stat_access"></div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center border border-gray-100 dark:border-gray-700">
+                    <div class="text-2xl font-black text-brand-600">27</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="txt[lang].stat_health"></div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center border border-gray-100 dark:border-gray-700">
+                    <div class="text-2xl font-black text-brand-600">30</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="txt[lang].stat_protect"></div>
+                </div>
+            </div>
+
+            <!-- 20 Hak Asasi Grid - BILINGUAL COMPLETE -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Hak 1 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-graduation-cap"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak1_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak1_desc"></p>
+                    <div class="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 p-2 rounded-lg font-mono border border-blue-200 dark:border-blue-800" x-text="txt[lang].hak1_section"></div>
+                </div>
+
+                <!-- Hak 2 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-briefcase"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak2_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak2_desc"></p>
+                    <div class="text-[10px] bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 p-2 rounded-lg font-mono border border-green-200 dark:border-green-800" x-text="txt[lang].hak2_section"></div>
+                </div>
+
+                <!-- Hak 3 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-building"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak3_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak3_desc"></p>
+                    <div class="text-[10px] bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 p-2 rounded-lg font-mono border border-purple-200 dark:border-purple-800" x-text="txt[lang].hak3_section"></div>
+                </div>
+
+                <!-- Hak 4 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-hospital"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak4_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak4_desc"></p>
+                    <div class="text-[10px] bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-2 rounded-lg font-mono border border-red-200 dark:border-red-800" x-text="txt[lang].hak4_section"></div>
+                </div>
+
+                <!-- Hak 5 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-bus"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak5_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak5_desc"></p>
+                    <div class="text-[10px] bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 p-2 rounded-lg font-mono border border-yellow-200 dark:border-yellow-800" x-text="txt[lang].hak5_section"></div>
+                </div>
+
+                <!-- Hak 6 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-laptop"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak6_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak6_desc"></p>
+                    <div class="text-[10px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 p-2 rounded-lg font-mono border border-indigo-200 dark:border-indigo-800" x-text="txt[lang].hak6_section"></div>
+                </div>
+
+                <!-- Hak 7 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-pink-100 text-pink-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-futbol"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak7_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak7_desc"></p>
+                    <div class="text-[10px] bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 p-2 rounded-lg font-mono border border-pink-200 dark:border-pink-800" x-text="txt[lang].hak7_section"></div>
+                </div>
+
+                <!-- Hak 8 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-id-card"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak8_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak8_desc"></p>
+                    <div class="text-[10px] bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 p-2 rounded-lg font-mono border border-teal-200 dark:border-teal-800" x-text="txt[lang].hak8_section"></div>
+                </div>
+
+                <!-- Hak 9 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-shield-alt"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak9_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak9_desc"></p>
+                    <div class="text-[10px] bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 p-2 rounded-lg font-mono border border-orange-200 dark:border-orange-800" x-text="txt[lang].hak9_section"></div>
+                </div>
+
+                <!-- Hak 10 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-cyan-100 text-cyan-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-users"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak10_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak10_desc"></p>
+                    <div class="text-[10px] bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 p-2 rounded-lg font-mono border border-cyan-200 dark:border-cyan-800" x-text="txt[lang].hak10_section"></div>
+                </div>
+
+                <!-- Hak 11 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-person-walking"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak11_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak11_desc"></p>
+                    <div class="text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 p-2 rounded-lg font-mono border border-emerald-200 dark:border-emerald-800" x-text="txt[lang].hak11_section"></div>
+                </div>
+
+                <!-- Hak 12 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-microphone"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak12_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak12_desc"></p>
+                    <div class="text-[10px] bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 p-2 rounded-lg font-mono border border-amber-200 dark:border-amber-800" x-text="txt[lang].hak12_section"></div>
+                </div>
+
+                <!-- Hak 13 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-vote-yea"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak13_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak13_desc"></p>
+                    <div class="text-[10px] bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 p-2 rounded-lg font-mono border border-rose-200 dark:border-rose-800" x-text="txt[lang].hak13_section"></div>
+                </div>
+
+                <!-- Hak 14 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-lime-100 text-lime-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-coins"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak14_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak14_desc"></p>
+                    <div class="text-[10px] bg-lime-50 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 p-2 rounded-lg font-mono border border-lime-200 dark:border-lime-800" x-text="txt[lang].hak14_section"></div>
+                </div>
+
+                <!-- Hak 15 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-home"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak15_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak15_desc"></p>
+                    <div class="text-[10px] bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 p-2 rounded-lg font-mono border border-sky-200 dark:border-sky-800" x-text="txt[lang].hak15_section"></div>
+                </div>
+
+                <!-- Hak 16 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-violet-100 text-violet-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-hand-holding-heart"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak16_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak16_desc"></p>
+                    <div class="text-[10px] bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 p-2 rounded-lg font-mono border border-violet-200 dark:border-violet-800" x-text="txt[lang].hak16_section"></div>
+                </div>
+
+                <!-- Hak 17 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-fuchsia-100 text-fuchsia-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-university"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak17_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak17_desc"></p>
+                    <div class="text-[10px] bg-fuchsia-50 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 p-2 rounded-lg font-mono border border-fuchsia-200 dark:border-fuchsia-800" x-text="txt[lang].hak17_section"></div>
+                </div>
+
+                <!-- Hak 18 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-stone-100 text-stone-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-palette"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak18_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak18_desc"></p>
+                    <div class="text-[10px] bg-stone-50 dark:bg-stone-900/30 text-stone-700 dark:text-stone-300 p-2 rounded-lg font-mono border border-stone-200 dark:border-stone-800" x-text="txt[lang].hak18_section"></div>
+                </div>
+
+                <!-- Hak 19 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-gavel"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak19_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak19_desc"></p>
+                    <div class="text-[10px] bg-gray-50 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 p-2 rounded-lg font-mono border border-gray-200 dark:border-gray-800" x-text="txt[lang].hak19_section"></div>
+                </div>
+
+                <!-- Hak 20 -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-zinc-100 text-zinc-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fas fa-pray"></i></div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white" x-text="txt[lang].hak20_title"></h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" x-text="txt[lang].hak20_desc"></p>
+                    <div class="text-[10px] bg-zinc-50 dark:bg-zinc-900/30 text-zinc-700 dark:text-zinc-300 p-2 rounded-lg font-mono border border-zinc-200 dark:border-zinc-800" x-text="txt[lang].hak20_section"></div>
+                </div>
+            </div>
+
+            <!-- Footer Hak Asasi - BILINGUAL -->
+            <div class="mt-12 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <i class="fas fa-scale-balanced text-brand-500 mr-2 text-xl"></i>
+                <span class="block mb-2" x-text="txt[lang].hak_footer"></span>
+                <div class="flex flex-wrap justify-center gap-3 mt-4">
+                    <span class="bg-brand-50 dark:bg-gray-700 px-3 py-1 rounded-full text-xs" x-text="txt[lang].badge_act"></span>
+                    <span class="bg-brand-50 dark:bg-gray-700 px-3 py-1 rounded-full text-xs" x-text="txt[lang].badge_crpd"></span>
+                    <span class="bg-brand-50 dark:bg-gray-700 px-3 py-1 rounded-full text-xs" x-text="txt[lang].badge_constitution"></span>
+                    <span class="bg-brand-50 dark:bg-gray-700 px-3 py-1 rounded-full text-xs" x-text="txt[lang].badge_policy"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 15+ BANTUAN GUAMAN - BILINGUAL COMPLETE -->
+    <section id="guaman" class="py-16 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+        <div class="container mx-auto px-4 max-w-7xl">
+            <!-- Section Header -->
+            <div class="text-center mb-12">
+                <span class="bg-yellow-500 text-white text-sm font-bold px-4 py-2 rounded-full uppercase tracking-wider mb-4 inline-block" x-text="txt[lang].legal_badge"></span>
+                <h2 class="text-4xl md:text-5xl font-black mb-4 dark:text-white flex items-center justify-center gap-3">
+                    <i class="fas fa-gavel text-brand-600"></i>
+                    <span x-text="txt[lang].guaman_title"></span>
+                </h2>
+                <p class="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto" x-text="txt[lang].guaman_subtitle"></p>
+            </div>
+
+            <!-- Statistics - BILINGUAL -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                <div class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl text-center border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl font-black text-brand-600">15+</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400" x-text="txt[lang].legal_stat1"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl text-center border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl font-black text-brand-600">✓</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400" x-text="txt[lang].legal_stat2"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl text-center border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl font-black text-brand-600">RM0-50</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400" x-text="txt[lang].legal_stat3"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl text-center border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl font-black text-brand-600">13</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400" x-text="txt[lang].legal_stat4"></div>
+                </div>
+            </div>
+
+            <!-- 15+ Legal Aid Grid - BILINGUAL COMPLETE -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 1. JBG -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-brand-600 hover:shadow-xl transition">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="font-bold text-xl dark:text-white" x-text="txt[lang].jbg_title"></h3>
+                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full" x-text="txt[lang].badge_gov"></span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].jbg_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-brand-600 w-5"></i> <span x-text="txt[lang].jbg_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-brand-600 w-5"></i> <span x-text="txt[lang].jbg_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-brand-600 w-5"></i> <span x-text="txt[lang].jbg_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 2. YBGK -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-yellow-500 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].ybgk_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].ybgk_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-yellow-600 w-5"></i> <span x-text="txt[lang].ybgk_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-yellow-600 w-5"></i> <span x-text="txt[lang].ybgk_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-yellow-600 w-5"></i> <span x-text="txt[lang].ybgk_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 3. Majlis Peguam -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-purple-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].bar_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].bar_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-purple-600 w-5"></i> <span x-text="txt[lang].bar_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-purple-600 w-5"></i> <span x-text="txt[lang].bar_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-purple-600 w-5"></i> <span x-text="txt[lang].bar_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 4. Sisters in Islam -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-pink-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].sis_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].sis_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-pink-600 w-5"></i> <span x-text="txt[lang].sis_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-pink-600 w-5"></i> <span x-text="txt[lang].sis_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-pink-600 w-5"></i> <span x-text="txt[lang].sis_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 5. Tenaganita -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-red-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].tena_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].tena_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-red-600 w-5"></i> <span x-text="txt[lang].tena_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-red-600 w-5"></i> <span x-text="txt[lang].tena_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-600 w-5"></i> <span x-text="txt[lang].tena_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 6. SUHAKAM -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-blue-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].suhakam_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].suhakam_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-blue-600 w-5"></i> <span x-text="txt[lang].suhakam_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-blue-600 w-5"></i> <span x-text="txt[lang].suhakam_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-blue-600 w-5"></i> <span x-text="txt[lang].suhakam_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 7. WAO -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-orange-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].wao_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].wao_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-orange-600 w-5"></i> <span x-text="txt[lang].wao_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-orange-600 w-5"></i> <span x-text="txt[lang].wao_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-orange-600 w-5"></i> <span x-text="txt[lang].wao_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 8. OKU Malaysia -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-teal-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].okum_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].okum_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-teal-600 w-5"></i> <span x-text="txt[lang].okum_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-teal-600 w-5"></i> <span x-text="txt[lang].okum_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-600 w-5"></i> <span x-text="txt[lang].okum_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 9. UiTM Legal Aid -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-cyan-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].uitm_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].uitm_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-cyan-600 w-5"></i> <span x-text="txt[lang].uitm_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-cyan-600 w-5"></i> <span x-text="txt[lang].uitm_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-cyan-600 w-5"></i> <span x-text="txt[lang].uitm_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 10. UM Legal Aid -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-emerald-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].um_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].um_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-emerald-600 w-5"></i> <span x-text="txt[lang].um_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-emerald-600 w-5"></i> <span x-text="txt[lang].um_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-emerald-600 w-5"></i> <span x-text="txt[lang].um_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 11. Malaysian Care -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-indigo-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].care_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].care_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-indigo-600 w-5"></i> <span x-text="txt[lang].care_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-indigo-600 w-5"></i> <span x-text="txt[lang].care_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-indigo-600 w-5"></i> <span x-text="txt[lang].care_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 12. Sabah Law Society -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-blue-800 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].sabah_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].sabah_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-blue-800 w-5"></i> <span x-text="txt[lang].sabah_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-blue-800 w-5"></i> <span x-text="txt[lang].sabah_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-blue-800 w-5"></i> <span x-text="txt[lang].sabah_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 13. Advocates Sarawak -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-yellow-800 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].swk_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].swk_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-yellow-800 w-5"></i> <span x-text="txt[lang].swk_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-yellow-800 w-5"></i> <span x-text="txt[lang].swk_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-yellow-800 w-5"></i> <span x-text="txt[lang].swk_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 14. Penang Legal Aid -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-lime-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].pg_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].pg_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-lime-600 w-5"></i> <span x-text="txt[lang].pg_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-lime-600 w-5"></i> <span x-text="txt[lang].pg_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-lime-600 w-5"></i> <span x-text="txt[lang].pg_loc"></span></div>
+                    </div>
+                </div>
+
+                <!-- 15. Perak Legal Aid -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border-l-4 border-amber-600 hover:shadow-xl transition">
+                    <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].perak_title"></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" x-text="txt[lang].perak_desc"></p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><i class="fas fa-phone text-amber-600 w-5"></i> <span x-text="txt[lang].perak_phone"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-globe text-amber-600 w-5"></i> <span x-text="txt[lang].perak_web"></span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-amber-600 w-5"></i> <span x-text="txt[lang].perak_loc"></span></div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Emergency Hotline - BILINGUAL -->
+            <div class="mt-12 bg-brand-50 dark:bg-gray-800 p-6 rounded-2xl border border-brand-100 dark:border-gray-700">
+                <div class="flex flex-col md:flex-row gap-6 items-center">
+                    <div class="w-16 h-16 bg-brand-600 text-white rounded-full flex items-center justify-center text-3xl flex-shrink-0">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-xl mb-2 dark:text-white" x-text="txt[lang].emergency_title"></h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-3" x-text="txt[lang].emergency_desc"></p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm">
+                                <span class="font-bold block" x-text="txt[lang].jbg_hotline"></span>
+                                <span>03-2261 7000</span>
+                            </div>
+                            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm">
+                                <span class="font-bold block" x-text="txt[lang].ybgk_hotline"></span>
+                                <span>1-800-88-9245</span>
+                            </div>
+                            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm">
+                                <span class="font-bold block" x-text="txt[lang].police_hotline"></span>
+                                <span>03-2266 6666</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHAT BOT - BILINGUAL -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm" x-text="txt[lang].bot_title"></h4>
+                        <span class="text-[10px] opacity-80 block" x-text="txt[lang].bot_status"></span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-balance-scale text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function appData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,
+                showSettings: false,
+                chatOpen: false,
+                userMsg: '',
+                textSize: 'medium',
+                highContrast: false,
+                largeCursor: false,
+                screenReader: false,
+                messages: [
+                    { id: 1, text: this.lang === 'ms' ? 'Hai! Saya boleh bantu tentang 20 hak OKU dan 15+ saluran bantuan guaman. Apa yang anda perlukan?' : 'Hi! I can help with 20 PWD rights and 15+ legal aid channels. What do you need?', sender: 'bot' }
+                ],
+                
+                txt: {
+                    ms: {
+                        // Settings
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa / Language',
+                        lang_ms: 'Bahasa Melayu',
+                        lang_en: 'English',
+                        lbl_mode: 'Mod Paparan',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_textsize: 'Saiz Teks',
+                        text_small: 'Kecil',
+                        text_medium: 'Sederhana',
+                        text_large: 'Besar',
+                        access_features: 'Ciri-ciri Aksesibiliti',
+                        high_contrast: 'Kontras Tinggi',
+                        large_cursor: 'Kursor Besar',
+                        screen_reader: 'Pembaca Skrin',
+                        
+                        // Navigation
+                        nav_subtitle: 'Undang-Undang',
+                        menu_home: 'Utama',
+                        menu_akta: 'Akta OKU',
+                        menu_hak: '20 Hak',
+                        menu_guaman: 'Bantuan Guaman',
+                        btn_settings: 'Tetapan',
+                        
+                        // Header
+                        law_title: 'Hak & Undang-undang OKU',
+                        law_desc: 'Memahami 20 hak asasi, perlindungan di bawah Akta OKU 2008, dan 15+ saluran bantuan guaman untuk komuniti OKU di Malaysia.',
+                        stat_rights: 'Hak Asasi',
+                        stat_legal: 'Bantuan Guaman',
+                        stat_act: 'Akta OKU',
+                        
+                        // Akta OKU
+                        akta_title: 'Akta OKU 2008 (Akta 685)',
+                        akta_desc: 'Akta Orang Kurang Upaya 2008 adalah undang-undang yang melindungi hak OKU di Malaysia. Akta ini dikuatkuasakan mulai 7 Julai 2008 dan menjadi landasan utama dalam memastikan OKU mendapat hak yang sama seperti warganegara lain.',
+                        akta_desc2: 'Akta ini mengandungi 7 Bahagian dan 64 Seksyen yang merangkumi pelbagai aspek kehidupan OKU termasuk pendidikan, pekerjaan, kesihatan, aksesibiliti, dan perlindungan dari diskriminasi.',
+                        akta_part1: 'Bahagian I - Permulaan',
+                        akta_part1_desc: 'Takrif OKU, pendaftaran, dan objektif akta',
+                        akta_part2: 'Bahagian II - Pendaftaran',
+                        akta_part2_desc: 'Pendaftaran OKU secara sukarela dan kad OKU',
+                        akta_part3: 'Bahagian III - Majlis OKU',
+                        akta_part3_desc: 'Penubuhan Majlis Kebangsaan OKU',
+                        akta_part4: 'Bahagian IV - Hak OKU',
+                        akta_part4_desc: 'Hak pendidikan, pekerjaan, kesihatan, akses',
+                        btn_download_akta: 'Muat Turun Akta (PDF)',
+                        btn_parlimen: 'Laman Rasmi Parlimen',
+                        
+                        // 20 Hak Asasi
+                        crpd_badge: 'KONVENSYEN PBB CRPD',
+                        hak_title: '20 Hak Asasi OKU Dilindungi',
+                        hak_subtitle: 'Berdasarkan Akta OKU 2008 dan Konvensyen PBB Mengenai Hak OKU (CRPD)',
+                        stat_edu: 'Pendidikan',
+                        stat_emp: 'Pekerjaan',
+                        stat_access: 'Akses Awam',
+                        stat_health: 'Kesihatan',
+                        stat_protect: 'Perlindungan',
+                        
+                        // Hak 1-20
+                        hak1_title: 'Pendidikan Inklusif',
+                        hak1_desc: 'Akses kepada pendidikan rendah dan menengah secara inklusif, tanpa diskriminasi. Sekolah wajib menyediakan kemudahan pembelajaran untuk OKU.',
+                        hak1_section: 'Seksyen 28(1): Hak pendidikan sama rata',
+                        
+                        hak2_title: 'Pekerjaan Adil',
+                        hak2_desc: 'Peluang pekerjaan sama rata, gaji setimpal, persekitaran kerja selamat, dan larangan diskriminasi dalam pekerjaan.',
+                        hak2_section: 'Seksyen 35: Peluang pekerjaan adil',
+                        
+                        hak3_title: 'Akses Bangunan',
+                        hak3_desc: 'Bangunan awam dan swasta mesti menyediakan kemudahan mesra OKU termasuk tanjakan, lif, tandas OKU, dan laluan bebas halangan.',
+                        hak3_section: 'Seksyen 26: Akses kepada bangunan',
+                        
+                        hak4_title: 'Kesihatan & Pemulihan',
+                        hak4_desc: 'Perkhidmatan kesihatan dan pemulihan percuma atau kos rendah di hospital kerajaan. Termasuk rawatan fisioterapi dan pemulihan awal.',
+                        hak4_section: 'Seksyen 27: Perkhidmatan kesihatan',
+                        
+                        hak5_title: 'Pengangkutan Mesra OKU',
+                        hak5_desc: 'Bas, tren, LRT, MRT, teksi, dan pengangkutan awam lain mesti mesra OKU dengan ruang kerusi roda, papan tanda braille, dan pengumuman audio.',
+                        hak5_section: 'Seksyen 26(2): Pengangkutan awam',
+                        
+                        hak6_title: 'Teknologi Maklumat',
+                        hak6_desc: 'Akses kepada laman web, aplikasi, dan kandungan digital mesra OKU. Kerajaan dan swasta wajib menyediakan platform yang boleh diakses.',
+                        hak6_section: 'Seksyen 32: ICT & komunikasi',
+                        
+                        hak7_title: 'Sukan & Rekreasi',
+                        hak7_desc: 'Kemudahan sukan dan rekreasi khas untuk OKU di setiap negeri. Termasuk kolam renang, padang, dan gelanggang mesra OKU.',
+                        hak7_section: 'Seksyen 29: Aktiviti sukan',
+                        
+                        hak8_title: 'Kad OKU & Faedah',
+                        hak8_desc: 'Pendaftaran percuma dan kad OKU untuk akses pelbagai insentif kerajaan termasuk diskaun, bantuan kewangan, dan kemudahan khas.',
+                        hak8_section: 'Seksyen 5-9: Pendaftaran OKU',
+                        
+                        hak9_title: 'Anti-Penderaan',
+                        hak9_desc: 'Perlindungan dari penderaan fizikal, mental, seksual, pengabaian, dan eksploitasi. Tindakan undang-undang terhadap pendera OKU.',
+                        hak9_section: 'Seksyen 30: Perlindungan khas',
+                        
+                        hak10_title: 'Penyertaan Masyarakat',
+                        hak10_desc: 'Hidup bermasyarakat dan bebas dari pengasingan sosial. Hak untuk menyertai aktiviti kemasyarakatan dan membuat keputusan.',
+                        hak10_section: 'Seksyen 3(i): Penyertaan penuh',
+                        
+                        hak11_title: 'Kebebasan Bergerak',
+                        hak11_desc: 'Bebas bergerak di ruang awam dengan kemudahan laluan mesra OKU, lintasan pejalan kaki, jejantas, dan kaki lima yang sesuai.',
+                        hak11_section: 'Seksyen 26: Laluan mesra OKU',
+                        
+                        hak12_title: 'Kebebasan Bersuara',
+                        hak12_desc: 'Menyuarakan pendapat dan pandangan dalam semua aspek kehidupan. Hak untuk didengar dalam pembuatan dasar.',
+                        hak12_section: 'Perkara 10: Perlembagaan Persekutuan',
+                        
+                        hak13_title: 'Hak Mengundi',
+                        hak13_desc: 'Kemudahan mengundi untuk OKU di semua pusat mengundi. Bantuan pengundi, braille, dan akses kerusi roda di bilik undi.',
+                        hak13_section: 'SPR: Kemudahan OKU',
+                        
+                        hak14_title: 'Akses Kewangan',
+                        hak14_desc: 'Perbankan dan insurans mesra OKU tanpa diskriminasi. ATM mesra OKU, dokumen braille, dan khidmat pelanggan khas.',
+                        hak14_section: 'Bank Negara: Garis Panduan',
+                        
+                        hak15_title: 'Perumahan Mampu Milik',
+                        hak15_desc: 'Kuota perumahan awam dan swasta untuk OKU. Reka bentuk rumah mesra OKU dan bantuan sewa untuk OKU tidak mampu.',
+                        hak15_section: 'KPKT: Dasar Perumahan OKU',
+                        
+                        hak16_title: 'Bantuan Kewangan',
+                        hak16_desc: 'Bantuan bulanan JKM sehingga RM450, pencen OKU, insentif pekerjaan, dan bantuan alat tiruan untuk OKU tidak mampu.',
+                        hak16_section: 'JKM: Bantuan OKU',
+                        
+                        hak17_title: 'Pendidikan Tinggi',
+                        hak17_desc: 'Kuota khas 1% IPTA untuk OKU, PTPTN, pinjaman pendidikan, kemudahan belajar, dan sokongan akademik di universiti.',
+                        hak17_section: 'KPT: Dasar Inklusif',
+                        
+                        hak18_title: 'Kebudayaan & Kesenian',
+                        hak18_desc: 'Akses ke muzium, galeri, dan acara kebudayaan. Kemudahan audio guide, braille guide, dan tiket percuma untuk OKU.',
+                        hak18_section: 'MOTAC: Program Inklusif',
+                        
+                        hak19_title: 'Bantuan Guaman Percuma',
+                        hak19_desc: 'Bantuan guaman percuma untuk kes sivil dan jenayah terpilih. Ujian kemampuan khas untuk OKU (means test dilonggarkan).',
+                        hak19_section: 'JBG & YBGK: Bantuan percuma',
+                        
+                        hak20_title: 'Kebebasan Beragama',
+                        hak20_desc: 'Akses ke rumah ibadat dan bahan agama dalam format boleh capai. Ruang khas dan kemudahan di tempat ibadat untuk OKU.',
+                        hak20_section: 'Perkara 11: Perlembagaan',
+                        
+                        hak_footer: 'Hak-hak ini diperkukuhkan melalui Akta OKU 2008 dan selaras dengan Konvensyen PBB mengenai Hak OKU (CRPD) yang telah diratifikasi Malaysia.',
+                        badge_act: 'Akta 685',
+                        badge_crpd: 'CRPD',
+                        badge_constitution: 'Perlembagaan',
+                        badge_policy: 'Dasar OKU',
+                        
+                        // Bantuan Guaman
+                        legal_badge: 'PERCUMA & KOS RENDAH',
+                        guaman_title: '15+ Saluran Bantuan Guaman OKU',
+                        guaman_subtitle: 'Bantuan guaman percuma, nasihat undang-undang, dan sokongan litigasi untuk OKU di seluruh Malaysia',
+                        legal_stat1: 'Organisasi',
+                        legal_stat2: 'Percuma',
+                        legal_stat3: 'Kos',
+                        legal_stat4: 'Negeri',
+                        
+                        // JBG
+                        jbg_title: 'Jabatan Bantuan Guaman (JBG)',
+                        badge_gov: 'Kementerian',
+                        jbg_desc: 'Bantuan guaman untuk kes sivil dan jenayah. Ujian kemampuan khas untuk OKU. Perkhidmatan percuma untuk kes jenayah terpilih dan kos rendah untuk kes sivil (RM50).',
+                        jbg_phone: '03-2261 7000',
+                        jbg_web: 'www.jbg.gov.my',
+                        jbg_loc: 'Seluruh Malaysia (13 cawangan)',
+                        
+                        // YBGK
+                        ybgk_title: 'Yayasan Bantuan Guaman Kebangsaan',
+                        ybgk_desc: 'Bantuan guaman percuma untuk kes jenayah (tangkapan, reman, jaminan). Khas untuk rakyat Malaysia berpendapatan rendah. OKU layak secara automatik.',
+                        ybgk_phone: '1-800-88-9245',
+                        ybgk_web: 'www.ybgk.org.my',
+                        ybgk_loc: '13 cawangan negeri',
+                        
+                        // Majlis Peguam
+                        bar_title: 'Majlis Peguam Malaysia',
+                        bar_desc: 'Pusat Bantuan Guaman (Legal Aid Centre) di Kuala Lumpur, Pulau Pinang, Johor, Perak, Sabah & Sarawak. Bantuan percuma untuk kes sivil dan jenayah.',
+                        bar_phone: '03-2050 2050',
+                        bar_web: 'www.malaysianbar.org.my',
+                        bar_loc: '6 cawangan utama',
+                        
+                        // Sisters in Islam
+                        sis_title: 'Sisters in Islam',
+                        sis_desc: 'Bantuan guaman untuk wanita OKU berkaitan undang-undang keluarga Islam. Percuma untuk kes perceraian, nafkah, dan hak penjagaan anak.',
+                        sis_phone: '03-7960 5121',
+                        sis_web: 'www.sistersinislam.org',
+                        sis_loc: 'Kuala Lumpur',
+                        
+                        // Tenaganita
+                        tena_title: 'Tenaganita',
+                        tena_desc: 'Bantuan guaman untuk pekerja migran dan OKU mangsa eksploitasi. Fokus kepada kes penderaan, perdagangan manusia, dan diskriminasi.',
+                        tena_phone: '03-7770 3668',
+                        tena_web: 'www.tenaganita.net',
+                        tena_loc: 'Kuala Lumpur',
+                        
+                        // SUHAKAM
+                        suhakam_title: 'SUHAKAM',
+                        suhakam_desc: 'Bantuan aduan dan siasatan untuk kes diskriminasi OKU. Boleh membuat aduan rasmi jika hak OKU dinafikan oleh mana-mana pihak.',
+                        suhakam_phone: '03-2612 5600',
+                        suhakam_web: 'www.suhakam.org.my',
+                        suhakam_loc: 'Seluruh Malaysia',
+                        
+                        // WAO
+                        wao_title: 'Women\'s Aid Organisation',
+                        wao_desc: 'Bantuan guaman untuk wanita OKU mangsa keganasan rumah tangga. Perkhidmatan percuma termasuk perlindungan dan kaunseling.',
+                        wao_phone: '03-7956 3488',
+                        wao_web: 'www.wao.org.my',
+                        wao_loc: 'Kuala Lumpur',
+                        
+                        // OKU Malaysia
+                        okum_title: 'Pertubuhan Kebajikan OKU Malaysia',
+                        okum_desc: 'Rujukan guaman dan sokongan undang-undang untuk ahli OKU. Bantuan mengisi borang, dokumen, dan urusan berkaitan undang-undang.',
+                        okum_phone: '03-7875 2727',
+                        okum_web: 'www.okumalaysia.org',
+                        okum_loc: 'Selangor',
+                        
+                        // UiTM Legal Aid
+                        uitm_title: 'UiTM Legal Aid Clinic',
+                        uitm_desc: 'Klinik guaman percuma oleh pensyarah dan pelajar undang-undang. Bantuan untuk kes sivil, rujukan dokumen, dan nasihat undang-undang.',
+                        uitm_phone: '03-5544 4000',
+                        uitm_web: 'law.uitm.edu.my',
+                        uitm_loc: 'Shah Alam',
+                        
+                        // UM Legal Aid
+                        um_title: 'UM Legal Aid Centre',
+                        um_desc: 'Fakulti Undang-undang UM menyediakan bantuan guaman percuma. Klinik guaman setiap minggu untuk masyarakat umum dan OKU.',
+                        um_phone: '03-7967 6500',
+                        um_web: 'law.um.edu.my',
+                        um_loc: 'Kuala Lumpur',
+                        
+                        // Malaysian Care
+                        care_title: 'Malaysian Care',
+                        care_desc: 'Advokasi dan rujukan guaman untuk OKU dari semua kategori. Bantuan mendapatkan dokumen, kad OKU, dan hak-hak asas.',
+                        care_phone: '03-7782 5488',
+                        care_web: 'www.malaysiancare.org',
+                        care_loc: 'Petaling Jaya',
+                        
+                        // Sabah Law Society
+                        sabah_title: 'Sabah Law Society',
+                        sabah_desc: 'Bantuan guaman percuma untuk OKU di Sabah. Klinik guaman di Kota Kinabalu, Sandakan, Tawau, dan daerah lain.',
+                        sabah_phone: '088-254 823',
+                        sabah_web: 'www.sabahlawsociety.org',
+                        sabah_loc: 'Kota Kinabalu',
+                        
+                        // Advocates Sarawak
+                        swk_title: 'Advocates Association Sarawak',
+                        swk_desc: 'Bantuan guaman percuma dan nasihat undang-undang untuk OKU Sarawak. Klinik guaman di Kuching, Sibu, Miri, dan Bintulu.',
+                        swk_phone: '082-235 691',
+                        swk_web: 'www.advocates.org.my',
+                        swk_loc: 'Kuching, Sibu, Miri',
+                        
+                        // Penang Legal Aid
+                        pg_title: 'Penang Legal Aid Centre',
+                        pg_desc: 'Bantuan guaman percuma untuk OKU di Pulau Pinang. Fokus kepada kes sivil, buruh, dan rumahtangga.',
+                        pg_phone: '04-261 5666',
+                        pg_web: 'www.pglegalaid.org',
+                        pg_loc: 'George Town',
+                        
+                        // Perak Legal Aid
+                        perak_title: 'Perak Legal Aid Centre',
+                        perak_desc: 'Bantuan guaman untuk OKU di negeri Perak. Perkhidmatan percuma untuk kes terpilih dan nasihat undang-undang.',
+                        perak_phone: '05-253 4498',
+                        perak_web: 'www.perakbar.org',
+                        perak_loc: 'Ipoh',
+                        
+                        // Emergency Hotline
+                        emergency_title: 'Talian Kecemasan Undang-undang OKU',
+                        emergency_desc: 'Jika anda atau rakan OKU memerlukan bantuan guaman segera, hubungi talian berikut:',
+                        jbg_hotline: 'JBG Hotline',
+                        ybgk_hotline: 'YBGK Hotline',
+                        police_hotline: 'Polis OKU Unit',
+                        
+                        // Chat Bot
+                        bot_title: 'Law Assist Bot',
+                        bot_status: 'Online 24/7',
+                        chat_ph: 'Tanya soalan undang-undang...'
+                    },
+                    
+                    // ENGLISH TRANSLATION (COMPLETE)
+                    en: {
+                        // Settings
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        lang_ms: 'Malay',
+                        lang_en: 'English',
+                        lbl_mode: 'Display Mode',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_textsize: 'Text Size',
+                        text_small: 'Small',
+                        text_medium: 'Medium',
+                        text_large: 'Large',
+                        access_features: 'Accessibility Features',
+                        high_contrast: 'High Contrast',
+                        large_cursor: 'Large Cursor',
+                        screen_reader: 'Screen Reader',
+                        
+                        // Navigation
+                        nav_subtitle: 'Law & Rights',
+                        menu_home: 'Home',
+                        menu_akta: 'PWD Act',
+                        menu_hak: '20 Rights',
+                        menu_guaman: 'Legal Aid',
+                        btn_settings: 'Settings',
+                        
+                        // Header
+                        law_title: 'PWD Rights & Law',
+                        law_desc: 'Understanding 20 basic rights, protections under the PWD Act 2008, and 15+ legal aid channels for the PWD community in Malaysia.',
+                        stat_rights: 'Basic Rights',
+                        stat_legal: 'Legal Aid',
+                        stat_act: 'PWD Act',
+                        
+                        // Akta OKU
+                        akta_title: 'Persons with Disabilities Act 2008 (Act 685)',
+                        akta_desc: 'The Persons with Disabilities Act 2008 is the law that protects the rights of PWDs in Malaysia. This act came into force on July 7, 2008 and is the main foundation in ensuring PWDs have equal rights as other citizens.',
+                        akta_desc2: 'This act contains 7 Parts and 64 Sections covering various aspects of PWD life including education, employment, health, accessibility, and protection from discrimination.',
+                        akta_part1: 'Part I - Preliminary',
+                        akta_part1_desc: 'Definition of PWD, registration, and objectives',
+                        akta_part2: 'Part II - Registration',
+                        akta_part2_desc: 'Voluntary PWD registration and PWD card',
+                        akta_part3: 'Part III - PWD Council',
+                        akta_part3_desc: 'Establishment of National PWD Council',
+                        akta_part4: 'Part IV - PWD Rights',
+                        akta_part4_desc: 'Education, employment, health, access rights',
+                        btn_download_akta: 'Download Act (PDF)',
+                        btn_parlimen: 'Official Parliament Site',
+                        
+                        // 20 Hak Asasi
+                        crpd_badge: 'UN CRPD CONVENTION',
+                        hak_title: '20 Protected PWD Rights',
+                        hak_subtitle: 'Based on PWD Act 2008 and UN Convention on the Rights of Persons with Disabilities (CRPD)',
+                        stat_edu: 'Education',
+                        stat_emp: 'Employment',
+                        stat_access: 'Public Access',
+                        stat_health: 'Health',
+                        stat_protect: 'Protection',
+                        
+                        // Hak 1-20
+                        hak1_title: 'Inclusive Education',
+                        hak1_desc: 'Access to primary and secondary education inclusively, without discrimination. Schools must provide learning facilities for PWDs.',
+                        hak1_section: 'Section 28(1): Equal education rights',
+                        
+                        hak2_title: 'Fair Employment',
+                        hak2_desc: 'Equal employment opportunities, fair wages, safe work environment, and prohibition of discrimination in employment.',
+                        hak2_section: 'Section 35: Fair employment opportunities',
+                        
+                        hak3_title: 'Building Access',
+                        hak3_desc: 'Public and private buildings must provide PWD-friendly facilities including ramps, lifts, PWD toilets, and barrier-free pathways.',
+                        hak3_section: 'Section 26: Access to buildings',
+                        
+                        hak4_title: 'Health & Rehabilitation',
+                        hak4_desc: 'Free or low-cost health and rehabilitation services at government hospitals. Includes physiotherapy and early rehabilitation.',
+                        hak4_section: 'Section 27: Health services',
+                        
+                        hak5_title: 'PWD-Friendly Transport',
+                        hak5_desc: 'Buses, trains, LRT, MRT, taxis, and other public transport must be PWD-friendly with wheelchair space, braille signs, and audio announcements.',
+                        hak5_section: 'Section 26(2): Public transport',
+                        
+                        hak6_title: 'Information Technology',
+                        hak6_desc: 'Access to PWD-friendly websites, applications, and digital content. Government and private sector must provide accessible platforms.',
+                        hak6_section: 'Section 32: ICT & communication',
+                        
+                        hak7_title: 'Sports & Recreation',
+                        hak7_desc: 'Special sports and recreation facilities for PWDs in every state. Includes swimming pools, fields, and PWD-friendly courts.',
+                        hak7_section: 'Section 29: Sports activities',
+                        
+                        hak8_title: 'PWD Card & Benefits',
+                        hak8_desc: 'Free registration and PWD card for access to various government incentives including discounts, financial aid, and special facilities.',
+                        hak8_section: 'Section 5-9: PWD registration',
+                        
+                        hak9_title: 'Anti-Abuse',
+                        hak9_desc: 'Protection from physical, mental, sexual abuse, neglect, and exploitation. Legal action against PWD abusers.',
+                        hak9_section: 'Section 30: Special protection',
+                        
+                        hak10_title: 'Community Participation',
+                        hak10_desc: 'Living in the community and free from social isolation. Right to participate in community activities and decision making.',
+                        hak10_section: 'Section 3(i): Full participation',
+                        
+                        hak11_title: 'Freedom of Movement',
+                        hak11_desc: 'Free movement in public spaces with PWD-friendly pathways, pedestrian crossings, overhead bridges, and suitable sidewalks.',
+                        hak11_section: 'Section 26: PWD-friendly pathways',
+                        
+                        hak12_title: 'Freedom of Speech',
+                        hak12_desc: 'Express opinions and views in all aspects of life. Right to be heard in policy making.',
+                        hak12_section: 'Article 10: Federal Constitution',
+                        
+                        hak13_title: 'Voting Rights',
+                        hak13_desc: 'Voting facilities for PWDs at all polling stations. Voter assistance, braille, and wheelchair access at polling rooms.',
+                        hak13_section: 'EC: PWD facilities',
+                        
+                        hak14_title: 'Financial Access',
+                        hak14_desc: 'PWD-friendly banking and insurance without discrimination. PWD-friendly ATMs, braille documents, and special customer service.',
+                        hak14_section: 'Bank Negara: Guidelines',
+                        
+                        hak15_title: 'Affordable Housing',
+                        hak15_desc: 'Public and private housing quota for PWDs. PWD-friendly house design and rental assistance for low-income PWDs.',
+                        hak15_section: 'KPKT: PWD Housing Policy',
+                        
+                        hak16_title: 'Financial Aid',
+                        hak16_desc: 'Monthly JKM aid up to RM450, PWD pension, employment incentives, and assistive devices aid for low-income PWDs.',
+                        hak16_section: 'JKM: PWD Aid',
+                        
+                        hak17_title: 'Higher Education',
+                        hak17_desc: '1% special quota for PWDs in public universities, PTPTN, education loans, learning facilities, and academic support at universities.',
+                        hak17_section: 'MOHE: Inclusive Policy',
+                        
+                        hak18_title: 'Culture & Arts',
+                        hak18_desc: 'Access to museums, galleries, and cultural events. Audio guide, braille guide facilities, and free tickets for PWDs.',
+                        hak18_section: 'MOTAC: Inclusive Programs',
+                        
+                        hak19_title: 'Free Legal Aid',
+                        hak19_desc: 'Free legal aid for selected civil and criminal cases. Special means test for PWDs (relaxed eligibility).',
+                        hak19_section: 'JBG & YBGK: Free aid',
+                        
+                        hak20_title: 'Religious Freedom',
+                        hak20_desc: 'Access to places of worship and religious materials in accessible formats. Special spaces and facilities at places of worship for PWDs.',
+                        hak20_section: 'Article 11: Constitution',
+                        
+                        hak_footer: 'These rights are strengthened through the PWD Act 2008 and are in line with the UN Convention on the Rights of Persons with Disabilities (CRPD) which Malaysia has ratified.',
+                        badge_act: 'Act 685',
+                        badge_crpd: 'CRPD',
+                        badge_constitution: 'Constitution',
+                        badge_policy: 'PWD Policy',
+                        
+                        // Legal Aid
+                        legal_badge: 'FREE & LOW COST',
+                        guaman_title: '15+ PWD Legal Aid Channels',
+                        guaman_subtitle: 'Free legal aid, legal advice, and litigation support for PWDs throughout Malaysia',
+                        legal_stat1: 'Organizations',
+                        legal_stat2: 'Free',
+                        legal_stat3: 'Cost',
+                        legal_stat4: 'States',
+                        
+                        // JBG
+                        jbg_title: 'Legal Aid Department (JBG)',
+                        badge_gov: 'Ministry',
+                        jbg_desc: 'Legal aid for civil and criminal cases. Special means test for PWDs. Free service for selected criminal cases and low cost for civil cases (RM50).',
+                        jbg_phone: '03-2261 7000',
+                        jbg_web: 'www.jbg.gov.my',
+                        jbg_loc: 'Nationwide (13 branches)',
+                        
+                        // YBGK
+                        ybgk_title: 'National Legal Aid Foundation',
+                        ybgk_desc: 'Free legal aid for criminal cases (arrest, remand, bail). For low-income Malaysians. PWDs automatically eligible.',
+                        ybgk_phone: '1-800-88-9245',
+                        ybgk_web: 'www.ybgk.org.my',
+                        ybgk_loc: '13 state branches',
+                        
+                        // Bar Council
+                        bar_title: 'Malaysian Bar Council',
+                        bar_desc: 'Legal Aid Centres in Kuala Lumpur, Penang, Johor, Perak, Sabah & Sarawak. Free aid for civil and criminal cases.',
+                        bar_phone: '03-2050 2050',
+                        bar_web: 'www.malaysianbar.org.my',
+                        bar_loc: '6 main branches',
+                        
+                        // Sisters in Islam
+                        sis_title: 'Sisters in Islam',
+                        sis_desc: 'Legal aid for PWD women regarding Islamic family law. Free for divorce, maintenance, and child custody cases.',
+                        sis_phone: '03-7960 5121',
+                        sis_web: 'www.sistersinislam.org',
+                        sis_loc: 'Kuala Lumpur',
+                        
+                        // Tenaganita
+                        tena_title: 'Tenaganita',
+                        tena_desc: 'Legal aid for migrant workers and PWDs who are victims of exploitation. Focus on abuse, human trafficking, and discrimination cases.',
+                        tena_phone: '03-7770 3668',
+                        tena_web: 'www.tenaganita.net',
+                        tena_loc: 'Kuala Lumpur',
+                        
+                        // SUHAKAM
+                        suhakam_title: 'SUHAKAM',
+                        suhakam_desc: 'Complaint and investigation assistance for PWD discrimination cases. Can make official complaints if PWD rights are denied.',
+                        suhakam_phone: '03-2612 5600',
+                        suhakam_web: 'www.suhakam.org.my',
+                        suhakam_loc: 'Nationwide',
+                        
+                        // WAO
+                        wao_title: 'Women\'s Aid Organisation',
+                        wao_desc: 'Legal aid for PWD women who are victims of domestic violence. Free services including protection and counseling.',
+                        wao_phone: '03-7956 3488',
+                        wao_web: 'www.wao.org.my',
+                        wao_loc: 'Kuala Lumpur',
+                        
+                        // OKU Malaysia
+                        okum_title: 'OKU Malaysia Welfare Organization',
+                        okum_desc: 'Legal referral and legal support for PWD members. Help with forms, documents, and legal matters.',
+                        okum_phone: '03-7875 2727',
+                        okum_web: 'www.okumalaysia.org',
+                        okum_loc: 'Selangor',
+                        
+                        // UiTM Legal Aid
+                        uitm_title: 'UiTM Legal Aid Clinic',
+                        uitm_desc: 'Free legal clinic by lecturers and law students. Help with civil cases, document referrals, and legal advice.',
+                        uitm_phone: '03-5544 4000',
+                        uitm_web: 'law.uitm.edu.my',
+                        uitm_loc: 'Shah Alam',
+                        
+                        // UM Legal Aid
+                        um_title: 'UM Legal Aid Centre',
+                        um_desc: 'UM Law Faculty provides free legal aid. Weekly legal clinic for the general public and PWDs.',
+                        um_phone: '03-7967 6500',
+                        um_web: 'law.um.edu.my',
+                        um_loc: 'Kuala Lumpur',
+                        
+                        // Malaysian Care
+                        care_title: 'Malaysian Care',
+                        care_desc: 'Advocacy and legal referral for PWDs from all categories. Help with documents, PWD card, and basic rights.',
+                        care_phone: '03-7782 5488',
+                        care_web: 'www.malaysiancare.org',
+                        care_loc: 'Petaling Jaya',
+                        
+                        // Sabah Law Society
+                        sabah_title: 'Sabah Law Society',
+                        sabah_desc: 'Free legal aid for PWDs in Sabah. Legal clinics in Kota Kinabalu, Sandakan, Tawau, and other districts.',
+                        sabah_phone: '088-254 823',
+                        sabah_web: 'www.sabahlawsociety.org',
+                        sabah_loc: 'Kota Kinabalu',
+                        
+                        // Advocates Sarawak
+                        swk_title: 'Advocates Association Sarawak',
+                        swk_desc: 'Free legal aid and legal advice for PWDs in Sarawak. Legal clinics in Kuching, Sibu, Miri, and Bintulu.',
+                        swk_phone: '082-235 691',
+                        swk_web: 'www.advocates.org.my',
+                        swk_loc: 'Kuching, Sibu, Miri',
+                        
+                        // Penang Legal Aid
+                        pg_title: 'Penang Legal Aid Centre',
+                        pg_desc: 'Free legal aid for PWDs in Penang. Focus on civil, labor, and family cases.',
+                        pg_phone: '04-261 5666',
+                        pg_web: 'www.pglegalaid.org',
+                        pg_loc: 'George Town',
+                        
+                        // Perak Legal Aid
+                        perak_title: 'Perak Legal Aid Centre',
+                        perak_desc: 'Legal aid for PWDs in Perak. Free service for selected cases and legal advice.',
+                        perak_phone: '05-253 4498',
+                        perak_web: 'www.perakbar.org',
+                        perak_loc: 'Ipoh',
+                        
+                        // Emergency Hotline
+                        emergency_title: 'PWD Legal Emergency Hotline',
+                        emergency_desc: 'If you or a PWD friend need immediate legal assistance, contact the following hotlines:',
+                        jbg_hotline: 'JBG Hotline',
+                        ybgk_hotline: 'YBGK Hotline',
+                        police_hotline: 'Police PWD Unit',
+                        
+                        // Chat Bot
+                        bot_title: 'Law Assist Bot',
+                        bot_status: 'Online 24/7',
+                        chat_ph: 'Ask a legal question...'
+                    }
+                },
+
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+                
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+                
+                applyTextSize() {
+                    document.body.classList.remove('text-small', 'text-medium', 'text-large');
+                    document.body.classList.add(`text-${this.textSize}`);
+                    localStorage.setItem('textSize', this.textSize);
+                },
+                
+                sendMessage() {
+                    if(!this.userMsg.trim()) return;
+                    
+                    this.messages.push({ id: Date.now(), text: this.userMsg, sender: 'user' });
+                    let userQuestion = this.userMsg;
+                    this.userMsg = '';
+                    
+                    setTimeout(() => {
+                        let botReply;
+                        if (this.lang === 'ms') {
+                            botReply = 'Terima kasih. Untuk bantuan segera, sila hubungi talian JBG di 03-2261 7000 atau YBGK di 1-800-88-9245. Untuk 20 hak asasi, rujuk bahagian di atas. Jika anda perlukan bantuan khusus, sila hubungi organisasi berkaitan.';
+                        } else {
+                            botReply = 'Thank you. For immediate assistance, please contact JBG hotline at 03-2261 7000 or YBGK at 1-800-88-9245. For the 20 basic rights, refer to the section above. If you need specific help, please contact the relevant organization.';
+                        }
+                        
+                        this.messages.push({ id: Date.now(), text: botReply, sender: 'bot' });
+                        this.$nextTick(() => {
+                            let chatBox = document.getElementById('chat-messages');
+                            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                        });
+                    }, 1000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

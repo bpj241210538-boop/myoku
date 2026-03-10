@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY OKU - Pendidikan & Latihan</title>
+    <meta name="description" content="Info lengkap pendidikan khas, elaun murid khas, biasiswa OKU dan laluan kerjaya TVET.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        edu: { 500: '#8B5CF6', 600: '#7C3AED' },
+                        money: { 500: '#10B981', 600: '#059669' }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'float': 'float 6s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #8B5CF6; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="eduData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-edu-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+           <div class="flex items-center gap-3 md:gap-6">
+                <a href="index.html" class="font-bold hover:text-edu-600 transition"><i class="fas fa-home mr-1"></i> <span x-text="txt[lang].nav_home">Utama</span></a>
+                <a href="#laluan" class="font-bold hover:text-edu-600 transition" x-text="txt[lang].nav_path">Laluan</a>
+                <a href="#biasiswa" class="font-bold hover:text-edu-600 transition" x-text="txt[lang].nav_aid">Bantuan Kewangan</a>
+                <a href="#tvet" class="font-bold hover:text-edu-600 transition" x-text="txt[lang].nav_skills">Kemahiran (TVET)</a>
+                
+                <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-20 px-4 bg-gradient-to-br from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+        <div class="absolute top-20 left-10 w-64 h-64 bg-edu-200/40 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute bottom-20 right-10 w-80 h-80 bg-blue-200/40 rounded-full blur-3xl animate-float" style="animation-delay: 1s;"></div>
+        
+        <div class="container mx-auto max-w-6xl relative z-10 grid md:grid-cols-2 gap-12 items-center">
+            <div class="text-left">
+                <span class="inline-block py-1 px-3 rounded-full bg-edu-100 text-edu-700 font-bold text-xs uppercase tracking-widest mb-4 border border-edu-200">
+                    <i class="fas fa-book-reader mr-1"></i> <span x-text="txt[lang].hero_tag">Akses Pendidikan Inklusif</span>
+                </span>
+                <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight text-gray-900 dark:text-white">
+                    <span x-text="txt[lang].hero_t1">Ilmu Tanpa</span><br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-edu-600 to-blue-500" x-text="txt[lang].hero_t2">Sempadan.</span>
+                </h1>
+                <p class="text-lg text-gray-500 dark:text-gray-400 mb-8 leading-relaxed" x-text="txt[lang].hero_desc">
+                    Panduan lengkap untuk pelajar OKU di Malaysia. Dari prasekolah hingga ke universiti, serta peluang latihan kemahiran TVET dan bantuan biasiswa kerajaan.
+                </p>
+                <div class="flex gap-4">
+                    <a href="#laluan" class="px-8 py-4 bg-edu-600 hover:bg-edu-700 text-white rounded-xl font-bold shadow-lg shadow-edu-500/30 transition flex items-center gap-2">
+                        <i class="fas fa-route"></i> <span x-text="txt[lang].btn_start">Mula Teroka</span>
+                    </a>
+                    <a href="#biasiswa" class="px-8 py-4 bg-white dark:bg-gray-800 text-edu-600 border-2 border-edu-100 dark:border-gray-700 hover:border-edu-600 rounded-xl font-bold transition flex items-center gap-2">
+                        <i class="fas fa-money-bill-wave"></i> <span x-text="txt[lang].btn_money">Info Bantuan</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-2xl border border-gray-100 dark:border-gray-700 relative z-10 transform rotate-2 hover:rotate-0 transition duration-500">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="text-xs font-bold text-gray-400">PORTAL KPM/KPT</div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-green-500 text-xl shadow-sm"><i class="fas fa-check-circle"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white">Elaun Murid Khas (EMK)</h4>
+                                <p class="text-xs text-gray-500">RM150.00 / Bulan (Status: Aktif)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-purple-50 dark:bg-gray-700 rounded-xl">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-purple-500 text-xl shadow-sm"><i class="fas fa-university"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white">Bantuan Kewangan OKU (IPT)</h4>
+                                <p class="text-xs text-gray-500">Yuran + Elaun Sara Hidup</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-orange-50 dark:bg-gray-700 rounded-xl">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-orange-500 text-xl shadow-sm"><i class="fas fa-tools"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white">Latihan GiatMara</h4>
+                                <p class="text-xs text-gray-500">Kursus Kemahiran + Elaun</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="laluan" class="py-20 bg-white dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-black mb-4 flex items-center justify-center gap-3">
+                    <i class="fas fa-map-signs text-edu-600"></i>
+                    <span x-text="txt[lang].path_title">Laluan Pendidikan</span>
+                </h2>
+                <p class="text-gray-500 max-w-2xl mx-auto" x-text="txt[lang].path_desc">Pilih tahap pendidikan untuk melihat jenis persekolahan dan program yang ditawarkan.</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-2 mb-10">
+                <template x-for="tab in tabs">
+                    <button @click="activeTab = tab.id"
+                        class="px-6 py-3 rounded-full font-bold text-sm transition-all border-2 flex items-center gap-2"
+                        :class="activeTab === tab.id ? 'bg-edu-600 border-edu-600 text-white shadow-lg scale-105' : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-200'">
+                        <i :class="tab.icon"></i> <span x-text="tab.label[lang]"></span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <template x-for="item in getTabContent()" :key="item.title[lang]">
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-2 transition duration-300 group">
+                        <div class="w-14 h-14 rounded-2xl bg-white dark:bg-gray-700 flex items-center justify-center text-2xl text-edu-600 mb-6 shadow-md group-hover:scale-110 transition">
+                            <i :class="item.icon"></i>
+                        </div>
+                        <h3 class="text-xl font-black mb-3 text-gray-900 dark:text-white" x-text="item.title[lang]"></h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed h-20" x-text="item.desc[lang]"></p>
+                        
+                        <div class="bg-white dark:bg-gray-700/50 p-3 rounded-xl mb-4">
+                            <p class="text-[10px] font-bold uppercase text-gray-400 mb-2" x-text="txt[lang].lbl_features">Ciri-ciri:</p>
+                            <ul class="space-y-1">
+                                <template x-for="feat in item.features">
+                                    <li class="flex items-start gap-2 text-xs font-medium text-gray-700 dark:text-gray-200">
+                                        <i class="fas fa-check text-green-500 mt-0.5"></i> <span x-text="feat[lang]"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+
+                        <a :href="item.link" target="_blank" class="block w-full py-3 rounded-xl bg-edu-50 dark:bg-gray-700 text-edu-700 dark:text-white text-center font-bold text-sm hover:bg-edu-600 hover:text-white transition group-hover:shadow-lg">
+                            <span x-text="txt[lang].btn_more">Maklumat Lanjut</span> <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <section id="biasiswa" class="py-20 bg-brand-50/50 dark:bg-gray-800/30">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+                <div>
+                    <h2 class="text-3xl font-black mb-2 text-gray-900 dark:text-white">
+                        <span class="text-green-600">RM</span> <span x-text="txt[lang].money_title">Bantuan Kewangan & Biasiswa</span>
+                    </h2>
+                    <p class="text-gray-500" x-text="txt[lang].money_desc">Senarai bantuan kewangan khusus untuk pelajar OKU.</p>
+                </div>
+                <div class="text-right hidden md:block">
+                    <i class="fas fa-hand-holding-usd text-6xl text-green-200 dark:text-green-900/30"></i>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <template x-for="aid in aids">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border-l-4 border-green-500 hover:shadow-md transition flex flex-col md:flex-row gap-6 items-center">
+                        <div class="flex-shrink-0 text-center md:text-left">
+                            <div class="text-xs font-bold uppercase text-gray-400 mb-1" x-text="aid.provider"></div>
+                            <div class="text-2xl font-black text-green-600" x-text="aid.amount"></div>
+                            <div class="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block mt-1" x-text="aid.frequency[lang]"></div>
+                        </div>
+                        
+                        <div class="flex-1 text-center md:text-left">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white" x-text="aid.name[lang]"></h3>
+                            <p class="text-sm text-gray-500 mt-1" x-text="aid.desc[lang]"></p>
+                            <div class="mt-2 flex flex-wrap gap-2 justify-center md:justify-start">
+                                <template x-for="req in aid.reqs">
+                                    <span class="text-[10px] border border-gray-200 dark:border-gray-600 px-2 py-1 rounded text-gray-500 dark:text-gray-400" x-text="req"></span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="flex-shrink-0">
+                            <a :href="aid.link" target="_blank" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl font-bold text-sm hover:scale-105 transition shadow-lg block text-center">
+                                <span x-text="txt[lang].btn_apply_now">Mohon Sekarang</span>
+                            </a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <section id="tvet" class="py-20 bg-white dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full -translate-y-10 translate-x-10 blur-2xl"></div>
+                
+                <div class="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-black mb-4"><i class="fas fa-tools mr-2"></i> TVET & Kemahiran</h2>
+                        <p class="text-orange-100 text-lg mb-8 leading-relaxed">
+                            Bukan akademik semata-mata. Malaysia menyediakan banyak pusat latihan kemahiran khusus untuk OKU bagi menjamin peluang pekerjaan masa hadapan.
+                        </p>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-yellow-300"></i> Kursus kulinari, jahitan, komputer & elektronik.</li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-yellow-300"></i> Elaun bulanan disediakan semasa latihan.</li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-yellow-300"></i> Sijil SKM yang diiktiraf industri.</li>
+                        </ul>
+                        <div class="flex flex-wrap gap-4">
+                            <a href="https://www.giatmara.edu.my/" target="_blank" class="bg-white text-orange-600 px-6 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition">GIATMARA</a>
+                            <a href="https://www.jtm.gov.my/" target="_blank" class="bg-white/20 text-white border border-white/40 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition">ILP / ADTEC</a>
+                            <a href="https://www.kpwkm.gov.my/" target="_blank" class="bg-white/20 text-white border border-white/40 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition">PLPP Bangi</a>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex justify-center">
+                        <i class="fas fa-cogs text-9xl text-white/30 animate-spin-slow" style="animation-duration: 10s;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-edu-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-edu-500">PENDIDIKAN</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses pendidikan tanpa halangan.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-edu-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-edu-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Rasmi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="https://www.moe.gov.my/pendidikan/pendidikan-khas" target="_blank" class="hover:text-edu-400">Bahagian Pendidikan Khas (KPM)</a></li>
+                    <li><a href="https://upu.mohe.gov.my/" target="_blank" class="hover:text-edu-400">UPU Online (Kategori OKU)</a></li>
+                    <li><a href="https://biasiswa.mohe.gov.my/bk_oku/" target="_blank" class="hover:text-edu-400">Sistem Bantuan BKOKU</a></li>
+                    <li><a href="https://www.politeknik.edu.my/" target="_blank" class="hover:text-edu-400">Ambilan Politeknik</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi Kami</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-edu-500"></i> KPM: 03-8884 6000</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-edu-500"></i> aduan@moe.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Education. Data for info only. Not affiliated with Government agencies.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-edu-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-graduation-cap"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Cikgu Bot</h4>
+                        <span class="text-[10px] opacity-80 block">Tanya pasal biasiswa?</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-edu-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+                <div x-show="isTyping" class="flex justify-start">
+                    <div class="bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 h-10 items-center">
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide">
+                    <button @click="sendMessage('Syarat EMK?')" class="whitespace-nowrap px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs hover:bg-edu-100 text-gray-600 dark:text-gray-300">Syarat EMK?</button>
+                    <button @click="sendMessage('Link Biasiswa?')" class="whitespace-nowrap px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs hover:bg-edu-100 text-gray-600 dark:text-gray-300">Link Biasiswa?</button>
+                    <button @click="sendMessage('TVET OKU')" class="whitespace-nowrap px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs hover:bg-edu-100 text-gray-600 dark:text-gray-300">TVET OKU</button>
+                </div>
+                <form @submit.prevent="sendMessage(userMsg)" class="flex gap-2">
+                    <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-edu-500 dark:text-white">
+                    <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-edu-600 text-white flex items-center justify-center hover:bg-edu-700 disabled:opacity-50 transition">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-edu-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dots text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function eduData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+                activeTab: 'sekolah',
+                chatOpen: false,
+                userMsg: '',
+                isTyping: false,
+                messages: [
+                    { id: 1, text: 'Hai! Saya Cikgu Bot. 🎓<br>Nak tahu tentang <b>Elaun Khas (EMK)</b> atau <b>Biasiswa Universiti</b>?', sender: 'bot' }
+                ],
+
+                // --- DATA TABS ---
+                tabs: [
+                    { id: 'pra', label: { ms: 'Prasekolah', en: 'Preschool' }, icon: 'fas fa-shapes' },
+                    { id: 'sekolah', label: { ms: 'Sekolah (Rendah/Men)', en: 'School (Pri/Sec)' }, icon: 'fas fa-school' },
+                    { id: 'ipt', label: { ms: 'Universiti / IPT', en: 'University' }, icon: 'fas fa-graduation-cap' }
+                ],
+
+                contentData: {
+                    pra: [
+                        {
+                            title: { ms: 'Prasekolah Pendidikan Khas (KPM)', en: 'Special Education Preschool (MOE)' },
+                            desc: { ms: 'Pendidikan awal di sekolah kerajaan dengan fasiliti khas untuk pelbagai kategori OKU seawal umur 4 tahun.', en: 'Early education in gov schools with special facilities for various PWD categories starting age 4.' },
+                            features: [ { ms: 'Intervensi Awal', en: 'Early Intervention' }, { ms: 'Guru Terlatih', en: 'Trained Teachers' } ],
+                            icon: 'fas fa-school',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Program Pendidikan Inklusif (PPI) Prasekolah', en: 'Inclusive Education Program (Preschool)' },
+                            desc: { ms: 'Kanak-kanak OKU tahap ringan belajar bersama murid arus perdana di dalam kelas prasekolah biasa KPM.', en: 'Children with mild disabilities learn alongside mainstream students in regular MOE preschool classes.' },
+                            features: [ { ms: 'Sosialisasi Normal', en: 'Normal Socialization' }, { ms: 'Sokongan Guru Resos', en: 'Resource Teacher Support' } ],
+                            icon: 'fas fa-hands-helping',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Pusat Pemulihan Dalam Komuniti (PDK)', en: 'Community Based Rehab (PDK)' },
+                            desc: { ms: 'Program JKM untuk latihan asas kehidupan, motor kasar & pengurusan diri sebelum masuk sekolah.', en: 'JKM program for basic living skills, gross motor & self-management before school.' },
+                            features: [ { ms: 'Elaun Pelatih RM150', en: 'Trainee Allowance RM150' }, { ms: 'Penglibatan Komuniti', en: 'Community Involvement' } ],
+                            icon: 'fas fa-users',
+                            link: 'https://www.jkm.gov.my/'
+                        },
+                        {
+                            title: { ms: 'Taman Asuhan Kanak-Kanak (TASKA) OKU', en: 'OKU Childcare Centre (TASKA)' },
+                            desc: { ms: 'Taska khas yang disokong oleh JKM untuk mengasuh bayi dan kanak-kanak OKU (0-4 tahun) ketika ibu bapa bekerja.', en: 'Special childcare supported by JKM to care for PWD babies and children (0-4 years) while parents work.' },
+                            features: [ { ms: 'Penjagaan Khusus', en: 'Specialized Care' }, { ms: 'Yuran Bersubsidi', en: 'Subsidized Fees' } ],
+                            icon: 'fas fa-baby',
+                            link: 'https://www.jkm.gov.my/'
+                        },
+                        {
+                            title: { ms: 'Pusat GENIUS Kurnia', en: 'GENIUS Kurnia Centre' },
+                            desc: { ms: 'Program intervensi awal komprehensif di bawah KPM, khusus untuk kanak-kanak penghidap Autisme (terutama keluarga B40).', en: 'Comprehensive early intervention program under MOE, specifically for Autistic children (especially B40 families).' },
+                            features: [ { ms: 'Terapi Khusus Autisme', en: 'Autism-Specific Therapy' }, { ms: 'Latihan Ibu Bapa', en: 'Parental Training' } ],
+                            icon: 'fas fa-brain',
+                            link: 'https://geniuskurnia.moe.gov.my/'
+                        },
+                        {
+                            title: { ms: 'IDEAS Autism Centre (IAC)', en: 'IDEAS Autism Centre (IAC)' },
+                            desc: { ms: 'Pusat jagaan & intervensi awal NGO yang memfokuskan penjagaan sepenuh masa khusus untuk anak Autisme dari keluarga B40.', en: 'NGO care & early intervention centre focusing on full-time care specifically for Autistic children from B40 families.' },
+                            features: [ { ms: 'Fokus B40', en: 'B40 Focus' }, { ms: 'Penjagaan Sepenuh Masa', en: 'Full-time Care' } ],
+                            icon: 'fas fa-hand-holding-heart',
+                            link: 'https://www.ideasautismcentre.com/'
+                        },
+                        {
+                            title: { ms: 'Program Intervensi Awal NASOM', en: 'NASOM Early Intervention Program' },
+                            desc: { ms: 'Disediakan oleh Persatuan Kebangsaan Autisme Malaysia (NASOM) untuk saringan, diagnosis dan terapi tingkah laku (ABA).', en: 'Provided by the National Autism Society of Malaysia (NASOM) for screening, diagnosis, and behavioral therapy (ABA).' },
+                            features: [ { ms: 'Terapi Tingkah Laku', en: 'Behavioral Therapy' }, { ms: 'Cawangan Seluruh Negara', en: 'Nationwide Branches' } ],
+                            icon: 'fas fa-puzzle-piece',
+                            link: 'https://www.nasom.org.my/'
+                        },
+                        {
+                            title: { ms: 'Program Intervensi Kiwanis (Sindrom Down)', en: 'Kiwanis Intervention (Down Syndrome)' },
+                            desc: { ms: 'Pusat khusus oleh Yayasan Kiwanis untuk merangsang perkembangan kognitif dan motor bayi/kanak-kanak Sindrom Down.', en: 'Specialized centre by Kiwanis Foundation to stimulate cognitive and motor development of Down Syndrome babies/children.' },
+                            features: [ { ms: 'Pakar Sindrom Down', en: 'Down Syndrome Experts' }, { ms: 'Terapi Pertuturan', en: 'Speech Therapy' } ],
+                            icon: 'fas fa-smile',
+                            link: 'https://kdsf.org.my/'
+                        },
+                        {
+                            title: { ms: 'Persatuan Kanak-Kanak Spastik (Cerebral Palsy)', en: 'Spastic Children\'s Association (CP)' },
+                            desc: { ms: 'Menawarkan rawatan fisioterapi intensif, terapi hidro dan pra-pendidikan untuk kanak-kanak dengan kondisi Cerebral Palsy.', en: 'Offers intensive physiotherapy, hydrotherapy, and pre-education for children with Cerebral Palsy conditions.' },
+                            features: [ { ms: 'Fisioterapi Intensif', en: 'Intensive Physiotherapy' }, { ms: 'Sokongan Kerusi Roda', en: 'Wheelchair Support' } ],
+                            icon: 'fas fa-crutch',
+                            link: 'https://scasft.org/'
+                        },
+                        {
+                            title: { ms: 'Taska Istika Jaya / MFD (Masalah Pendengaran)', en: 'Taska Istika Jaya / MFD (Hearing Impaired)' },
+                            desc: { ms: 'Taska seliaan Persekutuan Orang Pekak Malaysia (MFD) untuk mengajar asas Bahasa Isyarat (BIM) sejak bayi.', en: 'Preschool managed by the Malaysian Federation of the Deaf (MFD) to teach basic Sign Language (BIM) from infancy.' },
+                            features: [ { ms: 'Asas Bahasa Isyarat', en: 'Basic Sign Language' }, { ms: 'Komuniti Pekak', en: 'Deaf Community' } ],
+                            icon: 'fas fa-deaf',
+                            link: 'https://www.mymfd.org.my/'
+                        },
+                        {
+                            title: { ms: 'Pusat Intervensi Penglihatan (SBM / St. Nicholas)', en: 'Visual Intervention Centre (SBM / St. Nicholas)' },
+                            desc: { ms: 'Pusat pendedahan awal kepada kanak-kanak buta/rabun teruk untuk belajar deria sentuhan, orientasi mobiliti dan asas Braille.', en: 'Early exposure centre for blind/visually impaired children to learn tactile senses, orientation mobility, and basic Braille.' },
+                            features: [ { ms: 'Latihan Mobiliti', en: 'Mobility Training' }, { ms: 'Asas Braille', en: 'Basic Braille' } ],
+                            icon: 'fas fa-blind',
+                            link: 'https://snh.org.my/'
+                        },
+                        {
+                            title: { ms: 'Program Intervensi Disleksia (PDM)', en: 'Dyslexia Intervention Program (PDM)' },
+                            desc: { ms: 'Kelas prasekolah khusus dari Persatuan Disleksia Malaysia untuk membina asas literasi, membaca, dan mengeja dengan kaedah khas.', en: 'Special preschool classes from Dyslexia Association of Malaysia to build literacy, reading, and spelling basics using special methods.' },
+                            features: [ { ms: 'Fokus Literasi/Membaca', en: 'Literacy/Reading Focus' }, { ms: 'Kaedah Multi-Sensori', en: 'Multi-Sensory Methods' } ],
+                            icon: 'fas fa-book-open',
+                            link: 'http://www.dyslexiamalaysia.org.my/'
+                        },
+                        {
+                            title: { ms: 'Malaysian Care (Pendidikan Awal Komuniti)', en: 'Malaysian Care (Community Early Ed)' },
+                            desc: { ms: 'NGO yang menyediakan perkhidmatan intervensi awal, playgroup, dan latihan mengurus diri terutamanya di kawasan miskin bandar.', en: 'NGO providing early intervention services, playgroups, and self-management training, especially in urban poor areas.' },
+                            features: [ { ms: 'Sokongan Komuniti', en: 'Community Support' }, { ms: 'Sesi Playgroup', en: 'Playgroup Sessions' } ],
+                            icon: 'fas fa-seedling',
+                            link: 'https://www.malaysiancare.org/'
+                        },
+                        {
+                            title: { ms: 'Unit Rehabilitasi Pediatrik Hospital Kerajaan', en: 'Gov Hospital Pediatric Rehab Unit' },
+                            desc: { ms: 'Sesi rawatan awal di jabatan pemulihan hospital (Terapi Pertuturan & Carakerja) sebelum kanak-kanak cukup umur masuk sekolah.', en: 'Early treatment sessions at hospital rehab departments (Speech & Occupational Therapy) before children reach school age.' },
+                            features: [ { ms: 'Rujukan Doktor Pakar', en: 'Specialist Referral' }, { ms: 'Kos Hampir Percuma', en: 'Almost Free Cost' } ],
+                            icon: 'fas fa-hospital-alt',
+                            link: 'https://www.moh.gov.my/'
+                        },
+                        {
+                            title: { ms: 'Pusat Perkhidmatan Pendidikan Khas (3PK)', en: 'Special Education Service Centre (3PK)' },
+                            desc: { ms: 'Pusat sokongan KPM pelbagai profesional (Audiologi, Psikologi) untuk saringan & intervensi sebelum kanak-kanak masuk sekolah.', en: 'Multi-professional MOE support centre (Audiology, Psychology) for screening & intervention before school entry.' },
+                            features: [ { ms: 'Saringan Penempatan', en: 'Placement Screening' }, { ms: 'Sokongan Alat Bantu', en: 'Assistive Device Support' } ],
+                            icon: 'fas fa-stethoscope',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas/pusat-perkhidmatan-pendidikan-khas-3pk'
+                        },
+                        {
+                            title: { ms: 'Tabika KEMAS / Perpaduan', en: 'KEMAS / Unity Preschool' },
+                            desc: { ms: 'Prasekolah kerajaan di luar bandar/taman perumahan yang turut menerima kanak-kanak OKU tahap ringan (inklusi tidak formal).', en: 'Government preschools in rural/residential areas that accept mild special needs children (informal inclusion).' },
+                            features: [ { ms: 'Yuran Sangat Rendah', en: 'Very Low Fees' }, { ms: 'Akses Mudah / Komuniti', en: 'Easy/Community Access' } ],
+                            icon: 'fas fa-home',
+                            link: 'https://www.kemas.gov.my/'
+                        },
+                        {
+                            title: { ms: 'Pusat EIP & Terapi Swasta', en: 'Private EIP & Therapy Centres' },
+                            desc: { ms: 'Pusat komersial yang menawarkan Terapi Pertuturan (ST), Terapi Carakerja (OT), dan kelas persediaan sekolah dengan jadual anjal.', en: 'Commercial centres offering Speech Therapy (ST), Occupational Therapy (OT), and school prep classes with flexible schedules.' },
+                            features: [ { ms: 'Nisbah 1-to-1', en: '1-to-1 Ratio' }, { ms: 'Rawatan Ekstensif', en: 'Extensive Treatment' } ],
+                            icon: 'fas fa-clinic-medical',
+                            link: '#'
+                        },
+                        {
+                            title: { ms: 'Rangkaian Homeschooling Khas', en: 'Special Needs Homeschooling Network' },
+                            desc: { ms: 'Pilihan pendidikan di rumah yang dikendalikan oleh ibu bapa atau pusat swasta berskala kecil mengikut kurikulum tersuai (custom).', en: 'Home-based education run by parents or small-scale private centres following customized curriculums.' },
+                            features: [ { ms: 'Pembelajaran Tersuai', en: 'Customized Learning' }, { ms: 'Persekitaran Selamat', en: 'Safe Environment' } ],
+                            icon: 'fas fa-laptop-house',
+                            link: '#'
+                        }
+                    ],
+
+                    sekolah: [
+                        {
+                            title: { ms: 'Sekolah Pendidikan Khas (SPK)', en: 'Special Education Schools (SPK)' },
+                            desc: { ms: 'Sekolah KPM yang berasingan dan khusus sepenuhnya untuk murid OKU (Penglihatan, Pendengaran, Pembelajaran).', en: 'Separate MOE schools fully dedicated to PWD students (Visual, Hearing, Learning Disabilities).' },
+                            features: [ { ms: 'Asrama Penuh/Harian', en: 'Full/Day Boarding' }, { ms: 'Fasiliti 100% OKU', en: '100% PWD Facilities' } ],
+                            icon: 'fas fa-building',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Program Pendidikan Khas Integrasi (PPKI)', en: 'Special Ed Integration Program (PPKI)' },
+                            desc: { ms: 'Kelas khas (pengasingan terancang) untuk murid OKU yang terletak di dalam sekolah harian perdana biasa.', en: 'Special classes (planned segregation) for PWD students located within regular mainstream daily schools.' },
+                            features: [ { ms: 'Rancangan Pendidikan Individu (RPI)', en: 'Individualized Education Plan (IEP)' }, { ms: 'Elaun EMK RM150', en: 'EMK Allowance RM150' } ],
+                            icon: 'fas fa-users-class',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Program Pendidikan Inklusif (PPI)', en: 'Inclusive Education Program (PPI)' },
+                            desc: { ms: 'Murid OKU tahap ringan belajar bersama murid biasa di dalam kelas arus perdana yang sama (Penuh/Separa).', en: 'Mild-level PWD students learn together with typical students in the same mainstream class (Full/Partial).' },
+                            features: [ { ms: 'Sosialisasi Maksima', en: 'Max Socialization' }, { ms: 'Guru Resos Pend. Khas', en: 'Special Ed Resource Teacher' } ],
+                            icon: 'fas fa-hands-helping',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Sekolah Menengah Pendidikan Khas Vokasional (SMPKV)', en: 'Special Ed Vocational Secondary (SMPKV)' },
+                            desc: { ms: 'Sekolah menengah KPM memfokuskan Sijil Kemahiran Malaysia (SKM) untuk remaja OKU (cth: SMPKV Indahpura).', en: 'MOE secondary schools focusing on Malaysian Skills Certificate (SKM) for PWD teens (e.g., SMPKV Indahpura).' },
+                            features: [ { ms: 'Sijil SKM Diiktiraf', en: 'Recognized SKM Cert' }, { ms: 'Persediaan Industri', en: 'Industry Preparation' } ],
+                            icon: 'fas fa-tools',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Program Transisi Ke Kerjaya (PTK)', en: 'Transition to Career Program (PTK)' },
+                            desc: { ms: 'Modul khas di peringkat menengah (PPKI/SPK) untuk menyediakan remaja OKU melangkah ke alam pekerjaan sebenar.', en: 'Special module at secondary level (PPKI/SPK) to prepare PWD teens to step into the real working world.' },
+                            features: [ { ms: 'Latihan Amali Kerja', en: 'Practical Work Training' }, { ms: 'Sokongan Job Coach', en: 'Job Coach Support' } ],
+                            icon: 'fas fa-briefcase',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Sekolah Dalam Hospital (SDH)', en: 'School in Hospital (SDH)' },
+                            desc: { ms: 'Pendidikan berterusan bagi murid OKU atau berpenyakit kronik yang terpaksa terlantar lama di wad hospital kerajaan.', en: 'Continuous education for PWD or chronically ill students who are bedridden for long periods in gov hospitals.' },
+                            features: [ { ms: 'Kerjasama KPM & KKM', en: 'MOE & MOH Collab' }, { ms: 'Pembelajaran Tepi Katil', en: 'Bedside Learning' } ],
+                            icon: 'fas fa-hospital-user',
+                            link: 'https://www.moe.gov.my/pendidikan/pendidikan-khas'
+                        },
+                        {
+                            title: { ms: 'Pendidikan Di Rumah (Homeschooling JPN)', en: 'Homeschooling (JPN Approved)' },
+                            desc: { ms: 'Pengecualian persekolahan wajib dari JPN untuk ibu bapa yang mendidik anak OKU tahap teruk di rumah sendiri.', en: 'Compulsory schooling exemption from JPN for parents educating severe-level PWD children at home.' },
+                            features: [ { ms: 'Kelulusan KPM/JPN', en: 'MOE/JPN Approval' }, { ms: 'Silibus Anjal/Khas', en: 'Flexible/Special Syllabus' } ],
+                            icon: 'fas fa-house-user',
+                            link: 'https://www.moe.gov.my/'
+                        },
+                        {
+                            title: { ms: 'PDK (Bagi Remaja & Belia OKU)', en: 'CBR (For PWD Teens & Youth)' },
+                            desc: { ms: 'Pusat Pemulihan Dalam Komuniti (JKM) khusus bagi OKU yang tidak melepasi syarat saringan ke sekolah KPM.', en: 'Community Based Rehab (JKM) specifically for PWDs who do not pass the screening requirements for MOE schools.' },
+                            features: [ { ms: 'Latihan Pengurusan Diri', en: 'Self-Management Training' }, { ms: 'Vokasional Asas (Kraf/Bakeri)', en: 'Basic Voc (Crafts/Bakery)' } ],
+                            icon: 'fas fa-people-carry',
+                            link: 'https://www.jkm.gov.my/'
+                        },
+                        {
+                            title: { ms: 'Sekolah Swasta / Antarabangsa OKU', en: 'Private / International PWD Schools' },
+                            desc: { ms: 'Sekolah swasta (cth: Taarana, Sri Eden) yang menawarkan kurikulum inklusif, unit sokongan khas dan terapi dalaman.', en: 'Private schools (e.g. Taarana, Sri Eden) offering inclusive curriculum, special support units and in-house therapy.' },
+                            features: [ { ms: 'Nisbah Kelas Sangat Kecil', en: 'Very Small Class Ratio' }, { ms: 'Terapi Bersepadu', en: 'Integrated Therapy' } ],
+                            icon: 'fas fa-graduation-cap',
+                            link: '#'
+                        },
+                        {
+                            title: { ms: 'NASOM (Aliran Transisi & Vokasional)', en: 'NASOM (Transition & Vocational)' },
+                            desc: { ms: 'Program NGO khusus untuk remaja Autisme bagi membina kemahiran hidup berdikari, sosial dan pra-pekerjaan.', en: 'NGO program specifically for Autistic teens to build independent living, social, and pre-employment skills.' },
+                            features: [ { ms: 'Pakar Autisme', en: 'Autism Experts' }, { ms: 'Bengkel Kemahiran', en: 'Skills Workshop' } ],
+                            icon: 'fas fa-puzzle-piece',
+                            link: 'https://www.nasom.org.my/'
+                        },
+                        {
+                            title: { ms: 'Sekolah Khas Cerebral Palsy (SCAS&FT)', en: 'Cerebral Palsy Special School' },
+                            desc: { ms: 'Pendidikan khas aliran akademik yang disepadukan sepenuhnya dengan rawatan rehabilitasi fizikal dan carakerja.', en: 'Academic special education fully integrated with physical and occupational rehabilitation treatments.' },
+                            features: [ { ms: 'Fisioterapi Harian', en: 'Daily Physiotherapy' }, { ms: 'Fasiliti Kerusi Roda Penuh', en: 'Full Wheelchair Facilities' } ],
+                            icon: 'fas fa-wheelchair',
+                            link: 'https://scasft.org/'
+                        },
+                        {
+                            title: { ms: 'Kelas Intervensi Disleksia (PDM)', en: 'Dyslexia Intervention Classes (PDM)' },
+                            desc: { ms: 'Program tuisyen dan intervensi membaca/menulis khusus oleh Persatuan Disleksia Malaysia (Rendah & Menengah).', en: 'Specific tuition and reading/writing intervention programs by Dyslexia Association of Malaysia (Primary & Secondary).' },
+                            features: [ { ms: 'Program Intensif', en: 'Intensive Program' }, { ms: 'Kaedah Multisensori', en: 'Multisensory Methods' } ],
+                            icon: 'fas fa-book-reader',
+                            link: 'http://www.dyslexiamalaysia.org.my/'
+                        },
+                        {
+                            title: { ms: 'Sokongan Pendidikan MFD (Pekak/Bisu)', en: 'MFD Educational Support (Deaf)' },
+                            desc: { ms: 'NGO yang menyediakan kelas tuisyen tambahan, penterjemah Bahasa Isyarat (BIM), dan sokongan untuk pelajar pekak.', en: 'NGO providing extra tuition classes, Sign Language (BIM) interpreters, and support for deaf students.' },
+                            features: [ { ms: 'Penterjemah BIM', en: 'BIM Interpreters' }, { ms: 'Sokongan Akademik', en: 'Academic Support' } ],
+                            icon: 'fas fa-sign-language',
+                            link: 'https://www.mymfd.org.my/'
+                        },
+                        {
+                            title: { ms: 'St. Nicholas Home / MAB (Penglihatan)', en: 'St. Nicholas Home / MAB (Visual)' },
+                            desc: { ms: 'Pusat NGO bagi pelajar buta/rabun teruk mendapatkan latihan mesin Braille, orientasi mobiliti dan perisian skrin komputer.', en: 'NGO centres for blind/severe visually impaired students to get Braille machine training, mobility orientation and screen software.' },
+                            features: [ { ms: 'Teknologi Asistif', en: 'Assistive Tech' }, { ms: 'Latihan ICT Braille', en: 'Braille ICT Training' } ],
+                            icon: 'fas fa-blind',
+                            link: 'https://snh.org.my/'
+                        }
+                    ],
+                    
+                    ipt: [
+                        // --- KATEGORI: UNIVERSITI AWAM (KPT) ---
+                        {
+                            title: { ms: 'Laluan Khas UPUOnline (OKU)', en: 'UPUOnline Special Track (OKU)' },
+                            desc: { ms: 'Laluan khas kemasukan ke 20 Universiti Awam, Politeknik, Kolej Komuniti & ILKA dengan kelonggaran syarat minimum.', en: 'Special admission track to 20 Public Universities, Polytechnics, Community Colleges & ILKA with relaxed minimum requirements.' },
+                            features: [ { ms: 'Lepasan SPM/STPM', en: 'SPM/STPM Leavers' }, { ms: 'Kelonggaran Syarat', en: 'Flexible Requirements' } ],
+                            icon: 'fas fa-door-open',
+                            link: 'https://upu.mohe.gov.my/'
+                        },
+                        {
+                            title: { ms: 'Universiti Malaya (Unit OKU)', en: 'Universiti Malaya (OKU Unit)' },
+                            desc: { ms: 'Perintis dasar inklusif. Mempunyai kemudahan mesra kerusi roda yang luas, pengangkutan bas khas OKU, dan bilik sumber khas.', en: 'Pioneer in inclusive policies. Features extensive wheelchair-friendly facilities, special buses, and resource rooms.' },
+                            features: [ { ms: 'Bas Khas OKU', en: 'Special OKU Bus' }, { ms: 'Pusat Sumber Inklusif', en: 'Inclusive Resource Centre' } ],
+                            icon: 'fas fa-university',
+                            link: 'https://inklusi.um.edu.my/'
+                        },
+                        {
+                            title: { ms: 'UiTM (Unit Perkhidmatan OKU - UPOKU)', en: 'UiTM (OKU Services Unit)' },
+                            desc: { ms: 'Menyelaras pendaftaran, kemudahan penginapan aras bawah, bas mesra kerusi roda dan sokongan akademik pelajar OKU Bumiputera.', en: 'Coordinates registration, ground-floor accommodation, accessible buses, and academic support.' },
+                            features: [ { ms: 'Kolej Kediaman Khas', en: 'Special Colleges' }, { ms: 'Bantuan Peperiksaan', en: 'Exam Assistance' } ],
+                            icon: 'fas fa-graduation-cap',
+                            link: 'https://upoku.uitm.edu.my/'
+                        },
+                        {
+                            title: { ms: 'UIAM / IIUM (Disability Services Unit)', en: 'IIUM (Disability Services Unit)' },
+                            desc: { ms: 'Sangat mesra OKU fizikal dan penglihatan. UIAM mempunyai DSU yang aktif menyokong bahan bacaan Braille dan fasiliti antarabangsa.', en: 'Highly accessible for physical & visual disabilities. IIUM has an active DSU supporting Braille materials.' },
+                            features: [ { ms: 'Mesin Cetak Braille', en: 'Braille Printing' }, { ms: 'Mobiliti Kampus', en: 'Campus Mobility' } ],
+                            icon: 'fas fa-mosque',
+                            link: 'https://www.iium.edu.my/office/dsu'
+                        },
+                        {
+                            title: { ms: 'USM (Unit Perkhidmatan OKU)', en: 'USM (OKU Services Unit)' },
+                            desc: { ms: 'USM Pulau Pinang mempunyai Pusat Sejahtera dan Unit OKU yang aktif memastikan fasiliti dewan kuliah dan asrama boleh diakses sepenuhnya.', en: 'USM ensures lecture halls and dormitories are fully accessible through their OKU unit.' },
+                            features: [ { ms: 'Sokongan Psikologi', en: 'Psychological Support' }, { ms: 'Fasiliti Boleh Akses', en: 'Accessible Facilities' } ],
+                            icon: 'fas fa-university',
+                            link: 'https://hepa.usm.my/'
+                        },
+                        {
+                            title: { ms: 'UKM (Pusat Pemerkasaan Pelajar)', en: 'UKM (Student Empowerment Centre)' },
+                            desc: { ms: 'UKM amat terkenal dengan pendidikan inklusif, menyediakan perkhidmatan sokongan mobiliti, akademik dan kebajikan untuk pelajar OKU.', en: 'Known for inclusive education, providing mobility, academic, and welfare support.' },
+                            features: [ { ms: 'Sokongan Mobiliti', en: 'Mobility Support' }, { ms: 'Sukarelawan OKU', en: 'OKU Volunteers' } ],
+                            icon: 'fas fa-book-reader',
+                            link: 'https://www.ukm.my/hep/'
+                        },
+                        {
+                            title: { ms: 'UPM (Sokongan Inklusif OKU)', en: 'UPM (Inclusive OKU Support)' },
+                            desc: { ms: 'Menyediakan kemudahan asrama OKU di Kolej Canselor, kenderaan buggy khas, dan laluan landai di seluruh fakulti utama.', en: 'Provides special OKU dorms, buggy vehicles, and ramps across major faculties.' },
+                            features: [ { ms: 'Pengangkutan Buggy', en: 'Buggy Transport' }, { ms: 'Kolej Canselor (OKU)', en: 'Chancellor College' } ],
+                            icon: 'fas fa-leaf',
+                            link: 'https://hep.upm.edu.my/'
+                        },
+                        {
+                            title: { ms: 'UTM (Unit Perkhidmatan Sokongan OKU)', en: 'UTM (OKU Support Services)' },
+                            desc: { ms: 'UTM komited dalam kebolehcapaian fizikal dan digital, memastikan pelajar OKU mendapat kesamarataan dalam fasiliti pembelajaran.', en: 'Committed to physical and digital accessibility, ensuring equal learning facilities.' },
+                            features: [ { ms: 'Kebolehcapaian Digital', en: 'Digital Accessibility' }, { ms: 'Laluan Mesra OKU', en: 'OKU Friendly Pathways' } ],
+                            icon: 'fas fa-building',
+                            link: 'https://www.utm.my/'
+                        },
+                        {
+                            title: { ms: 'UPSI (Pendidikan Khas & Sokongan)', en: 'UPSI (Special Ed & Support)' },
+                            desc: { ms: 'Selain melahirkan guru pendidikan khas, kampus UPSI sendiri amat mesra OKU dan mempunyai pusat sokongan pelajar yang proaktif.', en: 'Besides producing special ed teachers, the campus is OKU-friendly with proactive support.' },
+                            features: [ { ms: 'Pusat Transformasi', en: 'Transformation Centre' }, { ms: 'Bimbingan Kerjaya', en: 'Career Guidance' } ],
+                            icon: 'fas fa-chalkboard-teacher',
+                            link: 'https://www.upsi.edu.my/'
+                        },
+
+                        // --- KATEGORI: IPTS & PEMBELAJARAN JARAK JAUH ---
+                        {
+                            title: { ms: 'Sunway University (Kampus Inklusif)', en: 'Sunway University (Inclusive Campus)' },
+                            desc: { ms: 'Antara IPTS paling mesra OKU di Malaysia. Fasiliti bersambung (canopy walk) mesra kerusi roda sepenuhnya, tandas OKU, dan sokongan kesihatan mental.', en: 'Among the most OKU-friendly private unis. Fully wheelchair-friendly connected canopy walks.' },
+                            features: [ { ms: 'Fasiliti Premium', en: 'Premium Facilities' }, { ms: 'Laluan Bersambung', en: 'Connected Pathways' } ],
+                            icon: 'fas fa-city',
+                            link: 'https://sunwayuniversity.edu.my/'
+                        },
+                        {
+                            title: { ms: 'Monash University Malaysia (DSS)', en: 'Monash Malaysia (DSS)' },
+                            desc: { ms: 'Mempunyai Disability Support Services (DSS) yang mendaftar pelajar OKU untuk pelarasan masa peperiksaan, bahan alternatif dan aksesibiliti.', en: 'Disability Support Services adjusts exam times, alternative materials, and accessibility.' },
+                            features: [ { ms: 'Pelarasan Peperiksaan', en: 'Exam Adjustments' }, { ms: 'Bahan Alternatif', en: 'Alternative Materials' } ],
+                            icon: 'fas fa-globe',
+                            link: 'https://www.monash.edu.my/'
+                        },
+                        {
+                            title: { ms: 'Open University Malaysia (OUM)', en: 'Open University Malaysia (OUM)' },
+                            desc: { ms: 'Sangat sesuai untuk OKU fizikal parah kerana menawarkan mod pembelajaran dalam talian sepenuhnya (ODL) dengan potongan yuran khas OKU.', en: 'Ideal for severe physical disabilities offering full online learning (ODL) with special OKU fee discounts.' },
+                            features: [ { ms: 'Belajar Dari Rumah', en: 'Study From Home' }, { ms: 'Diskaun Yuran OKU', en: 'OKU Fee Discount' } ],
+                            icon: 'fas fa-laptop-house',
+                            link: 'https://www.oum.edu.my/'
+                        },
+
+                        // --- KATEGORI: TVET & KEMAHIRAN (KERAJAAN) ---
+                        {
+                            title: { ms: 'Politeknik (Laluan Khas Pendengaran)', en: 'Polytechnics (Hearing Impaired)' },
+                            desc: { ms: 'Program Sijil Kemahiran Khas di PSA Shah Alam, PUO Ipoh & PIS Johor. Menyediakan kursus katering, reka bentuk grafik & penyenggaraan mekanikal.', en: 'Special Skills Cert at PSA, PUO & PIS. Offers catering, graphic design & mechanical maintenance.' },
+                            features: [ { ms: 'Juru Bahasa Isyarat', en: 'Sign Language Interpreters' }, { ms: 'Sijil Kemahiran Khas', en: 'Special Skills Cert' } ],
+                            icon: 'fas fa-hands',
+                            link: 'https://www.politeknik.edu.my/'
+                        },
+                        {
+                            title: { ms: 'Kolej Komuniti (Sijil Asas Pembelajaran)', en: 'Community Colleges (Learning Disabilities)' },
+                            desc: { ms: 'Program Sijil Asas Khas di lebih 10 Kolej Komuniti (cth: Selayang, Masjid Tanah) khusus untuk OKU Masalah Pembelajaran (Autisme, Sindrom Down).', en: 'Basic Special Cert programs at 10+ Community Colleges for Learning Disabilities.' },
+                            features: [ { ms: 'Fokus Praktikal', en: 'Practical Focus' }, { ms: 'Yuran Rendah', en: 'Low Fees' } ],
+                            icon: 'fas fa-hammer',
+                            link: 'https://www.mypolycc.edu.my/'
+                        },
+                        {
+                            title: { ms: 'PLPP Bangi (KPWKM / JKM)', en: 'PLPP Bangi (KPWKM / JKM)' },
+                            desc: { ms: 'Pusat Latihan Perindustrian & Pemulihan (PLPP) untuk OKU Fizikal. Menyediakan Sijil Kemahiran Malaysia (SKM) jahit, komputer, elektrik & prostetik.', en: 'Offers SKM in sewing, IT, electrical & prosthetics. Full boarding provided.' },
+                            features: [ { ms: 'Elaun Bulanan', en: 'Monthly Allowance' }, { ms: 'Sijil SKM Diiktiraf', en: 'Recognized SKM Cert' } ],
+                            icon: 'fas fa-wheelchair',
+                            link: 'https://www.jkm.gov.my/'
+                        },
+                        {
+                            title: { ms: 'GIATMARA (Program Inklusif)', en: 'GIATMARA (Inclusive Program)' },
+                            desc: { ms: 'Menerima pelatih OKU yang mampu mengurus diri untuk menyertai kursus TVET jangka pendek seperti kulinari, jahitan dan automotif.', en: 'Accepts self-manageable PWDs for short-term TVET courses like culinary, tailoring, etc.' },
+                            features: [ { ms: 'Kursus Jangka Pendek', en: 'Short-term Courses' }, { ms: 'Kemahiran Usahawan', en: 'Entrepreneurial Skills' } ],
+                            icon: 'fas fa-tools',
+                            link: 'https://giatmara.edu.my/'
+                        },
+                        {
+                            title: { ms: 'ILKBS (Belia & Sukan)', en: 'ILKBS (Youth & Sports)' },
+                            desc: { ms: 'Institut Latihan Kemahiran Belia & Sukan (IKBN/IKTBN) mempunyai kuota khas untuk belia OKU lepasan sekolah dalam bidang teknikal & masakan.', en: 'Youth & Sports Institutes have special quotas for OKU school leavers in technical fields.' },
+                            features: [ { ms: 'Latihan Teknikal', en: 'Technical Training' }, { ms: 'Penempatan Industri', en: 'Industry Placement' } ],
+                            icon: 'fas fa-cogs',
+                            link: 'https://kemahiran.kbs.gov.my/'
+                        },
+                        {
+                            title: { ms: 'Sistem Latihan Dual Nasional (SLDN) OKU', en: 'National Dual Training System (SLDN)' },
+                            desc: { ms: 'Program anjuran Jabatan Pembangunan Kemahiran (JPK) di mana OKU dilatih terus di tempat kerja (industri) sambil mendapat sijil kemahiran.', en: 'JPK program where PWDs are trained directly at the workplace (industry) while getting certified.' },
+                            features: [ { ms: 'Belajar Sambil Bekerja', en: 'Learn and Earn' }, { ms: 'Pengalaman Industri', en: 'Industry Experience' } ],
+                            icon: 'fas fa-industry',
+                            link: 'https://www.dsd.gov.my/'
+                        },
+
+                        // --- KATEGORI: NGO & VOKASIONAL SOKONGAN ---
+                        {
+                            title: { ms: 'Pusat Latihan Gurney MAB (Penglihatan)', en: 'MAB Gurney Training Centre (Visual)' },
+                            desc: { ms: 'Latihan terapi urutan bertauliah, refleksologi, ICT, dan pengurusan pusat panggilan khas untuk cacat penglihatan.', en: 'Certified massage therapy, reflexology, ICT, and call center management for the blind.' },
+                            features: [ { ms: 'Sijil Urutan', en: 'Massage Cert' }, { ms: 'Asrama Penuh', en: 'Full Boarding' } ],
+                            icon: 'fas fa-eye-slash',
+                            link: 'https://mab.org.my/'
+                        },
+                        {
+                            title: { ms: 'Persatuan Orang Pekak Malaysia (MFD)', en: 'Malaysian Federation of the Deaf (MFD)' },
+                            desc: { ms: 'Menawarkan pusat latihan vokasional, penyediaan makanan dan teknologi maklumat dengan sokongan penuh bahasa isyarat.', en: 'Vocational, food prep, and IT training with full sign language support.' },
+                            features: [ { ms: 'Persekitaran BIM 100%', en: '100% BIM Environment' }, { ms: 'Bantuan Penempatan', en: 'Placement Assistance' } ],
+                            icon: 'fas fa-sign-language',
+                            link: 'https://www.mfd.org.my/'
+                        },
+                        {
+                            title: { ms: 'Pusat Majudiri Y (YMCA KL)', en: 'Pusat Majudiri Y (YMCA KL)' },
+                            desc: { ms: 'Pusat pembangunan belia pekak yang menawarkan program kepimpinan, latihan vokasional, kelas IT dan Bahasa Isyarat.', en: 'Deaf youth development center offering leadership, vocational, IT, and sign language classes.' },
+                            features: [ { ms: 'Pembangunan Belia', en: 'Youth Development' }, { ms: 'Latihan Vokasional', en: 'Vocational Training' } ],
+                            icon: 'fas fa-users-cog',
+                            link: 'https://www.ymcakl.com/'
+                        },
+                        {
+                            title: { ms: 'Cheshire Home (Program EEP)', en: 'Cheshire Home (EEP Program)' },
+                            desc: { ms: 'Program Pemerkasaan Ekonomi (EEP) melatih OKU fizikal & pembelajaran dalam bidang hospitaliti, bakeri dan data entri untuk penempatan kerja.', en: 'Economic Empowerment Programme trains in hospitality, bakery, and data entry.' },
+                            features: [ { ms: 'Penempatan Kerja Swasta', en: 'Private Job Placement' }, { ms: 'Sokongan Berterusan', en: 'Ongoing Support' } ],
+                            icon: 'fas fa-briefcase',
+                            link: 'https://cheshiremalaysia.org/'
+                        },
+                        {
+                            title: { ms: 'Beautiful Gate Foundation', en: 'Beautiful Gate Foundation' },
+                            desc: { ms: 'Menyediakan latihan teknikal seperti baik pulih komputer, e-dagang, kraf kitar semula, dan bengkel perlindungan untuk OKU fizikal.', en: 'Provides technical training (PC repair, e-commerce) and sheltered workshops for physical PWDs.' },
+                            features: [ { ms: 'Kelas Asas Berdikari', en: 'Independent Living' }, { ms: 'Bengkel Perlindungan', en: 'Sheltered Workshop' } ],
+                            icon: 'fas fa-laptop-medical',
+                            link: 'https://beautifulgate.org.my/'
+                        },
+                        {
+                            title: { ms: 'Persatuan Sindrom Down (PSDM)', en: 'Down Syndrome Association (PSDM)' },
+                            desc: { ms: 'Mempunyai Pusat Latihan Vokasional yang fokus kepada kemahiran katering, jahitan asuhan, kraf tangan, dan perkhidmatan dobi.', en: 'Vocational Training Centre focusing on catering, sewing, crafts, and laundry services.' },
+                            features: [ { ms: 'Latihan Dobi & Bakeri', en: 'Laundry & Bakery' }, { ms: 'Kemahiran Sosial', en: 'Social Skills' } ],
+                            icon: 'fas fa-tshirt',
+                            link: 'https://www.downsyndromemalaysia.org/'
+                        },
+                        {
+                            title: { ms: 'Pusat Vokasional NASOM (Autisme)', en: 'NASOM Vocational Centres (Autism)' },
+                            desc: { ms: 'Menyediakan latihan kemahiran hidup dan vokasional seperti membuat roti, membasuh kereta, pertanian bandar dan kraf tangan untuk belia Autisme.', en: 'Vocational skills like baking, car wash, urban farming, and crafts for youths with Autism.' },
+                            features: [ { ms: 'Pertanian & Bakeri', en: 'Farming & Bakery' }, { ms: 'Terapi Tingkah Laku', en: 'Behavioral Therapy' } ],
+                            icon: 'fas fa-seedling',
+                            link: 'https://www.nasom.org.my/'
+                        },
+                        {
+                            title: { ms: 'United Voice (Supported Employment)', en: 'United Voice (Supported Employment)' },
+                            desc: { ms: 'Persatuan advokasi-sendiri untuk OKU pembelajaran. Mereka menjalankan projek perusahaan sosial (bakeri, tenunan seni) yang menggaji OKU.', en: 'Self-advocacy society. Runs social enterprises (bakery, art weaving) employing PWDs.' },
+                            features: [ { ms: 'Advokasi Sendiri', en: 'Self-Advocacy' }, { ms: 'Perusahaan Sosial', en: 'Social Enterprise' } ],
+                            icon: 'fas fa-cookie-bite',
+                            link: 'https://www.unitedvoice.com.my/'
+                        },
+                        {
+                            title: { ms: 'STAND (Pie & Tart Project)', en: 'STAND (Pie & Tart Project)' },
+                            desc: { ms: 'Satu inisiatif latihan pekerjaan (bakeri khas pie dan tart) untuk belia yang mempunyai cabaran pembelajaran dan autisme ringan.', en: 'An employment training initiative (specializing in pies and tarts) for youths with learning challenges.' },
+                            features: [ { ms: 'Latihan Bakeri Praktikal', en: 'Practical Baking Training' }, { ms: 'Elaun Pekerja', en: 'Worker Allowance' } ],
+                            icon: 'fas fa-pizza-slice',
+                            link: 'https://www.stand.org.my/'
+                        }
+                    ]
+                },
+
+                // --- DATA BANTUAN ---
+                // --- DATA BANTUAN KEWANGAN & BIASISWA (MEGA UPDATE) ---
+                aids: [
+                    // --- PERINGKAT SEKOLAH & ASAS ---
+                    {
+                        provider: 'KPM (Kementerian Pendidikan)',
+                        amount: 'RM150',
+                        frequency: { ms: 'Sebulan', en: 'Per Month' },
+                        name: { ms: 'Elaun Murid Khas (EMK)', en: 'Special Needs Student Allowance (EMK)' },
+                        desc: { ms: 'Bantuan kewangan automatik untuk murid OKU berdaftar dari prasekolah hingga sekolah menengah di bawah KPM.', en: 'Automatic financial aid for registered OKU students from preschool to secondary school under MOE.' },
+                        reqs: ['Kad OKU JKM', 'Bersekolah KPM', 'Tiada Had Pendapatan'],
+                        link: 'https://www.moe.gov.my/'
+                    },
+                    {
+                        provider: 'KPM (Kementerian Pendidikan)',
+                        amount: 'RM100',
+                        frequency: { ms: 'Setahun', en: 'Per Year' },
+                        name: { ms: 'Kumpulan Wang Amanah Pelajar Miskin (KWAPM)', en: 'Poor Student Trust Fund (KWAPM)' },
+                        desc: { ms: 'Bantuan kewangan tambahan persekolahan untuk murid miskin dan OKU yang berdaftar dalam sistem e-Kasih.', en: 'Additional schooling financial aid for poor and OKU students registered in the e-Kasih system.' },
+                        reqs: ['Keluarga B40 / e-Kasih', 'Sekolah Rendah / Menengah', 'Warganegara'],
+                        link: 'https://www.moe.gov.my/'
+                    },
+
+                    // --- PERINGKAT IPT (DIPLOMA / IJAZAH / PJJ) ---
+                    {
+                        provider: 'KPT (Kementerian Pendidikan Tinggi)',
+                        amount: 'Yuran + RM300',
+                        frequency: { ms: 'Sebulan (Sara Hidup)', en: 'Monthly (Living)' },
+                        name: { ms: 'Bantuan Kewangan OKU (BKOKU)', en: 'OKU Financial Aid (BKOKU)' },
+                        desc: { ms: 'Pembiayaan yuran pengajian sebenar dan elaun sara hidup RM300/sebulan untuk pelajar OKU di IPTA, IPTS, Politeknik & Kolej Komuniti.', en: 'Covers actual tuition fees and RM300/month living allowance for OKU students in higher ed.' },
+                        reqs: ['Kad OKU JKM', 'Belajar Sepenuh Masa/PJJ', 'IPT Diiktiraf'],
+                        link: 'https://biasiswa.mohe.gov.my/bk_oku/'
+                    },
+                    {
+                        provider: 'JPA (Jabatan Perkhidmatan Awam)',
+                        amount: 'Tajaan Penuh',
+                        frequency: { ms: 'Sepanjang Pengajian', en: 'Full Duration' },
+                        name: { ms: 'Dermasiswa B40 & OKU', en: 'B40 & OKU Dermasiswa' },
+                        desc: { ms: 'Tajaan pendidikan khas (Yuran & Sara Hidup) untuk pelajar OKU lepasan SPM yang menyambung pengajian ke peringkat Diploma di Institusi Awam.', en: 'Special education sponsorship for OKU SPM leavers pursuing Diplomas in Public Institutions.' },
+                        reqs: ['Lepasan SPM', 'Keluarga B40', 'Lulus Temuduga/Tapisan'],
+                        link: 'https://esilav2.jpa.gov.my/'
+                    },
+                    {
+                        provider: 'Open University Malaysia (OUM)',
+                        amount: 'Diskaun 50%',
+                        frequency: { ms: 'Setiap Semester', en: 'Every Semester' },
+                        name: { ms: 'Pengecualian Yuran Khas OKU', en: 'Special OKU Fee Exemption' },
+                        desc: { ms: 'OUM memberi potongan yuran pengajian sebanyak 50% bagi semua pelajar OKU berdaftar untuk mempromosikan pembelajaran sepanjang hayat.', en: 'OUM gives a 50% tuition fee discount for all registered OKU students to promote lifelong learning.' },
+                        reqs: ['Kad OKU JKM', 'Pelajar OUM Berdaftar', 'Warganegara Malaysia'],
+                        link: 'https://www.oum.edu.my/'
+                    },
+
+                    // --- PERINGKAT PASCASISWAZAH (MASTER & PHD) ---
+                    {
+                        provider: 'JPA / Istana Negara',
+                        amount: 'Tajaan Penuh + Elaun',
+                        frequency: { ms: 'Sepanjang Pengajian', en: 'Full Duration' },
+                        name: { ms: 'Biasiswa Yang di-Pertuan Agong (BYDPA)', en: 'Yang di-Pertuan Agong Scholarship' },
+                        desc: { ms: 'Biasiswa paling berprestij di Malaysia yang mempunyai kuota khas untuk individu OKU yang cemerlang menyambung Master atau PhD di dalam/luar negara.', en: 'Malaysia\'s most prestigious scholarship with a special quota for outstanding OKU pursuing Masters/PhD locally or abroad.' },
+                        reqs: ['CGPA 3.75 (Master/PhD)', 'Kad OKU', 'Kertas Cadangan Penyelidikan Baik'],
+                        link: 'https://esilav2.jpa.gov.my/'
+                    },
+
+                    // --- TVET, KEMAHIRAN & BINA KERJAYA ---
+                    {
+                        provider: 'KPT (Program Kemahiran)',
+                        amount: 'RM300',
+                        frequency: { ms: 'Sebulan', en: 'Per Month' },
+                        name: { ms: 'Program Pendidikan Khas (PPK)', en: 'Special Education Program (PPK)' },
+                        desc: { ms: 'Bantuan kewangan khusus untuk pelatih OKU yang mengikuti program sijil kemahiran asas di Politeknik atau Kolej Komuniti.', en: 'Special financial aid for OKU trainees pursuing basic skills certificate programs at Polytechnics or Community Colleges.' },
+                        reqs: ['Kad OKU JKM', 'Pelajar Sijil Asas KK/Poli'],
+                        link: 'https://biasiswa.mohe.gov.my/bk_oku/'
+                    },
+                    {
+                        provider: 'JKM (Jabatan Kebajikan Masyarakat)',
+                        amount: 'RM300',
+                        frequency: { ms: 'Sebulan', en: 'Per Month' },
+                        name: { ms: 'Elaun Pelatih PDK', en: 'PDK Trainee Allowance' },
+                        desc: { ms: 'Elaun khas diberikan kepada pelatih OKU yang mengikuti program Pemulihan Dalam Komuniti (PDK) bagi menggalakkan kehadiran harian.', en: 'Special allowance for OKU trainees attending Community Rehab Programs (PDK) to encourage attendance.' },
+                        reqs: ['Berdaftar di PDK', 'Hadir Min. 15 Hari/Bulan'],
+                        link: 'https://www.jkm.gov.my/'
+                    },
+                    {
+                        provider: 'JKM (Geran Kerjaya)',
+                        amount: 'Maksimum RM2,700',
+                        frequency: { ms: 'Sekali Mohon', en: 'One-off' },
+                        name: { ms: 'Bantuan Geran Pelancaran (BGP)', en: 'Launching Grant Aid (BGP)' },
+                        desc: { ms: 'Geran kewangan (bukan pinjaman) untuk lepasan institusi vokasional OKU atau ibu bapa OKU yang mahu memulakan perniagaan kecil (bakeri, jahitan, dll).', en: 'Financial grant (not a loan) for OKU vocational grads or parents to start small businesses (bakery, tailoring, etc).' },
+                        reqs: ['Ada Sijil Kemahiran', 'Kertas Kerja Ringkas', 'Keluarga B40/Miskin'],
+                        link: 'https://www.jkm.gov.my/'
+                    },
+                    {
+                        provider: 'Yayasan Peneraju',
+                        amount: 'Tajaan Pensijilan',
+                        frequency: { ms: 'Sepanjang Program', en: 'Program Duration' },
+                        name: { ms: 'Peneraju Skil (Laluan Inklusif)', en: 'Peneraju Skil (Inclusive Track)' },
+                        desc: { ms: 'Membiayai kos pensijilan TVET berkemahiran tinggi (Contoh: IT, Perakaunan, Servis) dengan kuota yang dibuka untuk OKU Bumiputera.', en: 'Funds high-skill TVET certifications (e.g., IT, Accounting, Services) with quotas open for OKU Bumiputera.' },
+                        reqs: ['Bumiputera', 'Lulus Penilaian', 'Komited Tamatkan Latihan'],
+                        link: 'https://yayasanpeneraju.com.my/'
+                    },
+
+                    // --- SWASTA, KORPORAT & YAYASAN ---
+                    {
+                        provider: 'Yayasan Sime Darby',
+                        amount: 'Tajaan Penuh',
+                        frequency: { ms: 'Sepanjang Pengajian', en: 'Full Duration' },
+                        name: { ms: 'YSD Special Needs Bursary', en: 'YSD Special Needs Bursary' },
+                        desc: { ms: 'Biasiswa pendidikan penuh meliputi yuran pengajian, elaun sara hidup, buku dan komputer riba untuk pelajar OKU di peringkat Diploma & Ijazah.', en: 'Full scholarship covering tuition fees, living allowance, books, and laptop for OKU pursuing Diploma & Degree.' },
+                        reqs: ['Pendapatan Keluarga < RM11,000', 'Keputusan Akademik Baik'],
+                        link: 'https://www.yayasansimedarby.com/'
+                    },
+                    {
+                        provider: 'Kuok Foundation',
+                        amount: 'RM10,000 - RM50,000',
+                        frequency: { ms: 'Setahun', en: 'Per Year' },
+                        name: { ms: 'Study Awards (Undergraduate)', en: 'Study Awards (Undergraduate)' },
+                        desc: { ms: 'Geran dan pinjaman tanpa faedah (separuh biasiswa) yang memberi keutamaan tinggi kepada pelajar dari keluarga miskin atau mempunyai cabaran fizikal (OKU).', en: 'Grants and interest-free loans (half scholarships) giving high priority to students from poor families or with physical challenges (OKU).' },
+                        reqs: ['Universiti Awam Sahaja', 'Keputusan STPM/Diploma Baik', 'Temuduga'],
+                        link: 'https://kuokfoundation.com/'
+                    },
+
+                    // --- BANTUAN ALATAN & LAIN-LAIN ---
+                    {
+                        provider: 'MAI / PUSAT ZAKAT NEGERI',
+                        amount: 'Bervariasi',
+                        frequency: { ms: 'Sekali / Tahunan', en: 'One-off / Yearly' },
+                        name: { ms: 'Bantuan Zakat Pendidikan (Asnaf/OKU)', en: 'Education Zakat Aid' },
+                        desc: { ms: 'Bantuan kewangan untuk yuran pengajian, pembelian komputer riba, atau persediaan ke IPT untuk pelajar OKU beragama Islam (bergantung pada negeri).', en: 'Financial aid for tuition fees, laptops, or IPT preparation for Muslim OKU students (varies by state).' },
+                        reqs: ['Beragama Islam', 'Golongan Asnaf / B40', 'Penduduk Negeri Berkaitan'],
+                        link: 'https://www.zakat.com.my/'
+                    },
+                    {
+                        provider: 'JKM / KKM',
+                        amount: 'Kos Penuh Alat',
+                        frequency: { ms: 'Sekali Mohon', en: 'One-off' },
+                        name: { ms: 'Bantuan Alat Tiruan / Sokongan (BAT)', en: 'Supportive Device Aid (BAT)' },
+                        desc: { ms: 'Sokongan membelikan peralatan mahal untuk tujuan pembelajaran (mesin taip Braille, alat pendengaran digital, cermin mata khas, kerusi roda elektrik).', en: 'Support to purchase expensive learning devices (Braille typewriters, digital hearing aids, special glasses, electric wheelchairs).' },
+                        reqs: ['Kad OKU JKM', 'Syor Pegawai Perubatan (KKM)', 'Golongan Tidak Mampu'],
+                        link: 'https://www.jkm.gov.my/'
+                    },
+                    {
+                        provider: 'KWSP (Kumpulan Wang Simpanan Pekerja)',
+                        amount: 'Ikut Baki Akaun 2',
+                        frequency: { ms: 'Mengikut Semester', en: 'Per Semester' },
+                        name: { ms: 'Pengeluaran Pendidikan', en: 'Education Withdrawal' },
+                        desc: { ms: 'Ibu bapa boleh mengeluarkan simpanan dari Akaun Sejahtera (Akaun 2) untuk membiayai yuran pengajian anak OKU mereka di peringkat IPT.', en: 'Parents can withdraw savings from Sejahtera Account (Account 2) to fund their OKU childs IPT tuition fees.' },
+                        reqs: ['Pencarum KWSP', 'Surat Tawaran IPT', 'Anak Tanggungan'],
+                        link: 'https://www.kwsp.gov.my/'
+                    },
+                    {
+                        provider: 'PERKESO (SOCSO)',
+                        amount: 'Tajaan / Pinjaman',
+                        frequency: { ms: 'Sepanjang Pengajian', en: 'Full Duration' },
+                        name: { ms: 'Pinjaman / Bantuan Pendidikan (FOT)', en: 'Education Benefit (FOT)' },
+                        desc: { ms: 'Pembiayaan pendidikan untuk anak kepada pencarum yang meninggal dunia / hilang upaya, atau pekerja OKU di bawah program pemulihan (Return To Work).', en: 'Education funding for children of deceased/disabled contributors, or OKU workers under the RTW program.' },
+                        reqs: ['Anak Pencarum Layak', 'Tawaran IPT Diiktiraf', 'Gagal Dapat Biasiswa Lain'],
+                        link: 'https://www.perkeso.gov.my/'
+                    }
+                ],
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses', lbl_lang: 'Bahasa', mode_light: 'Cerah', mode_dark: 'Gelap', lbl_font: 'Saiz Tulisan',
+                        nav_home: 'Utama', nav_path: 'Laluan', nav_aid: 'Bantuan', nav_skills: 'TVET', btn_settings: 'Akses',
+                        hero_tag: 'Akses Pendidikan Inklusif', hero_t1: 'Ilmu Tanpa', hero_t2: 'Sempadan.',
+                        hero_desc: 'Panduan lengkap untuk pelajar OKU di Malaysia. Dari prasekolah hingga ke universiti, serta peluang latihan kemahiran TVET dan bantuan biasiswa kerajaan.',
+                        btn_start: 'Mula Teroka', btn_money: 'Info Bantuan',
+                        path_title: 'Laluan Pendidikan', path_desc: 'Pilih tahap pendidikan untuk melihat jenis persekolahan dan program yang ditawarkan.',
+                        lbl_features: 'CIRI-CIRI UTAMA:', btn_more: 'Maklumat Lanjut',
+                        money_title: 'Bantuan Kewangan & Biasiswa', money_desc: 'Senarai bantuan kewangan khusus untuk pelajar OKU.',
+                        btn_apply_now: 'Mohon Sekarang',
+                        ft_links: 'Pautan Rasmi', ft_contact: 'Hubungi Kami', chat_ph: 'Taip soalan...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings', lbl_lang: 'Language', mode_light: 'Light', mode_dark: 'Dark', lbl_font: 'Font Size',
+                        nav_home: 'Home', nav_path: 'Pathways', nav_aid: 'Financial Aid', nav_skills: 'TVET', btn_settings: 'Access',
+                        hero_tag: 'Inclusive Education Access', hero_t1: 'Knowledge Without', hero_t2: 'Barriers.',
+                        hero_desc: 'Complete guide for PWD students in Malaysia. From preschool to university, including TVET skills training and government scholarship aids.',
+                        btn_start: 'Start Exploring', btn_money: 'Aid Info',
+                        path_title: 'Education Pathways', path_desc: 'Select education level to view types of schooling and programs offered.',
+                        lbl_features: 'KEY FEATURES:', btn_more: 'More Info',
+                        money_title: 'Financial Aid & Scholarships', money_desc: 'List of financial assistance specifically for PWD students.',
+                        btn_apply_now: 'Apply Now',
+                        ft_links: 'Official Links', ft_contact: 'Contact Us', chat_ph: 'Type question...'
+                    }
+                },  // ✅ Data kekal sama (tak payah repeat)
+                
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses', lbl_lang: 'Bahasa', mode_light: 'Cerah', mode_dark: 'Gelap', lbl_font: 'Saiz Tulisan',
+                        nav_home: 'Utama', nav_path: 'Laluan', nav_aid: 'Bantuan', nav_skills: 'TVET', btn_settings: 'Akses',
+                        hero_tag: 'Akses Pendidikan Inklusif', hero_t1: 'Ilmu Tanpa', hero_t2: 'Sempadan.',
+                        hero_desc: 'Panduan lengkap untuk pelajar OKU di Malaysia. Dari prasekolah hingga ke universiti, serta peluang latihan kemahiran TVET dan bantuan biasiswa kerajaan.',
+                        btn_start: 'Mula Teroka', btn_money: 'Info Bantuan',
+                        path_title: 'Laluan Pendidikan', path_desc: 'Pilih tahap pendidikan untuk melihat jenis persekolahan dan program yang ditawarkan.',
+                        lbl_features: 'CIRI-CIRI UTAMA:', btn_more: 'Maklumat Lanjut',
+                        money_title: 'Bantuan Kewangan & Biasiswa', money_desc: 'Senarai bantuan kewangan khusus untuk pelajar OKU.',
+                        btn_apply_now: 'Mohon Sekarang',
+                        ft_links: 'Pautan Rasmi', ft_contact: 'Hubungi Kami', chat_ph: 'Taip soalan...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings', lbl_lang: 'Language', mode_light: 'Light', mode_dark: 'Dark', lbl_font: 'Font Size',
+                        nav_home: 'Home', nav_path: 'Pathways', nav_aid: 'Financial Aid', nav_skills: 'TVET', btn_settings: 'Access',
+                        hero_tag: 'Inclusive Education Access', hero_t1: 'Knowledge Without', hero_t2: 'Barriers.',
+                        hero_desc: 'Complete guide for PWD students in Malaysia. From preschool to university, including TVET skills training and government scholarship aids.',
+                        btn_start: 'Start Exploring', btn_money: 'Aid Info',
+                        path_title: 'Education Pathways', path_desc: 'Select education level to view types of schooling and programs offered.',
+                        lbl_features: 'KEY FEATURES:', btn_more: 'More Info',
+                        money_title: 'Financial Aid & Scholarships', money_desc: 'List of financial assistance specifically for PWD students.',
+                        btn_apply_now: 'Apply Now',
+                        ft_links: 'Official Links', ft_contact: 'Contact Us', chat_ph: 'Type question...'
+                    }
+                },
+
+                getTabContent() {
+                    return this.contentData[this.activeTab];
+                },
+
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                async sendMessage(msgText) {
+                    if(!msgText && !this.userMsg) return;
+                    const text = msgText || this.userMsg;
+                    this.messages.push({ id: Date.now(), text: text, sender: 'user' });
+                    this.userMsg = '';
+                    this.isTyping = true;
+                    
+                    setTimeout(() => {
+                        let reply = '';
+                        const lowText = text.toLowerCase();
+                        
+                        if(lowText.includes('emk') || lowText.includes('rm150')) {
+                            reply = this.lang === 'ms' 
+                                ? 'Elaun Murid Khas (EMK) adalah RM150/bulan. Syaratnya perlu ada Kad OKU dan bersekolah di sekolah Kerajaan/Bantuan Kerajaan.' 
+                                : 'EMK allowance is RM150/month. You need an OKU Card and attend a Government/Aided school.';
+                        } else if (lowText.includes('biasiswa') || lowText.includes('uni') || lowText.includes('ipt')) {
+                            reply = this.lang === 'ms' 
+                                ? 'Untuk IPT, anda boleh mohon BKOKU (KPT). Ia menanggung yuran dan bagi elaun saku RM300/bulan.' 
+                                : 'For Uni, you can apply for BKOKU (MOHE). It covers fees and gives RM300/month pocket money.';
+                        } else if (lowText.includes('link') || lowText.includes('mohon')) {
+                            reply = 'Sila lihat bahagian "Bantuan Kewangan" di halaman ini untuk butang "Mohon Sekarang" yang rasmi.';
+                        } else {
+                            reply = this.lang === 'ms' 
+                                ? 'Maaf, saya hanya bot info asas. Sila rujuk laman web KPM atau KPT untuk maklumat terperinci.' 
+                                : 'Sorry, I am just a basic info bot. Please refer to MOE or MOHE websites for details.';
+                        }
+
+                        this.isTyping = false;
+                        this.messages.push({ id: Date.now() + 1, text: reply, sender: 'bot' });
+                        
+                        this.$nextTick(() => {
+                            const container = document.getElementById('chat-messages');
+                            container.scrollTop = container.scrollHeight;
+                        });
+                    }, 1000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

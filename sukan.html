@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sukan & Rekreasi OKU - MY OKU SENTRAL</title>
+    <meta name="description" content="Info sukan paralimpik, atlet istimewa, insentif SHAKAM dan fasiliti sukan OKU.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        sport: { 500: '#ef4444', 600: '#dc2626' }
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+        .hero-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230ea5e9' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="sportData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                   <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+             <div class="flex items-center gap-3 md:gap-6">
+                <a href="index.html" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_home">Utama</a>
+                <a href="#badan" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_bodies">Badan Sukan</a>
+                <a href="#insentif" class="font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_incentive">Insentif</a>
+                
+                <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-20 px-4 bg-gray-50 dark:bg-gray-900 relative overflow-hidden hero-pattern">
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-3xl -translate-y-20 translate-x-20"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl translate-y-20 -translate-x-20"></div>
+
+        <div class="container mx-auto max-w-6xl relative z-10 flex flex-col md:flex-row items-center gap-12">
+            <div class="md:w-1/2 text-center md:text-left">
+                <span class="inline-block py-1 px-3 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-black text-xs uppercase tracking-widest mb-4 border border-red-200 dark:border-red-800 animate-pulse">
+                    <i class="fas fa-fire mr-1"></i> <span x-text="txt[lang].hero_badge">Semangat Juara</span>
+                </span>
+                <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight text-gray-900 dark:text-white">
+                    <span x-text="txt[lang].hero_t1">Sukan OKU</span><br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500" x-text="txt[lang].hero_t2">Luar Biasa.</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-8 leading-relaxed" x-text="txt[lang].hero_desc">
+                    Laman rasmi untuk atlet paralimpik dan amatur. Info mengenai skim hadiah kemenangan (SHAKAM), pencarian bakat, dan lokasi fasiliti mesra OKU.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#insentif" class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold transition shadow-xl flex items-center justify-center gap-2">
+                        <i class="fas fa-trophy"></i> <span x-text="txt[lang].btn_rewards">Lihat Ganjaran</span>
+                    </a>
+                    <a href="https://www.nsc.gov.my" target="_blank" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-2 border-gray-200 dark:border-gray-700 px-8 py-4 rounded-full font-bold hover:border-red-500 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-external-link-alt"></i> Majlis Sukan Negara
+                    </a>
+                </div>
+            </div>
+            <div class="md:w-1/2 relative">
+                <div class="relative z-10 grid grid-cols-2 gap-4">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-2xl border-b-8 border-yellow-400 transform hover:-translate-y-2 transition duration-500">
+                        <i class="fas fa-medal text-5xl text-yellow-400 mb-4"></i>
+                        <h3 class="font-black text-xl mb-1">Paralimpik</h3>
+                        <p class="text-sm text-gray-500">Tokyo, Paris, LA</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-2xl border-b-8 border-red-500 transform translate-y-8 hover:translate-y-6 transition duration-500">
+                        <i class="fas fa-running text-5xl text-red-500 mb-4"></i>
+                        <h3 class="font-black text-xl mb-1">Para SUKMA</h3>
+                        <p class="text-sm text-gray-500">Peringkat Kebangsaan</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-2xl border-b-8 border-blue-500 transform hover:-translate-y-2 transition duration-500">
+                        <i class="fas fa-swimmer text-5xl text-blue-500 mb-4"></i>
+                        <h3 class="font-black text-xl mb-1">Talent ID</h3>
+                        <p class="text-sm text-gray-500">Program Bakat Baru</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-2xl border-b-8 border-purple-500 transform translate-y-8 hover:translate-y-6 transition duration-500">
+                        <i class="fas fa-users text-5xl text-purple-500 mb-4"></i>
+                        <h3 class="font-black text-xl mb-1">Komuniti</h3>
+                        <p class="text-sm text-gray-500">Kelab & Persatuan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="badan" class="py-20 bg-white dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <span class="text-brand-600 font-bold uppercase tracking-wider text-sm mb-2 block" x-text="txt[lang].sec_org_sub">Organisasi</span>
+                <h2 class="text-4xl font-black text-gray-900 dark:text-white" x-text="txt[lang].sec_org_title">Badan Induk Sukan</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <template x-for="org in organizations">
+                    <div class="group bg-gray-50 dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 hover:border-brand-500 transition duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl" x-text="org.type"></div>
+                        <div class="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center text-3xl mb-6 text-brand-600 group-hover:scale-110 transition">
+                            <i :class="org.icon"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-900 dark:text-white" x-text="org.name[lang]"></h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" x-text="org.desc[lang]"></p>
+                        <a :href="org.link" target="_blank" class="inline-flex items-center font-bold text-brand-600 hover:text-brand-800 transition">
+                            <span x-text="txt[lang].btn_visit">Lawati Laman Web</span> <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <section id="insentif" class="py-20 bg-gray-900 text-white relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+            <div class="absolute top-10 left-10 w-64 h-64 bg-yellow-500 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-10 right-10 w-64 h-64 bg-red-500 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-gray-700 pb-8">
+                <div>
+                    <h2 class="text-4xl md:text-5xl font-black mb-4"><span class="text-yellow-400">SHAKAM</span> & Insentif</h2>
+                    <p class="text-gray-400 max-w-2xl text-lg" x-text="txt[lang].shakam_desc">Skim Hadiah Kemenangan Sukan: Ganjaran wang tunai yang SAMA RATA dengan atlet normal untuk pemenang pingat Paralimpik, Komenwel & Asia.</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <a href="https://www.nsc.gov.my/en/services/incentives/shakam/" target="_blank" class="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 rounded-xl font-bold transition flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i> <span x-text="txt[lang].btn_guideline">Garis Panduan Penuh</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-3xl overflow-hidden shadow-2xl border border-gray-700">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-700 text-gray-300 uppercase text-xs tracking-wider">
+                            <tr>
+                                <th class="p-6" x-text="txt[lang].tbl_event">Kejohanan</th>
+                                <th class="p-6 text-yellow-400"><i class="fas fa-medal mr-2"></i><span x-text="txt[lang].medal_gold">Emas</span></th>
+                                <th class="p-6 text-gray-300"><i class="fas fa-medal mr-2"></i><span x-text="txt[lang].medal_silver">Perak</span></th>
+                                <th class="p-6 text-orange-400"><i class="fas fa-medal mr-2"></i><span x-text="txt[lang].medal_bronze">Gangsa</span></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            <tr class="hover:bg-gray-700/50 transition">
+                                <td class="p-6 font-bold">Sukan Paralimpik / Olimpik</td>
+                                <td class="p-6 text-xl font-black text-yellow-400">RM 1,000,000</td>
+                                <td class="p-6 text-lg font-bold">RM 300,000</td>
+                                <td class="p-6 text-lg font-bold">RM 100,000</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/50 transition">
+                                <td class="p-6 font-bold">Sukan Komenwel / Asia</td>
+                                <td class="p-6 text-xl font-black text-yellow-400">RM 80,000</td>
+                                <td class="p-6 text-lg font-bold">RM 40,000</td>
+                                <td class="p-6 text-lg font-bold">RM 20,000</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/50 transition">
+                                <td class="p-6 font-bold">Sukan SEA / Para ASEAN</td>
+                                <td class="p-6 text-xl font-black text-yellow-400">RM 20,000</td>
+                                <td class="p-6 text-lg font-bold">RM 3,000</td>
+                                <td class="p-6 text-lg font-bold">RM 1,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-6 bg-gray-700/30 text-xs text-gray-400 flex items-start gap-2">
+                    <i class="fas fa-info-circle mt-0.5"></i>
+                    <span x-text="txt[lang].shakam_note">Nilai tertakluk kepada perubahan semasa polisi KBS/MSN. Data dikemaskini 2025. Sila rujuk pekeliling rasmi untuk acara berpasukan.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-brand-50 dark:bg-gray-800">
+        <div class="container mx-auto px-4 max-w-4xl">
+            <h2 class="text-3xl font-black text-center mb-8 text-gray-900 dark:text-white" x-text="txt[lang].search_title">Carian Sukan & Fasiliti</h2>
+            
+            <div class="relative mb-12">
+                <i class="fas fa-search absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"></i>
+                <input type="text" x-model="search" @input="doSearch()" :placeholder="txt[lang].search_ph" 
+                       class="w-full pl-14 pr-6 py-5 rounded-full border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:border-brand-500 focus:ring-4 focus:ring-brand-200 dark:focus:ring-brand-900 transition text-lg shadow-lg text-gray-900 dark:text-white">
+            </div>
+
+            <div class="grid gap-4">
+                <template x-for="item in filteredData" :key="item.id">
+                    <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm hover:shadow-xl transition border-l-4 border-brand-500 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500" x-text="item.category"></span>
+                            </div>
+                            <h3 class="font-bold text-lg text-gray-900 dark:text-white" x-text="item.title[lang]"></h3>
+                            <p class="text-sm text-gray-500" x-text="item.desc[lang]"></p>
+                        </div>
+                        <a :href="item.url" target="_blank" class="shrink-0 bg-brand-50 text-brand-600 hover:bg-brand-600 hover:text-white px-5 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
+                            <span x-text="txt[lang].btn_details">Info Lanjut</span> <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </template>
+                <div x-show="filteredData.length === 0" class="text-center py-10 opacity-50">
+                    <i class="fas fa-box-open text-4xl mb-3"></i>
+                    <p x-text="txt[lang].no_result">Tiada data dijumpai.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400">Utama</a></li>
+                    <li><a href="daftar.html" class="hover:text-brand-400">Pendaftaran JKM</a></li>
+                    <li><a href="kewangan.html" class="hover:text-brand-400">Bantuan Kewangan</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> KBS Hotline: 03-8871 3000</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> paralimpik@msn.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-gradient-to-r from-red-600 to-orange-500 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-running"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Coach Bot</h4>
+                        <span class="text-[10px] opacity-80 block">Sukan & Rekreasi</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-red-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+                <div x-show="isTyping" class="flex justify-start">
+                    <div class="bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 h-10 items-center">
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                    </div>
+                </div>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-red-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-red-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dots text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function sportData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+                search: '',
+                chatOpen: false,
+                userMsg: '',
+                isTyping: false,
+                
+                // DATA STRINGS (✅ data kekal sama)
+               txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        btn_settings: 'Akses',
+                        menu_home: 'Utama',
+                        menu_bodies: 'Badan Sukan',
+                        menu_incentive: 'Insentif',
+                        hero_badge: 'Semangat Juara',
+                        hero_t1: 'Sukan OKU',
+                        hero_t2: 'Luar Biasa.',
+                        hero_desc: 'Laman rasmi untuk atlet paralimpik dan amatur. Info mengenai skim hadiah kemenangan (SHAKAM), pencarian bakat, dan lokasi fasiliti mesra OKU.',
+                        btn_rewards: 'Lihat Ganjaran',
+                        sec_org_sub: 'Organisasi',
+                        sec_org_title: 'Badan Induk Sukan',
+                        btn_visit: 'Lawati Laman Web',
+                        shakam_desc: 'Skim Hadiah Kemenangan Sukan: Ganjaran wang tunai yang SAMA RATA dengan atlet normal untuk pemenang pingat Paralimpik, Komenwel & Asia.',
+                        btn_guideline: 'Garis Panduan',
+                        tbl_event: 'Kejohanan',
+                        medal_gold: 'Emas',
+                        medal_silver: 'Perak',
+                        medal_bronze: 'Gangsa',
+                        shakam_note: 'Nilai tertakluk kepada perubahan semasa polisi KBS/MSN. Data dikemaskini 2026.',
+                        search_title: 'Carian Sukan & Fasiliti',
+                        search_ph: 'Cari sukan (cth: Boccia, Renang, Memanah)...',
+                        btn_details: 'Info Lanjut',
+                        no_result: 'Tiada sukan dijumpai.',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Tanya pasal sukan...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        btn_settings: 'Access',
+                        menu_home: 'Home',
+                        menu_bodies: 'Sports Bodies',
+                        menu_incentive: 'Incentives',
+                        hero_badge: 'Champion Spirit',
+                        hero_t1: 'PWD Sports',
+                        hero_t2: 'Extraordinary.',
+                        hero_desc: 'Official hub for paralympic and amateur athletes. Info on victory incentives (SHAKAM), talent scouting, and accessible sports facilities.',
+                        btn_rewards: 'View Rewards',
+                        sec_org_sub: 'Organizations',
+                        sec_org_title: 'Sports Bodies',
+                        btn_visit: 'Visit Website',
+                        shakam_desc: 'Sports Victory Prize Scheme: EQUAL cash rewards with able-bodied athletes for Paralympic, Commonwealth & Asian Games medalists.',
+                        btn_guideline: 'Full Guidelines',
+                        tbl_event: 'Tournament',
+                        medal_gold: 'Gold',
+                        medal_silver: 'Silver',
+                        medal_bronze: 'Bronze',
+                        shakam_note: 'Values subject to current KBS/MSN policies. Data updated 2026.',
+                        search_title: 'Search Sports & Facilities',
+                        search_ph: 'Search sports (e.g., Boccia, Swimming, Archery)...',
+                        btn_details: 'More Info',
+                        no_result: 'No sports found.',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Ask about sports...'
+                    }
+                },
+
+                // DATA ORGANISATIONS
+               // DATA ORGANISATIONS  ✅ REPLACE YANG NI SAHAJA
+organizations: [
+  {
+    id: 1,
+    type: 'GOV',
+    icon: 'fas fa-flag',
+    name: { ms: 'Majlis Sukan Negara (MSN)', en: 'National Sports Council (NSC)' },
+    desc: {
+      ms: 'Badan utama mengurus program latihan dan pembangunan atlet elit negara.',
+      en: 'Main body managing elite athlete training and development programs.'
+    },
+    link: 'https://www.nsc.gov.my'
+  },
+  {
+    id: 2,
+    type: 'NGO',
+    icon: 'fas fa-universal-access',
+    name: { ms: 'Majlis Paralimpik Malaysia (PCM)', en: 'Paralympic Council of Malaysia (PCM)' },
+    desc: {
+      ms: 'Badan induk pergerakan paralimpik Malaysia, penyelarasan sukan para dan wakil rasmi.',
+      en: 'Governing body of the Paralympic movement in Malaysia and official representative.'
+    },
+    link: 'https://paralympic.org.my'
+  },
+  {
+    id: 3,
+    type: 'NGO',
+    icon: 'fas fa-eye-slash',
+    name: { ms: 'Persatuan Sukan Orang Buta Malaysia (MBSA)', en: 'Malaysian Blind Sports Association (MBSA)' },
+    desc: {
+      ms: 'Mengurus dan membangunkan sukan untuk OKU penglihatan (buta/low vision).',
+      en: 'Develops and manages sports for athletes with visual impairments.'
+    },
+    link: 'https://mbsa.org.my'
+  },
+
+  // ✅ TAMBAHAN BADAN INDUK / AGENSI BERKAITAN
+  {
+    id: 4,
+    type: 'GOV',
+    icon: 'fas fa-landmark',
+    name: { ms: 'Kementerian Belia dan Sukan (KBS)', en: 'Ministry of Youth and Sports (KBS)' },
+    desc: {
+      ms: 'Kementerian yang menetapkan dasar sukan negara termasuk insentif dan pembangunan atlet.',
+      en: 'Ministry that sets national sports policies including incentives and athlete development.'
+    },
+    link: 'https://www.kbs.gov.my'
+  },
+  {
+    id: 5,
+    type: 'GOV',
+    icon: 'fas fa-dumbbell',
+    name: { ms: 'Institut Sukan Negara (ISN)', en: 'National Sports Institute (ISN)' },
+    desc: {
+      ms: 'Sains sukan, perubatan sukan, prestasi atlet, nutrisi dan sokongan bersepadu.',
+      en: 'Sports science, medicine, performance, nutrition, and integrated support for athletes.'
+    },
+    link: 'https://www.isn.gov.my'
+  },
+  {
+    id: 6,
+    type: 'GOV',
+    icon: 'fas fa-people-group',
+    name: { ms: 'Jabatan Belia dan Sukan Negara (JBSN)', en: 'National Youth & Sports Department (JBSN)' },
+    desc: {
+      ms: 'Penyelaras program belia & sukan di peringkat negeri/daerah termasuk program bakat.',
+      en: 'Coordinates youth & sports programs at state/district level including talent programs.'
+    },
+    link: 'https://www.jbsn.gov.my'
+  },
+  {
+    id: 7,
+    type: 'GOV',
+    icon: 'fas fa-scale-balanced',
+    name: { ms: 'Pejabat Pesuruhjaya Sukan Malaysia (PJS)', en: 'Sports Commissioner Office Malaysia (PJS)' },
+    desc: {
+      ms: 'Urus pendaftaran & pemantauan persatuan/organisasi sukan berdaftar di Malaysia.',
+      en: 'Handles registration and oversight of sports associations/organizations in Malaysia.'
+    },
+    link: 'https://www.kbs.gov.my/gps' // portal KBS yang rujuk PJS untuk status persatuan
+  },
+  {
+    id: 8,
+    type: 'NGO',
+    icon: 'fas fa-wheelchair-move',
+    name: { ms: 'Malaysia Para Athlete Association (MPAA)', en: 'Malaysia Para Athlete Association (MPAA)' },
+    desc: {
+      ms: 'Badan yang mentadbir aktiviti para athletics dan penyertaan kejohanan di Malaysia.',
+      en: 'Administers para athletics activities and participation in tournaments in Malaysia.'
+    },
+    link: 'https://mpaa.paralympic.org.my/'
+  },
+  {
+    id: 9,
+    type: 'NGO',
+    icon: 'fas fa-star',
+    name: { ms: 'Special Olympics Malaysia', en: 'Special Olympics Malaysia' },
+    desc: {
+      ms: 'Program sukan & pembangunan komuniti untuk individu dengan ketidakupayaan intelektual.',
+      en: 'Sports and community development programs for people with intellectual disabilities.'
+    },
+    link: 'https://www.specialolympicsmalaysia.org.my'
+  },
+  {
+    id: 10,
+    type: 'INTL',
+    icon: 'fas fa-globe',
+    name: { ms: 'World Para Sport (IPC)', en: 'World Para Sport (IPC)' },
+    desc: {
+      ms: 'Rujukan antarabangsa bagi peraturan, klasifikasi, dan kejohanan sukan para.',
+      en: 'International reference for para sport rules, classification, and competitions.'
+    },
+    link: 'https://www.paralympic.org'
+  },
+  {
+  id: 11,
+  type: 'NGO',
+  icon: 'fas fa-basketball-ball',
+  name: { ms: 'Malaysia Wheelchair Basketball Federation', en: 'Malaysia Wheelchair Basketball Federation' },
+  desc: {
+    ms: 'Mengurus dan membangunkan sukan bola keranjang kerusi roda di Malaysia.',
+    en: 'Manages and develops wheelchair basketball in Malaysia.'
+  },
+  link: 'https://iwbf.org'
+},
+{
+  id: 12,
+  type: 'NGO',
+  icon: 'fas fa-table-tennis',
+  name: { ms: 'Persatuan Ping Pong Para Malaysia', en: 'Malaysia Para Table Tennis Association' },
+  desc: {
+    ms: 'Badan yang mengurus pembangunan atlet para ping pong.',
+    en: 'Body managing development of para table tennis athletes.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 13,
+  type: 'NGO',
+  icon: 'fas fa-swimmer',
+  name: { ms: 'Persatuan Renang Para Malaysia', en: 'Malaysia Para Swimming Association' },
+  desc: {
+    ms: 'Mengurus latihan dan kejohanan renang untuk atlet para.',
+    en: 'Manages training and competitions for para swimming athletes.'
+  },
+  link: 'https://www.worldparaswimming.org'
+},
+{
+  id: 14,
+  type: 'NGO',
+  icon: 'fas fa-bullseye',
+  name: { ms: 'Persatuan Memanah Para Malaysia', en: 'Malaysia Para Archery Association' },
+  desc: {
+    ms: 'Persatuan yang membangunkan atlet memanah paralimpik.',
+    en: 'Association developing paralympic archery athletes.'
+  },
+  link: 'https://worldarchery.org'
+},
+{
+  id: 15,
+  type: 'NGO',
+  icon: 'fas fa-futbol',
+  name: { ms: 'Persatuan Bola Sepak OKU Malaysia', en: 'Malaysia Disability Football Association' },
+  desc: {
+    ms: 'Mengurus futsal dan bola sepak untuk pemain OKU.',
+    en: 'Manages football and futsal for disabled athletes.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 16,
+  type: 'NGO',
+  icon: 'fas fa-dumbbell',
+  name: { ms: 'Persatuan Powerlifting Para Malaysia', en: 'Malaysia Para Powerlifting Federation' },
+  desc: {
+    ms: 'Menyelaras latihan dan pertandingan para powerlifting.',
+    en: 'Coordinates para powerlifting training and competitions.'
+  },
+  link: 'https://www.paralympic.org/powerlifting'
+},
+{
+  id: 17,
+  type: 'NGO',
+  icon: 'fas fa-bicycle',
+  name: { ms: 'Persatuan Para Cycling Malaysia', en: 'Malaysia Para Cycling Federation' },
+  desc: {
+    ms: 'Mengurus pembangunan atlet para berbasikal.',
+    en: 'Manages development of para cycling athletes.'
+  },
+  link: 'https://www.uci.org'
+},
+{
+  id: 18,
+  type: 'NGO',
+  icon: 'fas fa-running',
+  name: { ms: 'Persatuan Para Athletics Malaysia', en: 'Malaysia Para Athletics Association' },
+  desc: {
+    ms: 'Badan yang mengurus sukan olahraga paralimpik Malaysia.',
+    en: 'Association managing paralympic athletics in Malaysia.'
+  },
+  link: 'https://www.paralympic.org/athletics'
+},
+{
+  id: 19,
+  type: 'NGO',
+  icon: 'fas fa-chess',
+  name: { ms: 'Persatuan Sukan Catur OKU Malaysia', en: 'Malaysia Disability Chess Association' },
+  desc: {
+    ms: 'Menggalakkan sukan minda seperti catur untuk komuniti OKU.',
+    en: 'Promotes mind sports like chess for disabled communities.'
+  },
+  link: 'https://www.fide.com'
+},
+{
+  id: 20,
+  type: 'NGO',
+  icon: 'fas fa-hand-paper',
+  name: { ms: 'Persatuan Boccia Malaysia', en: 'Malaysia Boccia Federation' },
+  desc: {
+    ms: 'Badan rasmi yang mengurus sukan boccia untuk atlet paralimpik.',
+    en: 'Official body managing boccia for paralympic athletes.'
+  },
+  link: 'https://www.worldboccia.com'
+},
+{
+  id: 21,
+  type: 'NGO',
+  icon: 'fas fa-volleyball-ball',
+  name: { ms: 'Persatuan Bola Tampar Duduk Malaysia', en: 'Malaysia Sitting Volleyball Association' },
+  desc: {
+    ms: 'Membangunkan sukan bola tampar duduk untuk atlet OKU di Malaysia.',
+    en: 'Develops sitting volleyball sport for PWD athletes in Malaysia.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 22,
+  type: 'NGO',
+  icon: 'fas fa-bowling-ball',
+  name: { ms: 'Persatuan Boling Tenpin OKU Malaysia', en: 'Malaysia Disabled Tenpin Bowling Association' },
+  desc: {
+    ms: 'Mengurus kejohanan dan latihan boling untuk komuniti OKU.',
+    en: 'Organizes bowling competitions and training for PWD community.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 23,
+  type: 'NGO',
+  icon: 'fas fa-baseball-ball',
+  name: { ms: 'Persatuan Goalball Malaysia', en: 'Malaysia Goalball Association' },
+  desc: {
+    ms: 'Mengurus sukan goalball untuk atlet cacat penglihatan.',
+    en: 'Manages goalball sport for visually impaired athletes.'
+  },
+  link: 'https://www.ibsa-sport.org'
+},
+{
+  id: 24,
+  type: 'NGO',
+  icon: 'fas fa-hand-rock',
+  name: { ms: 'Persatuan Judo Para Malaysia', en: 'Malaysia Para Judo Association' },
+  desc: {
+    ms: 'Persatuan yang membangunkan atlet judo paralimpik Malaysia.',
+    en: 'Association developing paralympic judo athletes in Malaysia.'
+  },
+  link: 'https://www.paralympic.org/judo'
+},
+{
+  id: 25,
+  type: 'NGO',
+  icon: 'fas fa-shield-alt',
+  name: { ms: 'Persatuan Taekwondo Para Malaysia', en: 'Malaysia Para Taekwondo Federation' },
+  desc: {
+    ms: 'Mengurus pembangunan sukan taekwondo untuk atlet para.',
+    en: 'Manages development of para taekwondo athletes.'
+  },
+  link: 'https://www.worldtaekwondo.org'
+},
+{
+  id: 26,
+  type: 'NGO',
+  icon: 'fas fa-bullseye',
+  name: { ms: 'Persatuan Menembak Para Malaysia', en: 'Malaysia Para Shooting Association' },
+  desc: {
+    ms: 'Mengurus latihan dan pertandingan menembak paralimpik.',
+    en: 'Coordinates paralympic shooting training and competitions.'
+  },
+  link: 'https://www.paralympic.org/shooting'
+},
+{
+  id: 27,
+  type: 'NGO',
+  icon: 'fas fa-chess-knight',
+  name: { ms: 'Persatuan Sukan Intelek OKU Malaysia', en: 'Malaysia Intellectual Disability Sports Association' },
+  desc: {
+    ms: 'Menggalakkan sukan minda dan intelek bagi OKU pembelajaran.',
+    en: 'Promotes intellectual sports for learning disability athletes.'
+  },
+  link: 'https://www.specialolympics.org'
+},
+{
+  id: 28,
+  type: 'NGO',
+  icon: 'fas fa-running',
+  name: { ms: 'Kelab Larian OKU Malaysia', en: 'Malaysia Disability Running Club' },
+  desc: {
+    ms: 'Komuniti larian untuk atlet OKU dan sokongan kecergasan.',
+    en: 'Running community for disabled athletes and fitness support.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 29,
+  type: 'NGO',
+  icon: 'fas fa-bicycle',
+  name: { ms: 'Kelab Berbasikal Para Malaysia', en: 'Malaysia Para Cycling Club' },
+  desc: {
+    ms: 'Kelab pembangunan atlet berbasikal para.',
+    en: 'Development club for para cycling athletes.'
+  },
+  link: 'https://www.uci.org'
+},
+{
+  id: 30,
+  type: 'NGO',
+  icon: 'fas fa-swimmer',
+  name: { ms: 'Kelab Renang Paralimpik Malaysia', en: 'Malaysia Paralympic Swimming Club' },
+  desc: {
+    ms: 'Kelab latihan dan pembangunan renang paralimpik.',
+    en: 'Training and development club for paralympic swimming.'
+  },
+  link: 'https://www.worldparaswimming.org'
+},
+{
+  id: 31,
+  type: 'NGO',
+  icon: 'fas fa-dumbbell',
+  name: { ms: 'Kelab Angkat Berat OKU Malaysia', en: 'Malaysia Disability Powerlifting Club' },
+  desc: {
+    ms: 'Kelab latihan untuk atlet angkat berat paralimpik.',
+    en: 'Training club for paralympic powerlifting athletes.'
+  },
+  link: 'https://www.paralympic.org/powerlifting'
+},
+{
+  id: 32,
+  type: 'NGO',
+  icon: 'fas fa-table-tennis',
+  name: { ms: 'Kelab Ping Pong Para Malaysia', en: 'Malaysia Para Table Tennis Club' },
+  desc: {
+    ms: 'Kelab pembangunan pemain ping pong paralimpik.',
+    en: 'Development club for paralympic table tennis players.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 33,
+  type: 'NGO',
+  icon: 'fas fa-basketball-ball',
+  name: { ms: 'Kelab Bola Keranjang Kerusi Roda KL', en: 'KL Wheelchair Basketball Club' },
+  desc: {
+    ms: 'Kelab bola keranjang kerusi roda di Kuala Lumpur.',
+    en: 'Wheelchair basketball club in Kuala Lumpur.'
+  },
+  link: 'https://iwbf.org'
+},
+{
+  id: 34,
+  type: 'NGO',
+  icon: 'fas fa-basketball-ball',
+  name: { ms: 'Kelab Bola Keranjang Kerusi Roda Johor', en: 'Johor Wheelchair Basketball Club' },
+  desc: {
+    ms: 'Kelab bola keranjang kerusi roda di Johor.',
+    en: 'Wheelchair basketball club in Johor.'
+  },
+  link: 'https://iwbf.org'
+},
+{
+  id: 35,
+  type: 'NGO',
+  icon: 'fas fa-basketball-ball',
+  name: { ms: 'Kelab Bola Keranjang Kerusi Roda Penang', en: 'Penang Wheelchair Basketball Club' },
+  desc: {
+    ms: 'Kelab bola keranjang kerusi roda di Pulau Pinang.',
+    en: 'Wheelchair basketball club in Penang.'
+  },
+  link: 'https://iwbf.org'
+},
+{
+  id: 36,
+  type: 'NGO',
+  icon: 'fas fa-futbol',
+  name: { ms: 'Kelab Bola Sepak OKU Selangor', en: 'Selangor Disability Football Club' },
+  desc: {
+    ms: 'Kelab pembangunan bola sepak komuniti OKU Selangor.',
+    en: 'Community disability football club in Selangor.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 37,
+  type: 'NGO',
+  icon: 'fas fa-futbol',
+  name: { ms: 'Kelab Bola Sepak OKU Sabah', en: 'Sabah Disability Football Club' },
+  desc: {
+    ms: 'Kelab bola sepak komuniti OKU Sabah.',
+    en: 'Community disability football club in Sabah.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 38,
+  type: 'NGO',
+  icon: 'fas fa-futbol',
+  name: { ms: 'Kelab Bola Sepak OKU Sarawak', en: 'Sarawak Disability Football Club' },
+  desc: {
+    ms: 'Kelab bola sepak komuniti OKU Sarawak.',
+    en: 'Community disability football club in Sarawak.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 39,
+  type: 'NGO',
+  icon: 'fas fa-running',
+  name: { ms: 'Kelab Olahraga Para Malaysia', en: 'Malaysia Para Athletics Club' },
+  desc: {
+    ms: 'Kelab pembangunan atlet olahraga para.',
+    en: 'Development club for para athletics athletes.'
+  },
+  link: 'https://www.paralympic.org'
+},
+{
+  id: 40,
+  type: 'NGO',
+  icon: 'fas fa-hand-paper',
+  name: { ms: 'Kelab Boccia Malaysia', en: 'Malaysia Boccia Club' },
+  desc: {
+    ms: 'Kelab komuniti sukan boccia untuk OKU.',
+    en: 'Community boccia sports club for disabled athletes.'
+  },
+  link: 'https://www.worldboccia.com'
+}
+],
+
+                // DATA SEARCH ITEMS
+                listData: [
+                    { id: 1, category: 'Sukan', title: { ms: 'Boccia', en: 'Boccia' }, desc: { ms: 'Sukan ketepatan untuk atlet dengan gangguan motor yang teruk.', en: 'Precision sport for athletes with severe motor impairments.' }, url: 'https://www.paralympic.org/boccia' },
+                    { id: 2, category: 'Sukan', title: { ms: 'Bola Keranjang Kerusi Roda', en: 'Wheelchair Basketball' }, desc: { ms: 'Sukan berpasukan pantas dimainkan di gelanggang.', en: 'Fast-paced team sport played on court.' }, url: 'https://iwbf.org' },
+                    { id: 3, category: 'Fasiliti', title: { ms: 'Pusat Kecemerlangan Paralimpik Kg. Pandan', en: 'Kg. Pandan Paralympic Centre' }, desc: { ms: 'Fasiliti latihan lengkap bertaraf dunia di KL.', en: 'World-class training facility in KL.' }, url: 'https://goo.gl/maps/xyz' },
+                    { id: 4, category: 'Program', title: { ms: 'Para SUKMA', en: 'Para SUKMA Games' }, desc: { ms: 'Temasya sukan dwitahunan peringkat kebangsaan.', en: 'Biennial national level multi-sport event.' }, url: 'https://www.nsc.gov.my' },
+                    { id: 5, category: 'Sukan', title: { ms: 'Memanah Para', en: 'Para Archery' }, desc: { ms: 'Terbuka kepada atlet fizikal dengan pelbagai kategori.', en: 'Open to athletes with physical impairments in various categories.' }, url: 'https://worldarchery.sport' },
+                    { id: 6, category: 'Insentif', title: { ms: 'Skim Kesejahteraan Atlet (SKAK)', en: 'Athlete Welfare Scheme' }, desc: { ms: 'Bantuan kebajikan untuk bekas atlet negara.', en: 'Welfare aid for former national athletes.' }, url: 'https://yakeb.org.my' }
+                ],
+
+                filteredData: [],
+                messages: [
+                    { id: 1, text: 'Hai! 🏅 Saya <b>Coach Bot</b>. Nak tahu tentang <b>SHAKAM</b> (duit kemenangan) atau cara join <b>Para SUKMA</b>?', sender: 'bot' }
+                ],
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                    
+                    this.filteredData = this.listData;
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                doSearch() {
+                    const q = this.search.toLowerCase();
+                    if (!q) {
+                        this.filteredData = this.listData;
+                        return;
+                    }
+                    this.filteredData = this.listData.filter(item => 
+                        item.title[this.lang].toLowerCase().includes(q) || 
+                        item.desc[this.lang].toLowerCase().includes(q)
+                    );
+                },
+
+                sendMessage() {
+                    if (!this.userMsg.trim()) return;
+                    
+                    this.messages.push({ id: Date.now(), text: this.userMsg, sender: 'user' });
+                    const input = this.userMsg.toLowerCase();
+                    this.userMsg = '';
+                    this.isTyping = true;
+
+                    setTimeout(() => {
+                        const chatBox = document.getElementById('chat-messages');
+                        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                    }, 10);
+
+                    setTimeout(() => {
+                        let reply = '';
+                        if (input.includes('duit') || input.includes('rm') || input.includes('shakam') || input.includes('money')) {
+                            reply = this.lang === 'ms' 
+                                ? 'Untuk Sukan Paralimpik, Emas dapat <b>RM 1 Juta</b>! Sama macam Olimpik. Rujuk jadual di atas untuk info penuh.' 
+                                : 'For Paralympics, Gold gets <b>RM 1 Million</b>! Same as Olympics. Check the table above for details.';
+                        } else if (input.includes('daftar') || input.includes('join') || input.includes('sertai')) {
+                            reply = this.lang === 'ms' 
+                                ? 'Anda boleh hubungi Majlis Sukan Negeri anda atau Jabatan Belia & Sukan (JBS) untuk sesi pemilihan bakat.' 
+                                : 'You can contact your State Sports Council or Youth & Sports Dept (JBS) for talent identification sessions.';
+                        } else {
+                            reply = this.lang === 'ms' 
+                                ? 'Maaf, saya hanya bot latihan. Sila hubungi MSN di 03-8871 3000 untuk info lanjut.' 
+                                : 'Sorry, I am just a training bot. Please contact NSC at 03-8871 3000 for details.';
+                        }
+
+                        this.messages.push({ id: Date.now()+1, text: reply, sender: 'bot' });
+                        this.isTyping = false;
+                        
+                        setTimeout(() => {
+                            const chatBox = document.getElementById('chat-messages');
+                            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                        }, 10);
+                    }, 1500);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

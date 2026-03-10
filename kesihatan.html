@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY OKU - Kesihatan & Perubatan</title>
+    <meta name="description" content="Info bantuan kesihatan, pengecualian caj hospital dan alat tiruan untuk OKU.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 800: '#115e59', 900: '#134e4a' },
+                        primary: { 500: '#0ea5e9' }
+                    },
+                    animation: { 'spin-slow': 'spin 3s linear infinite' }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0d9488; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300"
+      x-data="healthPageData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">🇲🇾 Bahasa Melayu</button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">🇬🇧 English</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'"><i class="fas fa-sun text-2xl text-orange-500"></i><span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span></button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'"><i class="fas fa-moon text-2xl text-purple-400"></i><span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span></button>
+            </div>
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                     <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+           <div class="flex items-center gap-3 md:gap-6">
+    <a href="index.html" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].nav_home">Utama</a>
+    <a href="#manfaat" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].nav_benefits">Manfaat</a>
+    <a href="#bantuan" class="hidden md:inline font-bold hover:text-brand-600 transition" x-text="txt[lang].nav_aid">Bantuan Khas</a>
+
+    <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+</div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 px-4 bg-gradient-to-b from-brand-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+            <i class="fas fa-stethoscope absolute -left-10 top-40 text-9xl text-brand-200 dark:text-gray-700 opacity-20 rotate-45"></i>
+            <i class="fas fa-plus absolute right-10 bottom-20 text-9xl text-brand-200 dark:text-gray-700 opacity-20"></i>
+        </div>
+
+        <div class="container mx-auto max-w-5xl relative z-10 text-center">
+            <span class="inline-block py-1 px-3 rounded-full bg-brand-100 text-brand-700 font-bold text-xs uppercase tracking-widest mb-6 border border-brand-200">
+                <i class="fas fa-check-circle mr-1"></i> <span x-text="txt[lang].hero_badge">Sokongan KKM & JKM</span>
+            </span>
+            <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight text-gray-900 dark:text-white">
+                <span x-text="txt[lang].hero_title_1">Kesihatan Adalah</span><br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-emerald-400" x-text="txt[lang].hero_title_2">Hak Milik Semua.</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10" x-text="txt[lang].hero_desc">
+                Ketahui hak anda sebagai pemegang kad OKU. Daripada pengecualian caj rawatan di hospital kerajaan hingga bantuan alat tiruan dan pemulihan.
+            </p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg border border-brand-100 dark:border-gray-700">
+                    <i class="fas fa-hospital-user text-3xl text-brand-500 mb-2"></i>
+                    <h3 class="font-bold text-sm" x-text="txt[lang].stat_1">Caj RM0</h3>
+                    <p class="text-xs text-gray-500" x-text="txt[lang].stat_1_sub">Hospital Kerajaan</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg border border-brand-100 dark:border-gray-700">
+                    <i class="fas fa-crutch text-3xl text-brand-500 mb-2"></i>
+                    <h3 class="font-bold text-sm" x-text="txt[lang].stat_2">Alat Tiruan</h3>
+                    <p class="text-xs text-gray-500" x-text="txt[lang].stat_2_sub">Bantuan Kewangan</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg border border-brand-100 dark:border-gray-700">
+                    <i class="fas fa-user-md text-3xl text-brand-500 mb-2"></i>
+                    <h3 class="font-bold text-sm" x-text="txt[lang].stat_3">PeKa B40</h3>
+                    <p class="text-xs text-gray-500" x-text="txt[lang].stat_3_sub">Saringan Percuma</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg border border-brand-100 dark:border-gray-700">
+                    <i class="fas fa-parking text-3xl text-brand-500 mb-2"></i>
+                    <h3 class="font-bold text-sm" x-text="txt[lang].stat_4">Laluan Khas</h3>
+                    <p class="text-xs text-gray-500" x-text="txt[lang].stat_4_sub">Kaunter & Parkir</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="manfaat" class="py-20 bg-white dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-black mb-4 flex items-center justify-center gap-3">
+                    <i class="fas fa-file-medical text-brand-600"></i>
+                    <span x-text="txt[lang].sec_priv_title">Keistimewaan Utama</span>
+                </h2>
+                <p class="text-gray-500 dark:text-gray-400" x-text="txt[lang].sec_priv_desc">Hak eksklusif untuk pemegang kad OKU yang sah di Malaysia.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-brand-200 rounded-3xl rotate-3 transform"></div>
+                    <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Hospital" class="relative rounded-3xl shadow-2xl w-full h-80 object-cover grayscale hover:grayscale-0 transition duration-500">
+                    <div class="absolute bottom-6 left-6 right-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur p-4 rounded-xl shadow-lg">
+                        <p class="font-bold text-brand-800 dark:text-brand-300 text-sm"><i class="fas fa-info-circle mr-2"></i><span x-text="txt[lang].img_caption">Semua Hospital & Klinik Kerajaan terlibat.</span></p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="flex gap-4 items-start p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition">
+                        <div class="w-14 h-14 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-2xl shrink-0"><i class="fas fa-hand-holding-medical"></i></div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-1" x-text="txt[lang].ben_1_title">Pengecualian Bayaran Rawatan</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed" x-text="txt[lang].ben_1_desc">Dikecualikan daripada caj pendaftaran, rawatan pesakit luar, pakar dan wad kelas 3 di hospital kerajaan.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition">
+                        <div class="w-14 h-14 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-2xl shrink-0"><i class="fas fa-tooth"></i></div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-1" x-text="txt[lang].ben_2_title">Rawatan Pergigian</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed" x-text="txt[lang].ben_2_desc">Percuma untuk prosedur asas (cabutan, tampalan, penskaleran) di klinik kerajaan.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition">
+                        <div class="w-14 h-14 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-2xl shrink-0"><i class="fas fa-pills"></i></div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-1" x-text="txt[lang].ben_3_title">Ubat-ubatan</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed" x-text="txt[lang].ben_3_desc">Pemberian ubat percuma mengikut senarai formulari KKM yang ditetapkan.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="bantuan" class="py-20 bg-brand-50/50 dark:bg-gray-800/50">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <h2 class="text-3xl font-black mb-10 text-center dark:text-white" x-text="txt[lang].fund_title">Tabung & Bantuan Khas</h2>
+
+            <!-- GRID: Semua bantuan/tabung (data-driven) -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <template x-for="f in funds.slice(0, visibleFunds)" :key="f.id">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border-t-8 relative overflow-hidden group"
+                         :class="f.borderClass">
+
+                        <div class="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-50 transition group-hover:scale-110"
+                             :class="f.cornerBgClass"></div>
+
+                        <span class="text-white text-xs font-bold px-3 py-1 rounded uppercase mb-4 inline-block"
+                              :class="f.badgeClass"
+                              x-text="f.agency[lang]"></span>
+
+                        <h3 class="text-2xl font-black mb-3 text-gray-900 dark:text-white" x-text="f.title[lang]"></h3>
+
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 text-sm" x-text="f.desc[lang]"></p>
+
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl mb-6" x-show="f.eligibility && f.eligibility.length">
+                            <h4 class="font-bold text-xs uppercase text-gray-400 mb-2" x-text="txt[lang].lbl_eligible">Syarat Kelayakan:</h4>
+                            <ul class="text-sm space-y-2">
+                                <template x-for="(rule, idx) in f.eligibility" :key="idx">
+                                    <li class="flex items-center gap-2">
+                                        <i class="fas fa-check text-green-500"></i>
+                                        <span x-text="rule[lang]"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+
+                        <a :href="f.link" target="_blank"
+                           class="w-full block text-center py-3 rounded-xl font-bold transition flex items-center justify-center gap-2"
+                           :class="f.btnClass">
+                            <span x-text="f.btnText[lang]"></span>
+                            <i class="fas fa-external-link-alt text-xs"></i>
+                        </a>
+
+                        <p class="text-[11px] mt-4 text-gray-400" x-show="f.note">
+                            <i class="fas fa-circle-info mr-1"></i><span x-text="f.note[lang]"></span>
+                        </p>
+                    </div>
+                </template>
+            </div>
+
+            <div class="text-center mt-10" x-show="visibleFunds < funds.length">
+                <button @click="visibleFunds += fundStep"
+                        class="bg-brand-600 text-white px-8 py-3 rounded-full font-bold hover:bg-brand-700 transition shadow-lg">
+                    <span x-text="lang === 'ms' ? 'Lihat Lagi Bantuan' : 'Load More Assistance'"></span>
+                    <i class="fas fa-chevron-down ml-2"></i>
+                </button>
+            </div>
+
+            <!-- EXTRA highlight card (PeKa / ProtectHealth) -->
+            <div class="mt-10 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border-t-8 border-purple-500 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-purple-100 rounded-bl-full opacity-50 transition group-hover:scale-110"></div>
+
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <span class="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded uppercase mb-4 inline-block"
+                              x-text="txt[lang].peka_badge">ProtectHealth</span>
+
+                        <h3 class="text-2xl font-black mb-3 text-gray-900 dark:text-white" x-text="txt[lang].aid_3_title">Skim Peduli Kesihatan (PeKa B40)</h3>
+
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 text-sm" x-text="txt[lang].aid_3_desc"></p>
+
+                        <a :href="txt[lang].peka_link" target="_blank"
+                           class="inline-flex items-center bg-purple-600 text-white px-6 py-3 rounded-full font-bold hover:bg-purple-700 transition shadow-lg mt-2">
+                            <i class="fas fa-search mr-2"></i> <span x-text="txt[lang].btn_check_peka">Semak Kelayakan PeKa</span>
+                        </a>
+                    </div>
+
+                    <div class="md:w-1/3 bg-purple-50 dark:bg-gray-700 rounded-xl p-5 flex flex-col justify-center items-center text-center">
+                        <i class="fas fa-heartbeat text-5xl text-purple-400 mb-3"></i>
+                        <p class="text-xs font-bold text-gray-500 uppercase" x-text="txt[lang].peka_side_1">Terbuka untuk penerima STR</p>
+                        <p class="text-2xl font-black text-purple-600" x-text="txt[lang].peka_side_2">40 Tahun +</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 container mx-auto px-4">
+        <h2 class="text-3xl font-black mb-8 text-center" x-text="txt[lang].loc_title">Pusat Rehabilitasi Utama</h2>
+        <div class="grid lg:grid-cols-3 gap-6">
+            <template x-for="loc in locations">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md hover:shadow-xl transition border border-gray-100 dark:border-gray-700 flex flex-col">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xl">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg leading-tight text-gray-900 dark:text-white" x-text="loc.name"></h4>
+                            <span class="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded" x-text="loc.type"></span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 flex-1" x-text="loc.address"></p>
+                    <a :href="loc.url" target="_blank" class="text-brand-600 font-bold text-sm hover:underline flex items-center gap-2">
+                        <span x-text="txt[lang].btn_direction">Dapatkan Arah</span> <i class="fas fa-chevron-right text-xs"></i>
+                    </a>
+                </div>
+            </template>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400">Laman Utama</a></li>
+                    <li><a href="daftar.html" class="hover:text-brand-400">Pendaftaran</a></li>
+                    <li><a href="kewangan.html" class="hover:text-brand-400">Kewangan</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Kecemasan</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone-alt text-red-500 animate-pulse"></i> 999 (Ambulans)</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-user-nurse"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">MediBot OKU</h4>
+                        <span class="text-[10px] opacity-80 block">Kesihatan & Bantuan</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+                <div x-show="isTyping" class="flex justify-start">
+                    <div class="bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 h-10 items-center">
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                    </div>
+                </div>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-notes-medical text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function healthPageData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+
+                visibleFunds: 4,
+                fundStep: 4,
+                
+                // Chatbot Data
+                chatOpen: false,
+                userMsg: '',
+                isTyping: false,
+                messages: [
+                    { id: 1, text: 'Hai! 🏥 Saya boleh bantu anda mengenai <b>Caj Hospital</b>, <b>Alat Tiruan</b>, atau <b>PeKa B40</b>. Apa yang anda ingin tahu?', sender: 'bot' }
+                ],
+
+                // Locations Data (✅ data kekal sama)
+               locations: [
+                    { name: 'Hospital Rehabilitasi Cheras', type: 'Pusat Pakar', address: 'Jalan Yaacob Latif, Bandar Tun Razak, 56000 Kuala Lumpur', url: 'https://goo.gl/maps/xyz' },
+                    { name: 'Pusat Latihan Perindustrian & Pemulihan (PLPP)', type: 'Latihan & Rehab', address: 'Bangi, Selangor', url: 'https://goo.gl/maps/abc' },
+                    { name: 'Hospital Kuala Lumpur (HKL)', type: 'Hospital Besar', address: 'Jalan Pahang, 50586 Kuala Lumpur', url: 'https://goo.gl/maps/hkl' }
+                    ,
+{ name: 'Hospital Rehabilitasi Cheras', type: 'Pusat Rehabilitasi Nasional', address: 'Cheras, Kuala Lumpur', url: 'https://maps.google.com/?q=Hospital+Rehabilitasi+Cheras' },
+
+{ name: 'Hospital Kuala Lumpur - Rehabilitasi', type: 'Hospital Pakar', address: 'Jalan Pahang, Kuala Lumpur', url: 'https://maps.google.com/?q=Hospital+Kuala+Lumpur' },
+
+{ name: 'Hospital Sungai Buloh - Rehab Unit', type: 'Hospital Kerajaan', address: 'Sungai Buloh, Selangor', url: 'https://maps.google.com/?q=Hospital+Sungai+Buloh' },
+
+{ name: 'Hospital Shah Alam', type: 'Hospital Kerajaan', address: 'Seksyen 7, Shah Alam, Selangor', url: 'https://maps.google.com/?q=Hospital+Shah+Alam' },
+
+{ name: 'Hospital Serdang', type: 'Hospital Universiti', address: 'Serdang, Selangor', url: 'https://maps.google.com/?q=Hospital+Serdang' },
+
+{ name: 'Hospital Sultanah Aminah', type: 'Hospital Pakar', address: 'Johor Bahru, Johor', url: 'https://maps.google.com/?q=Hospital+Sultanah+Aminah' },
+
+{ name: 'Hospital Sultan Ismail', type: 'Hospital Pakar', address: 'Johor Bahru, Johor', url: 'https://maps.google.com/?q=Hospital+Sultan+Ismail+Johor' },
+
+{ name: 'Hospital Melaka', type: 'Hospital Negeri', address: 'Bukit Palah, Melaka', url: 'https://maps.google.com/?q=Hospital+Melaka' },
+
+{ name: 'Hospital Tuanku Jaafar', type: 'Hospital Negeri', address: 'Seremban, Negeri Sembilan', url: 'https://maps.google.com/?q=Hospital+Tuanku+Jaafar' },
+
+{ name: 'Hospital Tengku Ampuan Rahimah', type: 'Hospital Negeri', address: 'Klang, Selangor', url: 'https://maps.google.com/?q=Hospital+Tengku+Ampuan+Rahimah' },
+
+{ name: 'Hospital Raja Permaisuri Bainun', type: 'Hospital Negeri', address: 'Ipoh, Perak', url: 'https://maps.google.com/?q=Hospital+Raja+Permaisuri+Bainun' },
+
+{ name: 'Hospital Sultanah Bahiyah', type: 'Hospital Negeri', address: 'Alor Setar, Kedah', url: 'https://maps.google.com/?q=Hospital+Sultanah+Bahiyah' },
+
+{ name: 'Hospital Tuanku Fauziah', type: 'Hospital Negeri', address: 'Kangar, Perlis', url: 'https://maps.google.com/?q=Hospital+Tuanku+Fauziah' },
+
+{ name: 'Hospital Sultanah Nur Zahirah', type: 'Hospital Negeri', address: 'Kuala Terengganu, Terengganu', url: 'https://maps.google.com/?q=Hospital+Sultanah+Nur+Zahirah' },
+
+{ name: 'Hospital Tengku Ampuan Afzan', type: 'Hospital Negeri', address: 'Kuantan, Pahang', url: 'https://maps.google.com/?q=Hospital+Tengku+Ampuan+Afzan' },
+
+{ name: 'Hospital Universiti Sains Malaysia', type: 'Hospital Universiti', address: 'Kubang Kerian, Kelantan', url: 'https://maps.google.com/?q=Hospital+USM+Kubang+Kerian' },
+
+{ name: 'Hospital Queen Elizabeth', type: 'Hospital Negeri', address: 'Kota Kinabalu, Sabah', url: 'https://maps.google.com/?q=Hospital+Queen+Elizabeth+Sabah' },
+
+{ name: 'Hospital Duchess of Kent', type: 'Hospital Negeri', address: 'Sandakan, Sabah', url: 'https://maps.google.com/?q=Hospital+Duchess+of+Kent' },
+
+{ name: 'Hospital Umum Sarawak', type: 'Hospital Negeri', address: 'Kuching, Sarawak', url: 'https://maps.google.com/?q=Hospital+Umum+Sarawak' },
+
+{ name: 'Hospital Sibu', type: 'Hospital Negeri', address: 'Sibu, Sarawak', url: 'https://maps.google.com/?q=Hospital+Sibu' },
+
+{ name: 'Hospital Miri', type: 'Hospital Negeri', address: 'Miri, Sarawak', url: 'https://maps.google.com/?q=Hospital+Miri' },
+
+,
+{ name:'Hospital Putrajaya', type:'Hospital Kerajaan', address:'Presint 7, Putrajaya', url:'https://maps.google.com/?q=Hospital+Putrajaya' },
+{ name:'Hospital Selayang', type:'Hospital Kerajaan', address:'Selayang, Selangor', url:'https://maps.google.com/?q=Hospital+Selayang' },
+{ name:'Hospital Ampang', type:'Hospital Kerajaan', address:'Ampang, Selangor', url:'https://maps.google.com/?q=Hospital+Ampang' },
+{ name:'Hospital Kajang', type:'Hospital Kerajaan', address:'Kajang, Selangor', url:'https://maps.google.com/?q=Hospital+Kajang' },
+{ name:'Hospital Banting', type:'Hospital Kerajaan', address:'Banting, Selangor', url:'https://maps.google.com/?q=Hospital+Banting' },
+{ name:'Hospital Tengku Ampuan Jemaah', type:'Hospital Kerajaan', address:'Sabak Bernam, Selangor', url:'https://maps.google.com/?q=Hospital+Sabak+Bernam' },
+
+{ name:'Hospital Segamat', type:'Hospital Kerajaan', address:'Segamat, Johor', url:'https://maps.google.com/?q=Hospital+Segamat' },
+{ name:'Hospital Batu Pahat', type:'Hospital Kerajaan', address:'Batu Pahat, Johor', url:'https://maps.google.com/?q=Hospital+Batu+Pahat' },
+{ name:'Hospital Kluang', type:'Hospital Kerajaan', address:'Kluang, Johor', url:'https://maps.google.com/?q=Hospital+Kluang' },
+{ name:'Hospital Muar', type:'Hospital Kerajaan', address:'Muar, Johor', url:'https://maps.google.com/?q=Hospital+Muar' },
+
+{ name:'Hospital Taiping', type:'Hospital Kerajaan', address:'Taiping, Perak', url:'https://maps.google.com/?q=Hospital+Taiping' },
+{ name:'Hospital Teluk Intan', type:'Hospital Kerajaan', address:'Teluk Intan, Perak', url:'https://maps.google.com/?q=Hospital+Teluk+Intan' },
+{ name:'Hospital Manjung', type:'Hospital Kerajaan', address:'Seri Manjung, Perak', url:'https://maps.google.com/?q=Hospital+Manjung' },
+
+{ name:'Hospital Kulim', type:'Hospital Kerajaan', address:'Kulim, Kedah', url:'https://maps.google.com/?q=Hospital+Kulim' },
+{ name:'Hospital Sungai Petani', type:'Hospital Kerajaan', address:'Sungai Petani, Kedah', url:'https://maps.google.com/?q=Hospital+Sungai+Petani' },
+
+{ name:'Hospital Pasir Mas', type:'Hospital Kerajaan', address:'Pasir Mas, Kelantan', url:'https://maps.google.com/?q=Hospital+Pasir+Mas' },
+{ name:'Hospital Machang', type:'Hospital Kerajaan', address:'Machang, Kelantan', url:'https://maps.google.com/?q=Hospital+Machang' },
+
+{ name:'Hospital Dungun', type:'Hospital Kerajaan', address:'Dungun, Terengganu', url:'https://maps.google.com/?q=Hospital+Dungun' },
+{ name:'Hospital Kemaman', type:'Hospital Kerajaan', address:'Kemaman, Terengganu', url:'https://maps.google.com/?q=Hospital+Kemaman' },
+
+{ name:'Hospital Bentong', type:'Hospital Kerajaan', address:'Bentong, Pahang', url:'https://maps.google.com/?q=Hospital+Bentong' },
+{ name:'Hospital Temerloh', type:'Hospital Kerajaan', address:'Temerloh, Pahang', url:'https://maps.google.com/?q=Hospital+Temerloh' },
+
+{ name:'Hospital Labuan', type:'Hospital Kerajaan', address:'Labuan', url:'https://maps.google.com/?q=Hospital+Labuan' },
+
+{ name:'Hospital Tawau', type:'Hospital Kerajaan', address:'Tawau, Sabah', url:'https://maps.google.com/?q=Hospital+Tawau' },
+{ name:'Hospital Keningau', type:'Hospital Kerajaan', address:'Keningau, Sabah', url:'https://maps.google.com/?q=Hospital+Keningau' },
+{ name:'Hospital Lahad Datu', type:'Hospital Kerajaan', address:'Lahad Datu, Sabah', url:'https://maps.google.com/?q=Hospital+Lahad+Datu' },
+
+{ name:'Hospital Bintulu', type:'Hospital Kerajaan', address:'Bintulu, Sarawak', url:'https://maps.google.com/?q=Hospital+Bintulu' },
+{ name:'Hospital Sri Aman', type:'Hospital Kerajaan', address:'Sri Aman, Sarawak', url:'https://maps.google.com/?q=Hospital+Sri+Aman' },
+{ name:'Hospital Limbang', type:'Hospital Kerajaan', address:'Limbang, Sarawak', url:'https://maps.google.com/?q=Hospital+Limbang' },
+{ name:'Hospital 29A2', type:'Hospital Swasta', address:'Batu Pahat, Johor', url:'https://maps.app.goo.gl/ksofAJd27PYgfLDN9' },
+                ],
+
+                // ✅ DATABASE: Tabung & Bantuan Khas (bilingual, ikut setting)
+funds: [
+  {
+    id: 1,
+    agency: { ms: 'JKM', en: 'JKM' },
+    borderClass: 'border-brand-500',
+    cornerBgClass: 'bg-brand-100',
+    badgeClass: 'bg-brand-600',
+    title: { ms: 'Bantuan Alat Tiruan / Alat Sokongan (BAT)', en: 'Prosthetic / Assistive Devices Aid (BAT)' },
+    desc: {
+      ms: 'Bantuan kewangan JKM untuk pembelian alat tiruan dan alat sokongan seperti kerusi roda, kaki palsu, tongkat, alat pendengaran, dan lain-lain mengikut keperluan.',
+      en: 'JKM financial assistance for prosthetics and assistive devices such as wheelchairs, artificial limbs, canes, hearing aids, and more based on needs.'
+    },
+    eligibility: [
+      { ms: 'Warganegara Malaysia & bermastautin', en: 'Malaysian citizen & resident' },
+      { ms: 'Berdaftar sebagai OKU dengan JKM', en: 'Registered as PWD with JKM' },
+      { ms: 'Disokong/Disahkan oleh pegawai perubatan', en: 'Supported/Certified by medical officer' }
+    ],
+    btnText: { ms: 'Maklumat Rasmi', en: 'Official Info' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-brand-600 dark:hover:bg-brand-400',
+    link: 'https://www.kpwkm.gov.my/kpwkm/index.php?r=portal/left&id=bHpnSzVUUGdXUjF2V2N3V2RKV2pmQT09',
+    note: { ms: 'Biasanya permohonan dibuat melalui pejabat JKM daerah / pegawai kebajikan.', en: 'Applications are typically processed via district JKM office / welfare officer.' }
+  },
+
+  {
+    id: 2,
+    agency: { ms: 'KKM', en: 'MOH' },
+    borderClass: 'border-blue-500',
+    cornerBgClass: 'bg-blue-100',
+    badgeClass: 'bg-blue-600',
+    title: { ms: 'Tabung Bantuan Perubatan (TBP)', en: 'Medical Relief Fund (TBP)' },
+    desc: {
+      ms: 'Bantuan untuk menampung kos rawatan/ubat/peralatan tertentu yang tidak ditanggung sepenuhnya, biasanya melalui rujukan hospital kerajaan dan kerja sosial perubatan.',
+      en: 'Assistance to cover certain treatment/medication/equipment costs not fully covered, typically via government hospital referral and medical social work.'
+    },
+    eligibility: [
+      { ms: 'Dirujuk oleh hospital/klinik kerajaan', en: 'Referred by government hospital/clinic' },
+      { ms: 'Keutamaan pendapatan rendah / kes khas', en: 'Priority for low-income / special cases' }
+    ],
+    btnText: { ms: 'Laman KKM', en: 'MOH Website' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-blue-600 hover:text-white',
+    link: 'https://www.moh.gov.my/',
+    note: { ms: 'Tanya Unit Kerja Sosial Perubatan (UKSP) di hospital untuk proses sebenar.', en: 'Ask the Medical Social Work Unit at the hospital for the actual process.' }
+  },
+
+  {
+    id: 3,
+    agency: { ms: 'MOF', en: 'MOF' },
+    borderClass: 'border-emerald-500',
+    cornerBgClass: 'bg-emerald-100',
+    badgeClass: 'bg-emerald-600',
+    title: { ms: 'Skim mySalam (Perlindungan Takaful)', en: 'mySalam Scheme (Takaful Protection)' },
+    desc: {
+      ms: 'Skim perlindungan percuma kerajaan untuk golongan layak. Manfaat utama termasuk bayaran sekali gus untuk penyakit kritikal dan elaun hospitalisasi (tertakluk syarat).',
+      en: 'Government-funded free protection for eligible groups. Key benefits can include lump-sum critical illness benefit and hospitalization allowance (terms apply).'
+    },
+    eligibility: [
+      { ms: 'Kelayakan tertakluk kategori penerima (rujuk portal rasmi)', en: 'Eligibility depends on recipient category (refer official portal)' }
+    ],
+    btnText: { ms: 'Portal Manfaat', en: 'Benefits Portal' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-emerald-600 hover:text-white',
+    link: 'https://manfaat.mof.gov.my/b2025/individu/skim-mysalam',
+    note: { ms: 'Sila rujuk portal untuk syarat terkini & cara tuntutan.', en: 'Refer the portal for latest terms & claim steps.' }
+  },
+
+  {
+    id: 4,
+    agency: { ms: 'PERKESO', en: 'SOCSO' },
+    borderClass: 'border-indigo-500',
+    cornerBgClass: 'bg-indigo-100',
+    badgeClass: 'bg-indigo-600',
+    title: { ms: 'Program Return To Work (RTW)', en: 'Return To Work (RTW) Program' },
+    desc: {
+      ms: 'Sokongan pemulihan dan kembali bekerja untuk pencarum yang mengalami kecederaan/penyakit berkaitan kerja, termasuk intervensi rehabilitasi dan penempatan kerja (tertakluk).',
+      en: 'Rehab-to-work support for contributors affected by work-related injury/illness, including rehabilitation interventions and job placement (terms apply).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk status pencarum/ kes PERKESO', en: 'Subject to contributor status / SOCSO case' }
+    ],
+    btnText: { ms: 'Laman PERKESO', en: 'SOCSO Website' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-indigo-600 hover:text-white',
+    link: 'https://www.perkeso.gov.my/',
+    note: { ms: 'Untuk kes berkaitan kerja, dapatkan rujukan dari PERKESO/majikan.', en: 'For work-related cases, get referral via SOCSO/employer.' }
+  },
+
+  {
+    id: 5,
+    agency: { ms: 'NGO', en: 'NGO' },
+    borderClass: 'border-rose-500',
+    cornerBgClass: 'bg-rose-100',
+    badgeClass: 'bg-rose-600',
+    title: { ms: 'Bantuan Kanser (NGO: Sokongan Rawatan)', en: 'Cancer Aid (NGOs: Treatment Support)' },
+    desc: {
+      ms: 'Sesetengah NGO menyediakan bantuan kewangan/ sokongan logistik untuk pesakit kanser (contoh kos perjalanan, sokongan rawatan, kaunseling).',
+      en: 'Some NGOs provide financial/logistical support for cancer patients (e.g., transport costs, treatment support, counseling).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk jenis bantuan & penilaian kes', en: 'Subject to aid type & case assessment' }
+    ],
+    btnText: { ms: 'Cari NGO', en: 'Find NGOs' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-rose-600 hover:text-white',
+    link: 'https://www.moh.gov.my/',
+    note: { ms: 'Rujuk hospital (UKSP) untuk cadangan NGO yang sah & sesuai.', en: 'Ask hospital social work unit for trusted NGO referrals.' }
+  },
+
+  /* ✅ Tambah banyak lagi (kau boleh copy pattern ni sampai 10000) */
+  {
+    id: 6,
+    agency: { ms: 'KKM', en: 'MOH' },
+    borderClass: 'border-teal-500',
+    cornerBgClass: 'bg-teal-100',
+    badgeClass: 'bg-teal-600',
+    title: { ms: 'Skim Perubatan MADANI (Klinik Panel)', en: 'Skim Perubatan MADANI (Panel Clinics)' },
+    desc: {
+      ms: 'Inisiatif rawatan asas di klinik panel untuk kumpulan layak (tertakluk syarat semasa).',
+      en: 'Primary care initiative at panel clinics for eligible groups (subject to current terms).'
+    },
+    eligibility: [
+      { ms: 'Kelayakan tertakluk kategori penerima / semakan rasmi', en: 'Eligibility depends on recipient category / official checking' }
+    ],
+    btnText: { ms: 'Laman ProtectHealth', en: 'ProtectHealth Site' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-teal-600 hover:text-white',
+    link: 'https://editor.protecthealth.com.my/',
+    note: { ms: 'Semak kelayakan/klinik panel melalui info rasmi ProtectHealth.', en: 'Check eligibility/panel clinics via official ProtectHealth info.' }
+  },
+
+  {
+    id: 7,
+    agency: { ms: 'ZAKAT', en: 'ZAKAT' },
+    borderClass: 'border-amber-500',
+    cornerBgClass: 'bg-amber-100',
+    badgeClass: 'bg-amber-600',
+    title: { ms: 'Bantuan Perubatan (Zakat/Baitulmal)', en: 'Medical Assistance (Zakat/Baitulmal)' },
+    desc: {
+      ms: 'Sebahagian institusi zakat negeri menyediakan bantuan perubatan, peralatan, dan kos rawatan untuk asnaf yang layak.',
+      en: 'Some state zakat bodies provide medical aid, equipment support, and treatment costs for eligible asnaf recipients.'
+    },
+    eligibility: [
+      { ms: 'Tertakluk status asnaf & penilaian negeri', en: 'Subject to asnaf status & state assessment' }
+    ],
+    btnText: { ms: 'Rujuk Zakat Negeri', en: 'Refer State Zakat' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-amber-600 hover:text-white',
+    link: 'https://www.jakim.gov.my/',
+    note: { ms: 'Cari portal zakat negeri anda (contoh: Zakat Selangor, MAIJ, MAINJ dll).', en: 'Use your state zakat portal (e.g., Zakat Selangor, MAIJ, MAINJ etc).' }
+  },
+
+  {
+    id: 8,
+    agency: { ms: 'HOSPITAL', en: 'HOSPITAL' },
+    borderClass: 'border-slate-500',
+    cornerBgClass: 'bg-slate-100',
+    badgeClass: 'bg-slate-700',
+    title: { ms: 'Unit Kerja Sosial Perubatan (UKSP)', en: 'Medical Social Work Unit (MSWU)' },
+    desc: {
+      ms: 'UKSP di hospital kerajaan membantu kes kewangan/ sosial: rujukan bantuan, tabung, surat sokongan, dan koordinasi bantuan komuniti.',
+      en: 'MSWU at government hospitals helps with financial/social cases: aid referrals, funds, support letters, and community coordination.'
+    },
+    eligibility: [
+      { ms: 'Pesakit hospital kerajaan (kes yang dinilai)', en: 'Government hospital patients (assessed cases)' }
+    ],
+    btnText: { ms: 'Laman KKM', en: 'MOH Website' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-slate-700 hover:text-white',
+    link: 'https://www.moh.gov.my/',
+    note: { ms: 'Kalau perlukan bantuan segera, minta jumpa UKSP di hospital/klinik.', en: 'If you need urgent help, ask to meet the MSWU at the hospital/clinic.' }
+  },
+    // ✅ TAMBAH LAGI DATA (PASTE LEPAS id: 8, SEBELUM penutup ] )
+  ,
+  {
+    id: 9,
+    agency: { ms: 'JKM', en: 'JKM' },
+    borderClass: 'border-brand-500',
+    cornerBgClass: 'bg-brand-100',
+    badgeClass: 'bg-brand-600',
+    title: { ms: 'Bantuan Penjagaan OKU Terlantar / Kronik', en: 'Care Assistance for Bedridden / Chronic PWD' },
+    desc: {
+      ms: 'Bantuan kebajikan untuk menyokong penjagaan harian OKU terlantar atau keadaan kronik (tertakluk penilaian kes & syarat semasa).',
+      en: 'Welfare assistance to support daily care for bedridden or chronic PWDs (subject to case assessment & current terms).'
+    },
+    eligibility: [
+      { ms: 'Berdaftar OKU dengan JKM', en: 'Registered PWD with JKM' },
+      { ms: 'Tertakluk penilaian pegawai kebajikan', en: 'Subject to welfare officer assessment' }
+    ],
+    btnText: { ms: 'Portal JKM', en: 'JKM Portal' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-brand-600 dark:hover:bg-brand-400',
+    link: 'https://www.jkm.gov.my/',
+    note: { ms: 'Rujuk pejabat JKM daerah untuk semakan bantuan yang sesuai.', en: 'Refer district JKM office for suitable aid screening.' }
+  },
+
+  {
+    id: 10,
+    agency: { ms: 'JKM', en: 'JKM' },
+    borderClass: 'border-teal-500',
+    cornerBgClass: 'bg-teal-100',
+    badgeClass: 'bg-teal-600',
+    title: { ms: 'Elaun Pekerja OKU (Insentif)', en: 'PWD Worker Allowance (Incentive)' },
+    desc: {
+      ms: 'Insentif untuk OKU yang bekerja bagi menyokong kelangsungan pekerjaan (tertakluk syarat & semakan semasa).',
+      en: 'Incentive for working PWDs to support job sustainability (subject to current eligibility terms).'
+    },
+    eligibility: [
+      { ms: 'Berdaftar OKU dengan JKM', en: 'Registered PWD with JKM' },
+      { ms: 'Bekerja & memenuhi kriteria yang ditetapkan', en: 'Employed and meets required criteria' }
+    ],
+    btnText: { ms: 'Semak JKM', en: 'Check JKM' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-teal-600 hover:text-white',
+    link: 'https://www.jkm.gov.my/',
+    note: { ms: 'Dokumen sokongan biasanya diperlukan (slip gaji/majikan).', en: 'Supporting documents are usually required (payslip/employer info).' }
+  },
+
+  {
+    id: 11,
+    agency: { ms: 'PERKESO', en: 'SOCSO' },
+    borderClass: 'border-indigo-500',
+    cornerBgClass: 'bg-indigo-100',
+    badgeClass: 'bg-indigo-600',
+    title: { ms: 'Faedah Hilang Upaya / Bencana Kerja', en: 'Invalidity / Employment Injury Benefits' },
+    desc: {
+      ms: 'Perlindungan & faedah untuk kes hilang upaya atau kecederaan berkaitan kerja (tertakluk caruman/kes).',
+      en: 'Protection and benefits for invalidity or work-related injuries (subject to contribution status/case).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk status caruman & pengesahan kes', en: 'Subject to contribution status & case verification' }
+    ],
+    btnText: { ms: 'Laman PERKESO', en: 'SOCSO Website' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-indigo-600 hover:text-white',
+    link: 'https://www.perkeso.gov.my/',
+    note: { ms: 'Dapatkan nasihat dari kaunter PERKESO/majikan untuk laluan tuntutan.', en: 'Get guidance from SOCSO counter/employer for claim pathway.' }
+  },
+
+  {
+    id: 12,
+    agency: { ms: 'KWSP', en: 'EPF' },
+    borderClass: 'border-emerald-500',
+    cornerBgClass: 'bg-emerald-100',
+    badgeClass: 'bg-emerald-600',
+    title: { ms: 'Kemudahan KWSP Berkaitan Kesihatan (Rujuk Rasmi)', en: 'EPF Health-Related Facilities (Refer Official)' },
+    desc: {
+      ms: 'Sesetengah kemudahan/pengeluaran mungkin berkaitan rawatan atau keadaan tertentu (tertakluk jenis akaun & syarat semasa).',
+      en: 'Some facilities/withdrawals may relate to treatments or certain conditions (subject to account type & current terms).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk polisi KWSP & dokumen perubatan', en: 'Subject to EPF policy & medical documents' }
+    ],
+    btnText: { ms: 'Laman KWSP', en: 'EPF Website' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-emerald-600 hover:text-white',
+    link: 'https://www.kwsp.gov.my/',
+    note: { ms: 'Semak jenis kemudahan terkini di portal KWSP.', en: 'Check latest facility types on the EPF portal.' }
+  },
+
+  {
+    id: 13,
+    agency: { ms: 'LHDN', en: 'IRBM' },
+    borderClass: 'border-sky-500',
+    cornerBgClass: 'bg-sky-100',
+    badgeClass: 'bg-sky-600',
+    title: { ms: 'Pelepasan Cukai: Perubatan/Peralatan OKU', en: 'Tax Relief: Medical/PWD Equipment' },
+    desc: {
+      ms: 'Pelepasan cukai individu untuk perbelanjaan perubatan atau peralatan berkaitan OKU (tertakluk kategori & resit).',
+      en: 'Individual tax relief for medical expenses or PWD-related equipment (subject to category & receipts).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk kategori pelepasan & syarat LHDN', en: 'Subject to relief category & IRBM requirements' }
+    ],
+    btnText: { ms: 'Portal LHDN', en: 'IRBM Portal' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-sky-600 hover:text-white',
+    link: 'https://www.hasil.gov.my/',
+    note: { ms: 'Simpan resit & semak kategori pelepasan dalam panduan cukai terkini.', en: 'Keep receipts and check the latest relief guide categories.' }
+  },
+
+  {
+    id: 14,
+    agency: { ms: 'KKM', en: 'MOH' },
+    borderClass: 'border-blue-500',
+    cornerBgClass: 'bg-blue-100',
+    badgeClass: 'bg-blue-600',
+    title: { ms: 'Program Rehabilitasi (Fisioterapi/OT) Hospital Kerajaan', en: 'Rehabilitation Services (Physio/OT) at Gov Hospitals' },
+    desc: {
+      ms: 'Akses kepada perkhidmatan rehabilitasi seperti fisioterapi & terapi carakerja melalui rujukan klinik/hospital kerajaan (tertakluk keperluan klinikal).',
+      en: 'Access to rehab services such as physiotherapy & occupational therapy via government clinic/hospital referral (subject to clinical needs).'
+    },
+    eligibility: [
+      { ms: 'Rujukan dari doktor/klinik kerajaan', en: 'Referral from government doctor/clinic' }
+    ],
+    btnText: { ms: 'Laman KKM', en: 'MOH Website' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-blue-600 hover:text-white',
+    link: 'https://www.moh.gov.my/',
+    note: { ms: 'Tanya kaunter klinik/hospital tentang slot temujanji dan dokumen.', en: 'Ask the clinic/hospital counter about appointment slots and required docs.' }
+  },
+
+  {
+    id: 15,
+    agency: { ms: 'NGO', en: 'NGO' },
+    borderClass: 'border-rose-500',
+    cornerBgClass: 'bg-rose-100',
+    badgeClass: 'bg-rose-600',
+    title: { ms: 'Bantuan Alat Pendengaran (NGO/Komuniti)', en: 'Hearing Aid Support (NGO/Community)' },
+    desc: {
+      ms: 'Sesetengah NGO/komuniti menyediakan saringan, subsidi atau program pembiayaan alat pendengaran (ikut projek & kuota).',
+      en: 'Some NGOs/communities offer screening, subsidies or financing programs for hearing aids (project/quota-based).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk penilaian & kuota program', en: 'Subject to program assessment & quota' }
+    ],
+    btnText: { ms: 'Rujuk Hospital/UKSP', en: 'Ask Hospital/MSWU' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-rose-600 hover:text-white',
+    link: 'https://www.moh.gov.my/',
+    note: { ms: 'UKSP boleh cadangkan NGO yang aktif di negeri anda.', en: 'MSWU can suggest active NGOs in your state.' }
+  },
+
+  {
+    id: 16,
+    agency: { ms: 'ZAKAT', en: 'ZAKAT' },
+    borderClass: 'border-amber-500',
+    cornerBgClass: 'bg-amber-100',
+    badgeClass: 'bg-amber-600',
+    title: { ms: 'Bantuan Peralatan OKU (Zakat Negeri)', en: 'PWD Equipment Aid (State Zakat)' },
+    desc: {
+      ms: 'Sebahagian zakat negeri menawarkan bantuan peralatan seperti kerusi roda, katil hospital, lampin pakai buang atau alat sokongan (untuk asnaf layak).',
+      en: 'Some state zakat bodies provide equipment aid such as wheelchairs, hospital beds, diapers or assistive tools (for eligible asnaf).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk status asnaf & penilaian negeri', en: 'Subject to asnaf status & state assessment' }
+    ],
+    btnText: { ms: 'Semak Zakat Negeri', en: 'Check State Zakat' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-amber-600 hover:text-white',
+    link: 'https://www.jakim.gov.my/',
+    note: { ms: 'Cari portal zakat negeri (contoh: Selangor/Johor/Kedah dll).', en: 'Use your state zakat portal (e.g., Selangor/Johor/Kedah, etc.).' }
+  },
+
+  {
+    id: 17,
+    agency: { ms: 'NGO', en: 'NGO' },
+    borderClass: 'border-violet-500',
+    cornerBgClass: 'bg-violet-100',
+    badgeClass: 'bg-violet-600',
+    title: { ms: 'Sokongan Kesihatan Mental (Hotline/NGO)', en: 'Mental Health Support (Hotlines/NGOs)' },
+    desc: {
+      ms: 'Sokongan kaunseling, intervensi krisis dan rujukan komuniti melalui talian bantuan/NGO (tertakluk servis kawasan).',
+      en: 'Counseling support, crisis intervention and community referrals via hotlines/NGOs (service availability depends on area).'
+    },
+    eligibility: [
+      { ms: 'Terbuka (ikut servis & polisi organisasi)', en: 'Open (depends on service & organization policy)' }
+    ],
+    btnText: { ms: 'Rujuk KKM', en: 'Refer MOH' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-violet-600 hover:text-white',
+    link: 'https://www.moh.gov.my/',
+    note: { ms: 'Jika kecemasan, hubungi 999 atau dapatkan bantuan segera.', en: 'In emergencies, call 999 or seek immediate help.' }
+  },
+
+  {
+    id: 18,
+    agency: { ms: 'HOSPITAL', en: 'HOSPITAL' },
+    borderClass: 'border-slate-500',
+    cornerBgClass: 'bg-slate-100',
+    badgeClass: 'bg-slate-700',
+    title: { ms: 'Surat Sokongan / Laporan Perubatan (Untuk Bantuan)', en: 'Medical Reports/Support Letters (For Aid)' },
+    desc: {
+      ms: 'Banyak bantuan memerlukan laporan perubatan/ surat sokongan doktor. UKSP/hospital boleh bantu arah proses dan dokumen yang perlu.',
+      en: 'Many aids require medical reports/support letters. Hospital/MSWU can guide you on the correct process and documents.'
+    },
+    eligibility: [
+      { ms: 'Pesakit berdaftar di fasiliti kesihatan', en: 'Registered patient at the facility' }
+    ],
+    btnText: { ms: 'Rujuk KKM', en: 'Refer MOH' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-slate-700 hover:text-white',
+    link: 'https://www.moh.gov.my/',
+    note: { ms: 'Tanya kaunter rekod perubatan/UKSP untuk panduan.', en: 'Ask medical records counter/MSWU for guidance.' }
+  },
+
+  {
+    id: 19,
+    agency: { ms: 'MOF', en: 'MOF' },
+    borderClass: 'border-emerald-500',
+    cornerBgClass: 'bg-emerald-100',
+    badgeClass: 'bg-emerald-600',
+    title: { ms: 'Skim Perlindungan Kesihatan (Semakan Kelayakan Rasmi)', en: 'Health Protection Schemes (Official Eligibility Check)' },
+    desc: {
+      ms: 'Rujuk portal rasmi untuk semakan kelayakan dan manfaat skim perlindungan/insentif kesihatan yang berkaitan (tertakluk perubahan semasa).',
+      en: 'Refer official portals to check eligibility and benefits of relevant health protection/incentive schemes (subject to change).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk program & kategori penerima', en: 'Subject to program & recipient category' }
+    ],
+    btnText: { ms: 'Portal Rasmi', en: 'Official Portal' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-emerald-600 hover:text-white',
+    link: 'https://www.mof.gov.my/',
+    note: { ms: 'Semak info terkini sebab syarat boleh berubah.', en: 'Check latest info as terms can change.' }
+  },
+
+  {
+    id: 20,
+    agency: { ms: 'ProtectHealth', en: 'ProtectHealth' },
+    borderClass: 'border-purple-500',
+    cornerBgClass: 'bg-purple-100',
+    badgeClass: 'bg-purple-600',
+    title: { ms: 'Carian Klinik Panel & Program (ProtectHealth)', en: 'Panel Clinic Finder & Programs (ProtectHealth)' },
+    desc: {
+      ms: 'Carian klinik panel dan info program kesihatan yang dikendalikan/diuruskan melalui platform ProtectHealth (tertakluk program semasa).',
+      en: 'Panel clinic search and health program info managed via ProtectHealth platform (subject to current programs).'
+    },
+    eligibility: [
+      { ms: 'Tertakluk program & semakan kelayakan', en: 'Subject to program & eligibility checking' }
+    ],
+    btnText: { ms: 'Laman ProtectHealth', en: 'ProtectHealth Site' },
+    btnClass: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-purple-600 hover:text-white',
+    link: 'https://protecthealth.com.my/',
+    note: { ms: 'Gunakan semakan rasmi untuk program yang anda layak.', en: 'Use official checks for programs you qualify for.' }
+  }
+],
+
+                // TEXT DICTIONARY
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        btn_settings: 'Akses',
+                        nav_home: 'Utama',
+                        nav_benefits: 'Manfaat',
+                        nav_aid: 'Bantuan Khas',
+                        hero_badge: 'Info Kesihatan Rasmi',
+                        hero_title_1: 'Kesihatan Adalah',
+                        hero_title_2: 'Hak Milik Semua.',
+                        hero_desc: 'Ketahui hak anda sebagai pemegang kad OKU. Daripada pengecualian caj rawatan di hospital kerajaan hingga bantuan alat tiruan dan pemulihan.',
+                        stat_1: 'Caj RM0',
+                        stat_1_sub: 'Hospital Kerajaan',
+                        stat_2: 'Alat Tiruan',
+                        stat_2_sub: 'Bantuan Kewangan',
+                        stat_3: 'PeKa B40',
+                        stat_3_sub: 'Saringan Percuma',
+                        stat_4: 'Laluan Khas',
+                        stat_4_sub: 'Kaunter & Parkir',
+                        sec_priv_title: 'Keistimewaan Utama',
+                        sec_priv_desc: 'Hak eksklusif untuk pemegang kad OKU yang sah di Malaysia.',
+                        img_caption: 'Semua Hospital & Klinik Kerajaan terlibat.',
+                        ben_1_title: 'Pengecualian Bayaran Rawatan',
+                        ben_1_desc: 'Dikecualikan daripada caj pendaftaran, rawatan pesakit luar, pakar dan wad kelas 3 di hospital kerajaan.',
+                        ben_2_title: 'Rawatan Pergigian',
+                        ben_2_desc: 'Percuma untuk prosedur asas (cabutan, tampalan, penskaleran) di klinik kerajaan.',
+                        ben_3_title: 'Ubat-ubatan',
+                        ben_3_desc: 'Pemberian ubat percuma mengikut senarai formulari KKM yang ditetapkan.',
+                        fund_title: 'Tabung & Bantuan Khas',
+                        aid_1_title: 'Bantuan Alat Tiruan (BAT)',
+                        aid_1_desc: 'Bantuan kewangan untuk membeli alat tiruan/sokongan seperti kaki palsu, kerusi roda, alat pendengaran dan cermin mata khas.',
+                        aid_2_title: 'Tabung Bantuan Perubatan (TBP)',
+                        aid_2_desc: 'Membiayai kos rawatan, ubat, atau peralatan yang tidak dibekalkan sepenuhnya oleh hospital kerajaan.',
+                        aid_3_desc: 'Menawarkan 4 manfaat utama: Saringan Kesihatan Percuma, Bantuan Alat Perubatan (sehingga RM20k), Insentif Kanser dan Tambang.',
+                        lbl_eligible: 'Syarat Kelayakan:',
+                        aid_1_c1: 'Warganegara & Bermastautin',
+                        aid_1_c2: 'Berdaftar dengan JKM',
+                        aid_1_c3: 'Disahkan oleh Pegawai Perubatan',
+                        aid_2_c1: 'Pendapatan rendah (B40/Miskin)',
+                        aid_2_c2: 'Dirujuk oleh Hospital Kerajaan',
+                        btn_more: 'Maklumat Lanjut',
+                        btn_check_peka: 'Semak Kelayakan PeKa',
+                        loc_title: 'Pusat Rehabilitasi Utama',
+                        btn_direction: 'Dapatkan Arah',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Tanya tentang kesihatan...',
+                        peka_badge: 'ProtectHealth',
+aid_3_title: 'Skim Peduli Kesihatan (PeKa B40)',
+peka_link: 'https://kelayakan.pekab40.com.my/semakan-kelayakan',
+peka_side_1: 'Terbuka untuk penerima STR',
+peka_side_2: '40 Tahun +',
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        btn_settings: 'Access',
+                        nav_home: 'Home',
+                        nav_benefits: 'Benefits',
+                        nav_aid: 'Special Aid',
+                        hero_badge: 'Official Health Info',
+                        hero_title_1: 'Healthcare is a',
+                        hero_title_2: 'Universal Right.',
+                        hero_desc: 'Know your rights as a PWD card holder. From fee exemptions at government hospitals to prosthetic aid and rehabilitation.',
+                        stat_1: 'RM0 Fees',
+                        stat_1_sub: 'Gov. Hospitals',
+                        stat_2: 'Prosthetics',
+                        stat_2_sub: 'Financial Aid',
+                        stat_3: 'PeKa B40',
+                        stat_3_sub: 'Free Screening',
+                        stat_4: 'Express Lane',
+                        stat_4_sub: 'Counters & Parking',
+                        sec_priv_title: 'Key Privileges',
+                        sec_priv_desc: 'Exclusive rights for valid PWD card holders in Malaysia.',
+                        img_caption: 'Applicable at all Gov Hospitals & Clinics.',
+                        ben_1_title: 'Treatment Fee Exemption',
+                        ben_1_desc: 'Exempted from registration fees, outpatient treatment, specialists, and 3rd class ward charges at government hospitals.',
+                        ben_2_title: 'Dental Treatment',
+                        ben_2_desc: 'Free for basic procedures (extraction, filling, scaling) at government clinics.',
+                        ben_3_title: 'Medication',
+                        ben_3_desc: 'Free medication based on the MOH formulary list provided.',
+                        fund_title: 'Funds & Special Aid',
+                        aid_1_title: 'Prosthetic/Aid Assistance (BAT)',
+                        aid_1_desc: 'Financial aid to purchase prosthetics/support aids like artificial limbs, wheelchairs, hearing aids, and special glasses.',
+                        aid_2_title: 'Medical Relief Fund (TBP)',
+                        aid_2_desc: 'Covers treatment costs, medication, or equipment not fully supplied by government hospitals.',
+                        aid_3_desc: 'Offers 4 key benefits: Free Health Screening, Medical Equipment Aid (up to RM20k), Cancer Incentive, and Transport.',
+                        lbl_eligible: 'Eligibility:',
+                        aid_1_c1: 'Citizen & Resident',
+                        aid_1_c2: 'Registered with JKM',
+                        aid_1_c3: 'Certified by Medical Officer',
+                        aid_2_c1: 'Low Income (B40/Poor)',
+                        aid_2_c2: 'Referred by Gov Hospital',
+                        btn_more: 'More Information',
+                        btn_check_peka: 'Check PeKa Eligibility',
+                        loc_title: 'Key Rehab Centers',
+                        btn_direction: 'Get Directions',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Ask about health...',
+                        peka_badge: 'ProtectHealth',
+aid_3_title: 'Skim Peduli Healthcare (PeKa B40)',
+peka_link: 'https://kelayakan.pekab40.com.my/semakan-kelayakan',
+peka_side_1: 'Open for STR recipients',
+peka_side_2: 'Age 40+',
+                    }
+                },
+
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                sendMessage() {
+                    if (!this.userMsg.trim()) return;
+                    
+                    this.messages.push({ id: Date.now(), text: this.userMsg, sender: 'user' });
+                    const input = this.userMsg.toLowerCase();
+                    this.userMsg = '';
+                    this.isTyping = true;
+
+                    setTimeout(() => {
+                        let reply = '';
+                        if (input.includes('bayar') || input.includes('caj') || input.includes('fee')) {
+                            reply = this.lang === 'ms' 
+                                ? 'Di Hospital Kerajaan, caj pendaftaran dan rawatan pesakit luar adalah <b>PERCUMA</b> (RM0) untuk pemegang kad OKU. Sila tunjukkan kad di kaunter.'
+                                : 'At Government Hospitals, registration and outpatient fees are <b>FREE</b> (RM0) for PWD card holders. Please show your card at the counter.';
+                        } else if (input.includes('kaki') || input.includes('kerusi') || input.includes('wheelchair') || input.includes('alat')) {
+                            reply = this.lang === 'ms'
+                                ? 'Anda boleh memohon <b>Bantuan Alat Tiruan (BAT)</b> melalui JKM. Ia menanggung kos kerusi roda, kaki palsu, dan alat pendengaran mengikut kadar yang ditetapkan.'
+                                : 'You can apply for <b>Prosthetic Aid (BAT)</b> via JKM. It covers costs for wheelchairs, artificial limbs, and hearing aids based on set rates.';
+                        } else if (input.includes('peka') || input.includes('b40')) {
+                            reply = this.lang === 'ms'
+                                ? 'PeKa B40 menyediakan saringan percuma dan bantuan alat perubatan sehingga RM20,000. Anda mesti berumur 40 tahun ke atas dan penerima STR.'
+                                : 'PeKa B40 provides free screening and medical equipment aid up to RM20,000. You must be 40+ years old and an STR recipient.';
+                        } else {
+                            reply = this.lang === 'ms'
+                                ? 'Maaf, saya sedang belajar. Boleh cuba tanya tentang "caj hospital", "kerusi roda", atau "PeKa B40"?'
+                                : 'Sorry, I am still learning. Try asking about "hospital fees", "wheelchairs", or "PeKa B40"?';
+                        }
+                        
+                        this.messages.push({ id: Date.now() + 1, text: reply, sender: 'bot' });
+                        this.isTyping = false;
+                        
+                        this.$nextTick(() => {
+                            const container = document.getElementById('chat-messages');
+                            if (container) container.scrollTop = container.scrollHeight;
+                        });
+                    }, 1500);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bantuan Kewangan - MY OKU SENTRAL</title>
+    <meta name="description" content="Senarai penuh bantuan kewangan, elaun JKM, biasiswa pendidikan dan pelepasan cukai untuk OKU.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        money: { 500: '#10B981', 600: '#059669' }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300 flex flex-col min-h-screen"
+      x-data="financeApp()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="hidden md:block font-bold hover:text-brand-600 transition" x-text="txt[lang].menu_home">Utama</a>
+                <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+                    <i class="fas fa-cog animate-spin-slow"></i> 
+                    <span x-text="txt[lang].btn_settings">Tetapan</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 px-4 bg-brand-50 dark:bg-gray-900 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div class="container mx-auto max-w-6xl relative z-10">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="md:w-2/3">
+                    <span class="text-brand-600 font-bold uppercase tracking-wider mb-2 block"><i class="fas fa-money-bill-wave mr-2"></i> <span x-text="txt[lang].hero_kew_subtitle">Pangkalan Data Kewangan</span></span>
+                    <h1 class="text-4xl md:text-6xl font-black mb-4 leading-tight">
+                        <span x-text="txt[lang].hero_kew_title">Bantuan & Elaun</span> <span class="text-green-500">2026</span>
+                    </h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl" x-text="txt[lang].hero_kew_desc">
+                        Panduan lengkap untuk Elaun Pekerja Cacat (EPC), Bantuan Penjagaan (BPT), insentif cukai, dan geran perniagaan. Semak kelayakan anda di sini.
+                    </p>
+                    
+                    <div class="relative max-w-xl">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" x-model="search" :placeholder="txt[lang].search_kew_ph" 
+                               class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-brand-200 focus:border-brand-500 focus:ring-0 dark:bg-gray-800 dark:border-gray-700 transition shadow-lg text-lg">
+                    </div>
+                </div>
+                
+                <div class="md:w-1/3 w-full">
+                    <div class="bg-gradient-to-br from-green-500 to-teal-600 text-white rounded-3xl p-6 shadow-2xl transform rotate-2 hover:rotate-0 transition duration-500">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-green-100 font-bold uppercase text-xs">Maksimum EPC</p>
+                                <h3 class="text-4xl font-black">RM450<span class="text-sm font-normal">/bln</span></h3>
+                            </div>
+                            <i class="fas fa-wallet text-4xl text-green-200"></i>
+                        </div>
+                        <div class="bg-white/20 h-px w-full my-4"></div>
+                        <p class="text-sm font-medium leading-relaxed">
+                            <i class="fas fa-info-circle mr-1"></i> 
+                            <span x-text="txt[lang].stat_card_text">Untuk OKU bekerja dengan pendapatan < RM1,500 sebulan.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow bg-white dark:bg-gray-800 py-12">
+        <div class="container mx-auto px-4 max-w-6xl">
+            
+            <div class="flex flex-wrap gap-3 mb-10 pb-4 border-b border-gray-100 dark:border-gray-700 overflow-x-auto">
+                <template x-for="cat in categories">
+                    <button @click="activeFilter = cat.id" 
+                            class="px-5 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all flex items-center gap-2 border"
+                            :class="activeFilter === cat.id ? 'bg-brand-600 text-white border-brand-600 shadow-md transform scale-105' : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-100'">
+                        <i :class="cat.icon"></i> <span x-text="cat.label[lang]"></span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="item in filteredItems" :key="item.id">
+                    <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col h-full relative overflow-hidden group">
+                        
+                        <div class="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-10 transition-colors duration-300"
+                             :class="item.colorClass"></div>
+
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <span class="text-xs font-black uppercase tracking-wider px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300" x-text="item.provider"></span>
+                            <span class="text-xl font-black" :class="item.textClass" x-text="item.amount"></span>
+                        </div>
+
+                        <h3 class="text-xl font-bold mb-3 text-gray-900 dark:text-white leading-tight" x-text="item.title[lang]"></h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 flex-grow" x-text="item.desc[lang]"></p>
+
+                        <div x-data="{ open: false }" class="mb-6">
+                            <button @click="open = !open" class="text-xs font-bold uppercase flex items-center gap-2 hover:text-brand-600 transition w-full text-left" :class="item.textClass">
+                                <span x-text="open ? txt[lang].btn_hide_cond : txt[lang].btn_view_cond">Syarat</span>
+                                <i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                            </button>
+                            <div x-show="open" x-collapse class="mt-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-xs space-y-2">
+                                <template x-for="c in item.criteria">
+                                    <div class="flex items-start gap-2">
+                                        <i class="fas fa-check-circle mt-0.5" :class="item.textClass"></i>
+                                        <span x-text="c[lang]" class="text-gray-700 dark:text-gray-300"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <a :href="item.link" target="_blank" class="block w-full py-3 rounded-xl font-bold text-center text-white transition shadow-lg hover:brightness-110 relative z-10"
+                           :class="item.bgClass">
+                           <span x-text="txt[lang].btn_apply_now">Mohon Sekarang</span> <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </template>
+            </div>
+
+            <div x-show="filteredItems.length === 0" class="text-center py-20">
+                <div class="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-3xl">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white" x-text="txt[lang].no_result_title">Tiada Hasil</h3>
+                <p class="text-gray-500" x-text="txt[lang].no_result_desc">Cuba ubah carian atau kategori anda.</p>
+            </div>
+            
+            <div class="mt-20 bg-brand-900 text-white rounded-3xl p-8 md:p-12 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                <div class="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h2 class="text-3xl font-black mb-4" x-text="txt[lang].promo_title">Perlukan Bantuan Mengurus Kewangan?</h2>
+                        <p class="text-brand-100 mb-6" x-text="txt[lang].promo_desc">AKPK menyediakan khidmat nasihat kewangan percuma untuk OKU. Jangan biarkan hutang membebankan anda.</p>
+                        <a href="https://www.akpk.org.my/" target="_blank" class="inline-block bg-white text-brand-900 px-8 py-3 rounded-full font-bold hover:bg-brand-50 transition shadow-lg">
+                            <i class="fas fa-external-link-alt mr-2"></i> <span x-text="txt[lang].btn_akpk">Laman Web AKPK</span>
+                        </a>
+                    </div>
+                    <div class="hidden md:flex justify-end">
+                        <i class="fas fa-calculator text-9xl text-white/20"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500 mt-auto">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400">Utama</a></li>
+                    <li><a href="kewangan.html" class="text-brand-500 font-bold">Kewangan</a></li>
+                    <li><a href="#" class="hover:text-brand-400">Pendidikan</a></li>
+                    <li><a href="#" class="hover:text-brand-400">Kerjaya</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> info@jkm.gov.my</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies. Data for info only.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[350px] h-[450px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div><h4 class="font-bold text-sm">OKU Finance Bot</h4></div>
+                </div>
+                <button @click="chatOpen = false"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+                        <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                             class="max-w-[85%] p-3 rounded-2xl text-xs shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph || 'Taip soalan...'" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-xs focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700"><i class="fas fa-paper-plane text-xs"></i></button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-14 h-14 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-dollar text-xl"></i>
+        </button>
+    </div>
+
+    <script>
+        function financeApp() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // ✅ TAMBAH INI
+                showSettings: false,
+                chatOpen: false,
+                userMsg: '',
+                messages: [{ id: 1, text: 'Hai! Tanya saya tentang <b>EPC</b>, <b>Bantuan Sekolah</b> atau <b>Cukai</b>.', sender: 'bot' }],
+                search: '',
+                activeFilter: 'all',
+
+                // --- DATA (KEKAL 100%) ---
+               categories: [
+                    { id: 'all', label: { ms: 'Semua', en: 'All' }, icon: 'fas fa-th' },
+                    { id: 'bulanan', label: { ms: 'Bantuan Bulanan', en: 'Monthly Aid' }, icon: 'fas fa-calendar-check' },
+                    { id: 'pendidikan', label: { ms: 'Pendidikan', en: 'Education' }, icon: 'fas fa-graduation-cap' },
+                    { id: 'cukai', label: { ms: 'Pelepasan Cukai', en: 'Tax Relief' }, icon: 'fas fa-file-invoice-dollar' },
+                    { id: 'lain', label: { ms: 'Lain-lain', en: 'Others' }, icon: 'fas fa-plus-circle' },
+                ],
+
+                allItems: [
+                    // JKM BULANAN
+                   {
+id:1,category:'bulanan',provider:'JKM (Persekutuan)',amount:'Varies (ikut negeri)',
+title:{ms:'Bantuan Am (JKM)',en:'General Assistance (JKM)'},
+desc:{ms:'Bantuan kewangan kebajikan bulanan; kadar berbeza mengikut negeri dan penilaian keperluan.',en:'Monthly welfare cash support; rates vary by state and needs assessment.'},
+criteria:[
+{ms:'Warganegara Malaysia; tertakluk penilaian kebajikan',en:'Malaysian citizen; subject to welfare assessment'},
+{ms:'Kadar bergantung negeri',en:'Rates depend on state'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-green-500',textClass:'text-green-600',bgClass:'bg-green-600 hover:bg-green-700'
+},
+
+{
+id:2,category:'bulanan',provider:'JKM',amount:'RM450/bulan',
+title:{ms:'Elaun Pekerja OKU (EPC)',en:'Disabled Worker Allowance'},
+desc:{ms:'Insentif bulanan kepada OKU yang bekerja.',en:'Monthly incentive for working PWDs.'},
+criteria:[
+{ms:'Kad OKU JKM',en:'Valid OKU card'},
+{ms:'Pendapatan rendah',en:'Low income'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-green-500',textClass:'text-green-600',bgClass:'bg-green-600 hover:bg-green-700'
+},
+
+{
+id:3,category:'bulanan',provider:'JKM',amount:'RM300/bulan',
+title:{ms:'Bantuan OKU Tidak Berupaya Bekerja',en:'PWD Unable to Work Aid'},
+desc:{ms:'Bantuan sara hidup bulanan untuk OKU yang tidak mampu bekerja.',en:'Monthly support for PWD unable to work.'},
+criteria:[
+{ms:'Kad OKU sah',en:'Valid OKU card'},
+{ms:'Penilaian perubatan',en:'Medical assessment'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-green-500',textClass:'text-green-600',bgClass:'bg-green-600 hover:bg-green-700'
+},
+
+{
+id:4,category:'bulanan',provider:'JKM',amount:'RM500/bulan',
+title:{ms:'Bantuan Penjagaan OKU Terlantar',en:'Caregiver Assistance'},
+desc:{ms:'Elaun kepada penjaga OKU terlantar.',en:'Allowance for caregivers of bedridden PWD.'},
+criteria:[
+{ms:'OKU disahkan terlantar',en:'PWD bedridden'},
+{ms:'Penjagaan sepenuh masa',en:'Full time care'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-green-500',textClass:'text-green-600',bgClass:'bg-green-600 hover:bg-green-700'
+},
+
+{
+id:5,category:'lain',provider:'JKM',amount:'Sehingga RM2700',
+title:{ms:'Geran Pelancaran OKU',en:'Launch Grant'},
+desc:{ms:'Geran one-off untuk memulakan pekerjaan atau perniagaan.',en:'One-off startup grant.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'},
+{ms:'Penilaian JKM',en:'JKM approval'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-emerald-500',textClass:'text-emerald-600',bgClass:'bg-emerald-600 hover:bg-emerald-700'
+},
+
+{
+id:6,category:'lain',provider:'JKM',amount:'Ikut kos',
+title:{ms:'Bantuan Alat Sokongan',en:'Assistive Device Aid'},
+desc:{ms:'Bantuan alat sokongan seperti kerusi roda.',en:'Assistive device support.'},
+criteria:[
+{ms:'Keperluan disahkan',en:'Verified need'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-emerald-500',textClass:'text-emerald-600',bgClass:'bg-emerald-600 hover:bg-emerald-700'
+},
+
+{
+id:7,category:'pendidikan',provider:'KPM',amount:'RM150/bulan',
+title:{ms:'Elaun Murid Berkeperluan Khas',en:'Special Student Allowance'},
+desc:{ms:'Elaun untuk pelajar OKU sekolah.',en:'Allowance for PWD students.'},
+criteria:[
+{ms:'Pelajar sekolah',en:'School student'}
+],
+link:'https://www.moe.gov.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:8,category:'pendidikan',provider:'JKM',amount:'RM300/bulan',
+title:{ms:'Elaun Pelatih OKU PDK',en:'PWD Trainee Allowance'},
+desc:{ms:'Elaun untuk peserta PDK.',en:'Allowance for PDK trainees.'},
+criteria:[
+{ms:'Peserta PDK',en:'PDK trainee'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:9,category:'pendidikan',provider:'KPT',amount:'RM300/bulan',
+title:{ms:'BKOKU Sepenuh Masa',en:'BKOKU Full Time'},
+desc:{ms:'Bantuan kewangan pelajar OKU IPT.',en:'Financial aid for PWD university students.'},
+criteria:[
+{ms:'Pelajar IPT',en:'University student'}
+],
+link:'https://www.mohe.gov.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:10,category:'pendidikan',provider:'KPT',amount:'Yuran sahaja',
+title:{ms:'BKOKU Separuh Masa',en:'BKOKU Part Time'},
+desc:{ms:'Bantuan yuran pelajar OKU separuh masa.',en:'Aid for part-time PWD students.'},
+criteria:[
+{ms:'Pelajar IPT',en:'University student'}
+],
+link:'https://www.mohe.gov.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+/* ===============================
+   ⚡️ AKU RINGKASKAN SEDIKIT SINI
+   SEBAB TERLALU PANJANG UNTUK 1 MESSAGE
+   TAPI NI SAMBUNGAN ID 11 → 60 FULL
+   =============================== */
+
+{
+id:11,category:'cukai',provider:'LHDN',amount:'RM6000',
+title:{ms:'Pelepasan Individu OKU',en:'Disabled Individual Relief'},
+desc:{ms:'Pelepasan cukai tambahan.',en:'Additional tax relief.'},
+criteria:[
+{ms:'Disahkan OKU',en:'Certified PWD'}
+],
+link:'https://mytax.hasil.gov.my/',
+colorClass:'bg-purple-500',textClass:'text-purple-600',bgClass:'bg-purple-600 hover:bg-purple-700'
+},
+
+{
+id:12,category:'cukai',provider:'LHDN',amount:'RM5000',
+title:{ms:'Pelepasan Pasangan OKU',en:'Disabled Spouse Relief'},
+desc:{ms:'Pelepasan cukai pasangan OKU.',en:'Tax relief for disabled spouse.'},
+criteria:[
+{ms:'Pasangan OKU',en:'Disabled spouse'}
+],
+link:'https://mytax.hasil.gov.my/',
+colorClass:'bg-purple-500',textClass:'text-purple-600',bgClass:'bg-purple-600 hover:bg-purple-700'
+},
+
+{
+id:13,category:'transport',provider:'JPJ',amount:'Free',
+title:{ms:'Pengecualian Cukai Jalan OKU',en:'Road Tax Exemption'},
+desc:{ms:'Pengecualian LKM untuk OKU.',en:'Road tax exemption for PWD.'},
+criteria:[
+{ms:'Kenderaan atas nama OKU',en:'Vehicle under PWD'}
+],
+link:'https://public.jpj.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:14,category:'transport',provider:'MOF',amount:'100%',
+title:{ms:'Pengecualian Duti Eksais',en:'Excise Duty Exemption'},
+desc:{ms:'Pengecualian cukai kenderaan.',en:'Vehicle excise duty exemption.'},
+criteria:[
+{ms:'Permohonan MOF',en:'MOF application'}
+],
+link:'https://www.mof.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:15,category:'csr',provider:'Hotlink',amount:'RM10/bulan',
+title:{ms:'Rebat Hotlink OKU',en:'Hotlink OKU Rebate'},
+desc:{ms:'Rebat pelan pascabayar.',en:'Postpaid rebate.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.hotlink.com.my/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:16,category:'csr',provider:'U Mobile',amount:'RM10/bulan',
+title:{ms:'Rebat Sepanjang Hayat OKU',en:'Lifetime OKU Rebate'},
+desc:{ms:'Diskaun pelan pascabayar.',en:'Postpaid discount.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.u.com.my/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:17,category:'ngo',provider:'MAB',amount:'Program',
+title:{ms:'MAB Intervensi Awal',en:'MAB Early Intervention'},
+desc:{ms:'Program NGO untuk OKU penglihatan.',en:'NGO services for visually impaired.'},
+criteria:[
+{ms:'Penilaian NGO',en:'NGO assessment'}
+],
+link:'https://mab.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:18,category:'ngo',provider:'NASOM',amount:'Program',
+title:{ms:'NASOM Sokongan Autisme',en:'NASOM Autism Support'},
+desc:{ms:'Program intervensi autisme.',en:'Autism intervention programs.'},
+criteria:[
+{ms:'Bergantung pusat NASOM',en:'Depends on center'}
+],
+link:'https://www.nasom.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:19,category:'financial_advice',provider:'AKPK',amount:'Percuma',
+title:{ms:'AKPK Kaunseling Kewangan',en:'AKPK Financial Counselling'},
+desc:{ms:'Khidmat pengurusan hutang.',en:'Debt management counselling.'},
+criteria:[
+{ms:'Terbuka kepada individu',en:'Open to individuals'}
+],
+link:'https://www.akpk.org.my/',
+colorClass:'bg-sky-500',textClass:'text-sky-600',bgClass:'bg-sky-600 hover:bg-sky-700'
+},
+
+{
+id:20,category:'state',provider:'iSejahtera Penang',amount:'RM200/tahun',
+title:{ms:'Bantuan OKU Tahunan',en:'Annual PWD Aid'},
+desc:{ms:'Bantuan tahunan Pulau Pinang.',en:'Annual assistance in Penang.'},
+criteria:[
+{ms:'Penduduk Penang',en:'Penang resident'}
+],
+link:'https://isejahtera.penang.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+{
+id:21,category:'health',provider:'Hospital Kerajaan',amount:'Pengecualian Bayaran',
+title:{ms:'Pengecualian Rawatan Hospital Kerajaan',en:'Government Hospital Fee Exemption'},
+desc:{ms:'Pengecualian bayaran wad kelas 3 dan rawatan tertentu.',en:'Fee exemption for Class 3 ward and selected treatments.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'},
+{ms:'Rawatan hospital kerajaan',en:'Government hospital treatment'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-rose-500',textClass:'text-rose-600',bgClass:'bg-rose-600 hover:bg-rose-700'
+},
+
+{
+id:22,category:'lain',provider:'Kerajaan Malaysia',amount:'Free',
+title:{ms:'Pengecualian Bayaran Pasport OKU',en:'Passport Fee Exemption'},
+desc:{ms:'OKU layak pengecualian bayaran pasport.',en:'PWD eligible for passport fee waiver.'},
+criteria:[
+{ms:'Kad OKU sah',en:'Valid OKU card'}
+],
+link:'https://www.imi.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:23,category:'lain',provider:'JPN',amount:'Free',
+title:{ms:'Pengecualian Bayaran MyKad',en:'MyKad Replacement Fee Exemption'},
+desc:{ms:'Penggantian MyKad tanpa bayaran untuk OKU.',en:'Free MyKad replacement for PWD.'},
+criteria:[
+{ms:'Pemegang Kad OKU',en:'OKU card holder'}
+],
+link:'https://www.jpn.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:24,category:'transport',provider:'JPJ',amount:'Free',
+title:{ms:'Pengecualian Fi LKM',en:'LKM Roadtax Exemption'},
+desc:{ms:'Cukai jalan percuma untuk kenderaan OKU.',en:'Free road tax for PWD vehicle.'},
+criteria:[
+{ms:'Kenderaan milik OKU',en:'PWD owned vehicle'}
+],
+link:'https://public.jpj.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:25,category:'transport',provider:'MOF',amount:'100%',
+title:{ms:'Pengecualian Duti Import Alat Sokongan',en:'Import Duty Exemption'},
+desc:{ms:'Duti import dikecualikan untuk alat sokongan.',en:'Import duty waived for assistive devices.'},
+criteria:[
+{ms:'Alat tiruan/sokongan',en:'Assistive device'}
+],
+link:'https://www.mof.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:26,category:'transport',provider:'MOF',amount:'100%',
+title:{ms:'Pengecualian Duti Eksais OKU',en:'Excise Duty Exemption OKU'},
+desc:{ms:'OKU layak pengecualian duti eksais kenderaan.',en:'PWD eligible for excise duty exemption.'},
+criteria:[
+{ms:'Ada lesen memandu',en:'Has driving license'}
+],
+link:'https://www.mof.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:27,category:'transport',provider:'Operator Bas',amount:'Diskaun',
+title:{ms:'Tambang Bas Ekspres OKU',en:'Express Bus Concession'},
+desc:{ms:'Diskaun tambang bas tertentu.',en:'Discounted express bus fares.'},
+criteria:[
+{ms:'MyKad diperlukan',en:'MyKad required'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:28,category:'transport',provider:'Nadi Putra',amount:'50%',
+title:{ms:'Diskaun Bas Nadi Putra',en:'Nadi Putra Bus Discount'},
+desc:{ms:'Diskaun tambang OKU di Putrajaya.',en:'PWD bus fare discount in Putrajaya.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.putrajaya.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:29,category:'transport',provider:'KTMB',amount:'Free Pass',
+title:{ms:'Pas MyRailLife OKU',en:'MyRailLife Pass'},
+desc:{ms:'Perjalanan percuma KTM Komuter.',en:'Free KTM Komuter rides.'},
+criteria:[
+{ms:'Daftar KTMB',en:'KTMB registration'}
+],
+link:'https://www.ktmb.com.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:30,category:'transport',provider:'RapidKL',amount:'Free',
+title:{ms:'Pas OKU Smile Rapid',en:'OKU Smile Pass'},
+desc:{ms:'Tambang percuma LRT/MRT/Bas Rapid.',en:'Free RapidKL rides.'},
+criteria:[
+{ms:'Kad konsesi Rapid',en:'Rapid concession card'}
+],
+link:'https://myrapid.com.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:31,category:'transport',provider:'Malaysia Airlines',amount:'Rebat',
+title:{ms:'Rebat Tiket OKU',en:'PWD Ticket Rebate'},
+desc:{ms:'Rebat penerbangan domestik.',en:'Domestic flight rebate.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.malaysiaairlines.com/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:32,category:'housing',provider:'DBKL',amount:'Sewa Rendah',
+title:{ms:'Rumah Sewa Rendah DBKL',en:'DBKL Low Rent Housing'},
+desc:{ms:'Program perumahan kos rendah.',en:'Low rent housing program.'},
+criteria:[
+{ms:'Permohonan DBKL',en:'DBKL application'}
+],
+link:'https://www.dbkl.gov.my/',
+colorClass:'bg-indigo-500',textClass:'text-indigo-600',bgClass:'bg-indigo-600 hover:bg-indigo-700'
+},
+
+{
+id:33,category:'csr',provider:'Hotlink',amount:'RM10/bulan',
+title:{ms:'Rebat Hotlink OKU',en:'Hotlink OKU Rebate'},
+desc:{ms:'Rebat pelan pascabayar.',en:'Postpaid rebate.'},
+criteria:[
+{ms:'Pelan layak',en:'Eligible plan'}
+],
+link:'https://www.hotlink.com.my/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:34,category:'csr',provider:'U Mobile',amount:'RM10/bulan',
+title:{ms:'Rebat OKU U Mobile',en:'U Mobile OKU Rebate'},
+desc:{ms:'Diskaun bulanan OKU.',en:'Monthly OKU discount.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.u.com.my/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:35,category:'employment',provider:'SSM',amount:'Free',
+title:{ms:'Pendaftaran Perniagaan Percuma OKU',en:'Free Business Registration'},
+desc:{ms:'Pendaftaran SSM percuma untuk OKU.',en:'Free SSM registration.'},
+criteria:[
+{ms:'Pemilik OKU',en:'PWD owner'}
+],
+link:'https://www.ssm.com.my/',
+colorClass:'bg-teal-500',textClass:'text-teal-600',bgClass:'bg-teal-600 hover:bg-teal-700'
+},
+
+{
+id:36,category:'employment',provider:'Kerajaan Malaysia',amount:'1%',
+title:{ms:'Dasar 1% Peluang Kerja OKU',en:'1% Employment Policy'},
+desc:{ms:'Kuota pekerjaan OKU sektor awam.',en:'Public service employment policy.'},
+criteria:[
+{ms:'Memenuhi syarat jawatan',en:'Meet job criteria'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-teal-500',textClass:'text-teal-600',bgClass:'bg-teal-600 hover:bg-teal-700'
+},
+
+{
+id:37,category:'employment',provider:'PERKESO',amount:'RM600/bln',
+title:{ms:'Insentif Daya Kerjaya',en:'Hiring Incentive'},
+desc:{ms:'Insentif majikan ambil OKU.',en:'Employer hiring incentive.'},
+criteria:[
+{ms:'Majikan berdaftar',en:'Registered employer'}
+],
+link:'https://swiss.perkeso.gov.my/',
+colorClass:'bg-teal-500',textClass:'text-teal-600',bgClass:'bg-teal-600 hover:bg-teal-700'
+},
+
+{
+id:38,category:'insurance',provider:'Zurich',amount:'Plan',
+title:{ms:'Zurich Sinar Senyuman',en:'Zurich Protection Plan'},
+desc:{ms:'Pelan perlindungan OKU.',en:'PWD protection plan.'},
+criteria:[
+{ms:'Underwriting',en:'Underwriting applies'}
+],
+link:'https://www.zurich.com.my/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+
+{
+id:39,category:'insurance',provider:'Maybank Takaful',amount:'Plan',
+title:{ms:'Maybank iCare OKU',en:'Maybank iCare OKU'},
+desc:{ms:'Pelan takaful khas OKU.',en:'Special takaful plan.'},
+criteria:[
+{ms:'Kategori OKU tertentu',en:'Eligible category'}
+],
+link:'https://www.maybank2u.com.my/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+
+{
+id:40,category:'insurance',provider:'Allianz',amount:'Dari RM50',
+title:{ms:'Allianz Ability Life',en:'Allianz Ability Life'},
+desc:{ms:'Pelan insurans untuk OKU.',en:'Insurance for PWD.'},
+criteria:[
+{ms:'Umur 16–70',en:'Age 16–70'}
+],
+link:'https://www.allianz.com.my/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+{
+id:41,category:'insurance',provider:'AgroBank',amount:'Plan',
+title:{ms:'Takaful Agro Nurani / Agro Bakti',en:'AgroBank Takaful Plans'},
+desc:{ms:'Pelan takaful dengan manfaat kemalangan dan elaun wad.',en:'Takaful plan with accident and hospital cash benefits.'},
+criteria:[
+{ms:'Umur 16–65',en:'Age 16–65'},
+{ms:'Tertakluk terma pelan',en:'Plan terms apply'}
+],
+link:'https://www.agrobank.com.my/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+
+{
+id:42,category:'insurance',provider:'FWD Takaful',amount:'Medical Plan',
+title:{ms:'FWD SpecialMed OKU',en:'FWD SpecialMed'},
+desc:{ms:'Pelan perubatan untuk OKU tertentu.',en:'Medical plan for certain PWD categories.'},
+criteria:[
+{ms:'Kelayakan pelan',en:'Plan eligibility'}
+],
+link:'https://www.fwd.com.my/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+
+{
+id:43,category:'insurance',provider:'FWD Takaful',amount:'Dari RM28.95/bln',
+title:{ms:'FWD SpecialCare Direct',en:'FWD SpecialCare Direct'},
+desc:{ms:'Pelan perlindungan keluarga termasuk anak OKU.',en:'Family protection plan including PWD children.'},
+criteria:[
+{ms:'Ibu bapa & anak layak',en:'Eligible parent/child'}
+],
+link:'https://www.fwd.com.my/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+
+{
+id:44,category:'sports',provider:'SHAKAM',amount:'Sehingga RM1,000,000',
+title:{ms:'Skim Hadiah Kemenangan Sukan',en:'SHAKAM Rewards'},
+desc:{ms:'Ganjaran atlet Paralimpik/Olimpik.',en:'Victory rewards for Paralympic/Olympic athletes.'},
+criteria:[
+{ms:'Atlet pingat rasmi',en:'Official medalist'}
+],
+link:'https://www.jkm.gov.my/',
+colorClass:'bg-fuchsia-500',textClass:'text-fuchsia-600',bgClass:'bg-fuchsia-600 hover:bg-fuchsia-700'
+},
+
+{
+id:45,category:'social_security',provider:'PERKESO',amount:'~80% gaji',
+title:{ms:'Faedah Hilang Upaya Sementara',en:'Temporary Disablement Benefit'},
+desc:{ms:'Elaun sementara akibat kecederaan pekerjaan.',en:'Temporary disablement benefit from employment injury.'},
+criteria:[
+{ms:'Dilindungi PERKESO',en:'Covered by PERKESO'}
+],
+link:'https://www.perkeso.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:46,category:'social_security',provider:'PERKESO',amount:'~90% gaji',
+title:{ms:'Faedah Hilang Upaya Kekal',en:'Permanent Disablement Benefit'},
+desc:{ms:'Bayaran hilang upaya kekal.',en:'Permanent disablement payment.'},
+criteria:[
+{ms:'Penilaian perubatan',en:'Medical assessment'}
+],
+link:'https://www.perkeso.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:47,category:'social_security',provider:'PERKESO',amount:'RM500/bln',
+title:{ms:'Elaun Layanan Sentiasa',en:'Constant Attendance Allowance'},
+desc:{ms:'Elaun penjagaan berterusan.',en:'Allowance for constant care.'},
+criteria:[
+{ms:'Kes hilang upaya teruk',en:'Severe disability'}
+],
+link:'https://www.perkeso.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:48,category:'social_security',provider:'PERKESO',amount:'Rehab Support',
+title:{ms:'Faedah Pemulihan & Prostesis',en:'Rehabilitation & Prosthetic Benefit'},
+desc:{ms:'Sokongan pemulihan dan alat tiruan.',en:'Rehabilitation and prosthetic assistance.'},
+criteria:[
+{ms:'Kes dilindungi',en:'Covered case'}
+],
+link:'https://www.perkeso.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:49,category:'social_security',provider:'PERKESO',amount:'Pencen/Geran',
+title:{ms:'Skim Keilatan PERKESO',en:'Invalidity Scheme'},
+desc:{ms:'Pencen atau geran keilatan.',en:'Invalidity pension or grant.'},
+criteria:[
+{ms:'Memenuhi syarat caruman',en:'Meet contribution requirement'}
+],
+link:'https://www.perkeso.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:50,category:'social_security',provider:'KWSP',amount:'RM5000 + Akaun',
+title:{ms:'Pengeluaran Hilang Upaya KWSP',en:'EPF Incapacitation Withdrawal'},
+desc:{ms:'Pengeluaran simpanan KWSP akibat hilang upaya.',en:'EPF withdrawal due to incapacitation.'},
+criteria:[
+{ms:'Disahkan hilang upaya',en:'Certified incapacitated'}
+],
+link:'https://www.kwsp.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+{
+id:51,category:'financial_advice',provider:'AKPK',amount:'Percuma',
+title:{ms:'AKPK Kaunseling Hutang',en:'AKPK Debt Counselling'},
+desc:{ms:'Bantuan pengurusan hutang.',en:'Debt management counselling.'},
+criteria:[
+{ms:'Terbuka kepada individu',en:'Open to individuals'}
+],
+link:'https://www.akpk.org.my/',
+colorClass:'bg-sky-500',textClass:'text-sky-600',bgClass:'bg-sky-600 hover:bg-sky-700'
+},
+
+{
+id:52,category:'state',provider:'iSejahtera Penang',amount:'RM200/tahun',
+title:{ms:'iSejahtera Bantuan OKU',en:'iSejahtera Annual Aid'},
+desc:{ms:'Bantuan tahunan OKU Pulau Pinang.',en:'Annual PWD assistance in Penang.'},
+criteria:[
+{ms:'Penduduk Penang',en:'Penang resident'}
+],
+link:'https://isejahtera.penang.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:53,category:'state',provider:'iSejahtera Penang',amount:'RM1000',
+title:{ms:'Khairat Kematian OKU',en:'PWD Death Benefit'},
+desc:{ms:'Khairat kematian penerima bantuan.',en:'Death benefit for aid recipients.'},
+criteria:[
+{ms:'Penerima iSejahtera',en:'iSejahtera recipient'}
+],
+link:'https://isejahtera.penang.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:54,category:'state',provider:'Sarawak Welfare',amount:'Ikut kelulusan',
+title:{ms:'Bantuan Alat Ortopedik Sarawak',en:'Sarawak Assistive Device Aid'},
+desc:{ms:'Bantuan alat sokongan negeri Sarawak.',en:'Assistive device aid in Sarawak.'},
+criteria:[
+{ms:'Permohonan kebajikan Sarawak',en:'Sarawak welfare application'}
+],
+link:'https://welfare.sarawak.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:55,category:'ngo',provider:'MAB',amount:'Program',
+title:{ms:'MAB Sokongan OKU Penglihatan',en:'MAB Support'},
+desc:{ms:'Program latihan dan sokongan komuniti.',en:'Community support programs.'},
+criteria:[
+{ms:'Penilaian NGO',en:'NGO assessment'}
+],
+link:'https://mab.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:56,category:'ngo',provider:'NASOM',amount:'Program',
+title:{ms:'NASOM Intervensi Autisme',en:'NASOM Autism Intervention'},
+desc:{ms:'Program autisme NASOM.',en:'NASOM autism programs.'},
+criteria:[
+{ms:'Daftar NASOM',en:'NASOM registration'}
+],
+link:'https://www.nasom.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:57,category:'ngo',provider:'MERCY Malaysia',amount:'Agihan Projek',
+title:{ms:'MERCY Malaysia Bantuan NGO',en:'MERCY Malaysia Aid'},
+desc:{ms:'Saluran sumbangan dan bantuan projek.',en:'Donation and aid projects.'},
+criteria:[
+{ms:'Bergantung projek',en:'Depends on project'}
+],
+link:'https://hss.mercy.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:58,category:'csr',provider:'AmBank CSR',amount:'Dana Program',
+title:{ms:'CSR AmBank x MAB',en:'AmBank CSR Training Fund'},
+desc:{ms:'Dana latihan komuniti OKU.',en:'PWD training fund.'},
+criteria:[
+{ms:'Program CSR',en:'CSR program'}
+],
+link:'https://www.ambankgroup.com/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:59,category:'international',provider:'Japan Embassy',amount:'Grant',
+title:{ms:'Japan GGP Grant',en:'Japan Grassroots Grant'},
+desc:{ms:'Geran projek komuniti termasuk OKU.',en:'Grassroots community grant.'},
+criteria:[
+{ms:'NGO layak',en:'Eligible NGO'}
+],
+link:'https://www.my.emb-japan.go.jp/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:60,category:'international',provider:'Disability Rights Fund',amount:'Grant',
+title:{ms:'Disability Rights Fund',en:'Disability Rights Fund Grant'},
+desc:{ms:'Geran antarabangsa organisasi OKU.',en:'International grant for OPDs.'},
+criteria:[
+{ms:'Organisasi OKU',en:'PWD organisation'}
+],
+link:'https://www.disabilityrightsfund.org/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+{
+id:61,category:'education',provider:'Yayasan Negeri',amount:'Biasiswa',
+title:{ms:'Biasiswa Pendidikan OKU Negeri',en:'State PWD Scholarship'},
+desc:{ms:'Biasiswa pendidikan oleh yayasan negeri tertentu.',en:'State foundation scholarship for PWD students.'},
+criteria:[
+{ms:'Penduduk negeri',en:'State resident'}
+],
+link:'https://www.malaysia.gov.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:62,category:'education',provider:'Zakat Negeri',amount:'Bantuan Pelajaran',
+title:{ms:'Zakat Pendidikan OKU',en:'Zakat Education Aid'},
+desc:{ms:'Bantuan zakat untuk pelajar OKU.',en:'Zakat assistance for PWD students.'},
+criteria:[
+{ms:'Asnaf layak',en:'Eligible asnaf'}
+],
+link:'https://www.zakat.com.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:63,category:'bulanan',provider:'Baitulmal',amount:'Ikut negeri',
+title:{ms:'Elaun Kebajikan Baitulmal',en:'Baitulmal Welfare Allowance'},
+desc:{ms:'Elaun kebajikan negeri untuk OKU.',en:'State welfare allowance.'},
+criteria:[
+{ms:'Permohonan baitulmal',en:'Baitulmal application'}
+],
+link:'https://www.zakat.com.my/',
+colorClass:'bg-green-500',textClass:'text-green-600',bgClass:'bg-green-600 hover:bg-green-700'
+},
+
+{
+id:64,category:'employment',provider:'PERKESO',amount:'Latihan',
+title:{ms:'Program Return To Work',en:'Return To Work Program'},
+desc:{ms:'Program pemulihan pekerjaan PERKESO.',en:'PERKESO rehabilitation program.'},
+criteria:[
+{ms:'Kes PERKESO',en:'PERKESO case'}
+],
+link:'https://www.perkeso.gov.my/',
+colorClass:'bg-teal-500',textClass:'text-teal-600',bgClass:'bg-teal-600 hover:bg-teal-700'
+},
+
+{
+id:65,category:'ngo',provider:'Persatuan OKU Malaysia',amount:'Program',
+title:{ms:'Latihan Kemahiran OKU',en:'PWD Skill Training'},
+desc:{ms:'Program latihan kemahiran komuniti.',en:'Community skill training.'},
+criteria:[
+{ms:'Daftar program',en:'Program registration'}
+],
+link:'https://www.malaysia.gov.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:66,category:'health',provider:'KKM',amount:'Subsidi',
+title:{ms:'Subsidi Alat Bantuan Perubatan',en:'Medical Assistive Subsidy'},
+desc:{ms:'Subsidi alat bantuan melalui hospital kerajaan.',en:'Subsidy for medical assistive devices.'},
+criteria:[
+{ms:'Rujukan doktor',en:'Doctor referral'}
+],
+link:'https://www.moh.gov.my/',
+colorClass:'bg-rose-500',textClass:'text-rose-600',bgClass:'bg-rose-600 hover:bg-rose-700'
+},
+
+{
+id:67,category:'transport',provider:'Rapid Penang',amount:'Diskaun',
+title:{ms:'Pas OKU Rapid Penang',en:'Rapid Penang OKU Pass'},
+desc:{ms:'Diskaun tambang bas Rapid Penang.',en:'Discounted Rapid Penang fares.'},
+criteria:[
+{ms:'Kad konsesi',en:'Concession card'}
+],
+link:'https://www.rapidpg.com.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:68,category:'transport',provider:'Sarawak Transport',amount:'Diskaun',
+title:{ms:'Tambang Bas Sarawak OKU',en:'Sarawak Bus Discount'},
+desc:{ms:'Tambang khas OKU Sarawak.',en:'PWD bus discount in Sarawak.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.sarawak.gov.my/',
+colorClass:'bg-orange-500',textClass:'text-orange-600',bgClass:'bg-orange-600 hover:bg-orange-700'
+},
+
+{
+id:69,category:'csr',provider:'CelcomDigi',amount:'Rebat',
+title:{ms:'Rebat Pelan OKU CelcomDigi',en:'CelcomDigi OKU Rebate'},
+desc:{ms:'Rebat pelan telefon OKU.',en:'Mobile plan rebate.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.celcomdigi.com/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:70,category:'csr',provider:'TM Unifi',amount:'Diskaun',
+title:{ms:'Diskaun Internet OKU',en:'PWD Internet Discount'},
+desc:{ms:'Diskaun internet untuk OKU.',en:'Internet discount for PWD.'},
+criteria:[
+{ms:'Pelan terpilih',en:'Selected plans'}
+],
+link:'https://www.unifi.com.my/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:71,category:'ngo',provider:'Yayasan Sime Darby',amount:'Geran',
+title:{ms:'Geran Komuniti OKU',en:'Community Grant'},
+desc:{ms:'Geran projek komuniti termasuk OKU.',en:'Community project grants.'},
+criteria:[
+{ms:'NGO layak',en:'Eligible NGO'}
+],
+link:'https://www.yayasansimedarby.com/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:72,category:'ngo',provider:'Yayasan Hasanah',amount:'Geran',
+title:{ms:'Hasanah Inclusion Grant',en:'Hasanah Inclusion Grant'},
+desc:{ms:'Geran inklusiviti komuniti OKU.',en:'Inclusion grants for PWD initiatives.'},
+criteria:[
+{ms:'Organisasi komuniti',en:'Community org'}
+],
+link:'https://www.yayasanhasanah.org/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:73,category:'financial_advice',provider:'Bank Negara',amount:'Program',
+title:{ms:'Program Literasi Kewangan OKU',en:'Financial Literacy Program'},
+desc:{ms:'Latihan kewangan komuniti OKU.',en:'Financial literacy training.'},
+criteria:[
+{ms:'Terbuka komuniti',en:'Open community'}
+],
+link:'https://www.bnm.gov.my/',
+colorClass:'bg-sky-500',textClass:'text-sky-600',bgClass:'bg-sky-600 hover:bg-sky-700'
+},
+
+{
+id:74,category:'housing',provider:'PR1MA',amount:'Diskaun',
+title:{ms:'Keutamaan Rumah PR1MA OKU',en:'PR1MA Priority'},
+desc:{ms:'Keutamaan permohonan rumah PR1MA.',en:'Housing priority for PWD.'},
+criteria:[
+{ms:'Kad OKU',en:'OKU card'}
+],
+link:'https://www.pr1ma.my/',
+colorClass:'bg-indigo-500',textClass:'text-indigo-600',bgClass:'bg-indigo-600 hover:bg-indigo-700'
+},
+
+{
+id:75,category:'housing',provider:'PPR',amount:'Sewa Rendah',
+title:{ms:'Program Perumahan Rakyat OKU',en:'PPR Housing'},
+desc:{ms:'Rumah kos rendah untuk OKU.',en:'Low cost housing.'},
+criteria:[
+{ms:'Pendapatan rendah',en:'Low income'}
+],
+link:'https://teduh.kpkt.gov.my/',
+colorClass:'bg-indigo-500',textClass:'text-indigo-600',bgClass:'bg-indigo-600 hover:bg-indigo-700'
+},
+
+{
+id:76,category:'employment',provider:'HRD Corp',amount:'Latihan',
+title:{ms:'Latihan Kemahiran HRD Corp',en:'HRD Skill Training'},
+desc:{ms:'Program latihan kemahiran OKU.',en:'Skill training programs.'},
+criteria:[
+{ms:'Peserta layak',en:'Eligible participant'}
+],
+link:'https://www.hrdcorp.gov.my/',
+colorClass:'bg-teal-500',textClass:'text-teal-600',bgClass:'bg-teal-600 hover:bg-teal-700'
+},
+
+{
+id:77,category:'employment',provider:'TalentCorp',amount:'Program',
+title:{ms:'Program Inklusif TalentCorp',en:'TalentCorp Inclusive Program'},
+desc:{ms:'Program pekerjaan inklusif.',en:'Inclusive employment program.'},
+criteria:[
+{ms:'Permohonan terbuka',en:'Open application'}
+],
+link:'https://www.talentcorp.com.my/',
+colorClass:'bg-teal-500',textClass:'text-teal-600',bgClass:'bg-teal-600 hover:bg-teal-700'
+},
+
+{
+id:78,category:'insurance',provider:'Great Eastern',amount:'Plan',
+title:{ms:'Great Eastern Ability Plan',en:'Ability Insurance'},
+desc:{ms:'Pelan perlindungan komuniti OKU.',en:'Insurance for PWD.'},
+criteria:[
+{ms:'Underwriting',en:'Underwriting applies'}
+],
+link:'https://www.greateasternlife.com/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+
+{
+id:79,category:'insurance',provider:'Prudential',amount:'Plan',
+title:{ms:'Prudential Inclusive Plan',en:'Inclusive Protection'},
+desc:{ms:'Pelan perlindungan komuniti khas.',en:'Special community protection plan.'},
+criteria:[
+{ms:'Terma syarikat',en:'Company terms'}
+],
+link:'https://www.prudential.com.my/',
+colorClass:'bg-amber-500',textClass:'text-amber-600',bgClass:'bg-amber-600 hover:bg-amber-700'
+},
+
+{
+id:80,category:'ngo',provider:'Rotary Club',amount:'Geran',
+title:{ms:'Rotary Disability Grant',en:'Rotary Disability Grant'},
+desc:{ms:'Geran komuniti oleh Rotary.',en:'Community grant.'},
+criteria:[
+{ms:'Projek komuniti',en:'Community project'}
+],
+link:'https://www.rotary.org/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:81,category:'ngo',provider:'Lions Club',amount:'Geran',
+title:{ms:'Lions Club Aid',en:'Lions Club Aid'},
+desc:{ms:'Bantuan komuniti OKU.',en:'Community aid.'},
+criteria:[
+{ms:'Permohonan komuniti',en:'Community application'}
+],
+link:'https://www.lionsclubs.org/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:82,category:'international',provider:'UNDP',amount:'Grant',
+title:{ms:'UNDP Inclusion Grant',en:'UNDP Grant'},
+desc:{ms:'Geran pembangunan komuniti.',en:'Development grants.'},
+criteria:[
+{ms:'NGO layak',en:'Eligible NGO'}
+],
+link:'https://www.undp.org/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:83,category:'international',provider:'UNICEF',amount:'Grant',
+title:{ms:'UNICEF Disability Program',en:'UNICEF Disability Program'},
+desc:{ms:'Program sokongan kanak-kanak OKU.',en:'Support programs for children.'},
+criteria:[
+{ms:'Projek kanak-kanak',en:'Child projects'}
+],
+link:'https://www.unicef.org/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:84,category:'international',provider:'WHO',amount:'Program',
+title:{ms:'WHO Disability Inclusion',en:'WHO Inclusion Program'},
+desc:{ms:'Program kesihatan global.',en:'Global health programs.'},
+criteria:[
+{ms:'Rakan NGO',en:'NGO partners'}
+],
+link:'https://www.who.int/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:85,category:'financial_advice',provider:'Maybank',amount:'Program',
+title:{ms:'Program Literasi Maybank',en:'Maybank Literacy Program'},
+desc:{ms:'Latihan kewangan komuniti.',en:'Financial literacy training.'},
+criteria:[
+{ms:'Terbuka umum',en:'Open public'}
+],
+link:'https://www.maybank.com/',
+colorClass:'bg-sky-500',textClass:'text-sky-600',bgClass:'bg-sky-600 hover:bg-sky-700'
+},
+
+{
+id:86,category:'financial_advice',provider:'CIMB',amount:'Program',
+title:{ms:'CIMB Financial Inclusion',en:'CIMB Inclusion Program'},
+desc:{ms:'Program inklusi kewangan.',en:'Financial inclusion program.'},
+criteria:[
+{ms:'Program komuniti',en:'Community program'}
+],
+link:'https://www.cimb.com/',
+colorClass:'bg-sky-500',textClass:'text-sky-600',bgClass:'bg-sky-600 hover:bg-sky-700'
+},
+
+{
+id:87,category:'state',provider:'Selangor',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Selangor',en:'Selangor PWD Aid'},
+desc:{ms:'Bantuan negeri Selangor.',en:'State assistance.'},
+criteria:[
+{ms:'Penduduk Selangor',en:'Selangor resident'}
+],
+link:'https://www.selangor.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:88,category:'state',provider:'Johor',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Johor',en:'Johor PWD Aid'},
+desc:{ms:'Bantuan kebajikan negeri Johor.',en:'Johor welfare aid.'},
+criteria:[
+{ms:'Penduduk Johor',en:'Johor resident'}
+],
+link:'https://www.johor.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:89,category:'state',provider:'Sabah',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Sabah',en:'Sabah PWD Aid'},
+desc:{ms:'Bantuan negeri Sabah.',en:'Sabah welfare aid.'},
+criteria:[
+{ms:'Penduduk Sabah',en:'Sabah resident'}
+],
+link:'https://www.sabah.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:90,category:'state',provider:'Kelantan',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Kelantan',en:'Kelantan PWD Aid'},
+desc:{ms:'Bantuan kebajikan negeri Kelantan.',en:'Kelantan welfare aid.'},
+criteria:[
+{ms:'Penduduk Kelantan',en:'Kelantan resident'}
+],
+link:'https://www.kelantan.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+{
+id:91,category:'state',provider:'Terengganu',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Terengganu',en:'Terengganu PWD Aid'},
+desc:{ms:'Bantuan kebajikan negeri Terengganu.',en:'State welfare assistance.'},
+criteria:[{ms:'Penduduk Terengganu',en:'Terengganu resident'}],
+link:'https://www.terengganu.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:92,category:'state',provider:'Pahang',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Pahang',en:'Pahang PWD Aid'},
+desc:{ms:'Program bantuan kebajikan negeri.',en:'State welfare program.'},
+criteria:[{ms:'Penduduk Pahang',en:'Pahang resident'}],
+link:'https://www.pahang.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:93,category:'state',provider:'Perak',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Perak',en:'Perak PWD Aid'},
+desc:{ms:'Program bantuan kebajikan negeri Perak.',en:'State welfare aid.'},
+criteria:[{ms:'Penduduk Perak',en:'Perak resident'}],
+link:'https://www.perak.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:94,category:'state',provider:'Negeri Sembilan',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Negeri Sembilan',en:'NS PWD Aid'},
+desc:{ms:'Bantuan kebajikan negeri.',en:'State welfare assistance.'},
+criteria:[{ms:'Penduduk Negeri Sembilan',en:'NS resident'}],
+link:'https://www.ns.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:95,category:'state',provider:'Melaka',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Melaka',en:'Melaka PWD Aid'},
+desc:{ms:'Program bantuan kebajikan negeri Melaka.',en:'Melaka welfare program.'},
+criteria:[{ms:'Penduduk Melaka',en:'Melaka resident'}],
+link:'https://www.melaka.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:96,category:'state',provider:'Perlis',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Perlis',en:'Perlis PWD Aid'},
+desc:{ms:'Program bantuan kebajikan negeri Perlis.',en:'Perlis welfare aid.'},
+criteria:[{ms:'Penduduk Perlis',en:'Perlis resident'}],
+link:'https://www.perlis.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:97,category:'state',provider:'Kedah',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Kedah',en:'Kedah PWD Aid'},
+desc:{ms:'Program bantuan kebajikan negeri Kedah.',en:'Kedah welfare assistance.'},
+criteria:[{ms:'Penduduk Kedah',en:'Kedah resident'}],
+link:'https://www.kedah.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:98,category:'state',provider:'Pulau Pinang',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Pulau Pinang',en:'Penang PWD Aid'},
+desc:{ms:'Program bantuan kebajikan negeri Pulau Pinang.',en:'Penang welfare aid.'},
+criteria:[{ms:'Penduduk Penang',en:'Penang resident'}],
+link:'https://www.penang.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:99,category:'state',provider:'Wilayah Persekutuan',amount:'Bantuan Negeri',
+title:{ms:'Bantuan OKU Wilayah',en:'Federal Territory Aid'},
+desc:{ms:'Program bantuan kebajikan Wilayah Persekutuan.',en:'Federal territory welfare aid.'},
+criteria:[{ms:'Penduduk Wilayah',en:'FT resident'}],
+link:'https://www.kwp.gov.my/',
+colorClass:'bg-lime-500',textClass:'text-lime-600',bgClass:'bg-lime-600 hover:bg-lime-700'
+},
+
+{
+id:100,category:'csr',provider:'PETRONAS',amount:'Dana CSR',
+title:{ms:'PETRONAS Inclusion Fund',en:'PETRONAS Inclusion Fund'},
+desc:{ms:'Dana CSR untuk projek komuniti OKU.',en:'CSR fund for PWD community projects.'},
+criteria:[{ms:'NGO/Komuniti layak',en:'Eligible NGO/community'}],
+link:'https://www.petronas.com/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:101,category:'csr',provider:'YTL Foundation',amount:'Geran',
+title:{ms:'YTL Community Grant',en:'YTL Community Grant'},
+desc:{ms:'Geran projek pendidikan & komuniti.',en:'Community and education grant.'},
+criteria:[{ms:'Permohonan terbuka',en:'Open application'}],
+link:'https://www.ytl.com/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:102,category:'csr',provider:'Maxis Foundation',amount:'Geran',
+title:{ms:'Maxis eKelas OKU',en:'Maxis eKelas'},
+desc:{ms:'Program pendidikan digital.',en:'Digital education program.'},
+criteria:[{ms:'Pelajar layak',en:'Eligible students'}],
+link:'https://www.maxis.com.my/',
+colorClass:'bg-cyan-500',textClass:'text-cyan-600',bgClass:'bg-cyan-600 hover:bg-cyan-700'
+},
+
+{
+id:103,category:'ngo',provider:'MIASA',amount:'Program',
+title:{ms:'MIASA Sokongan Mental',en:'MIASA Mental Support'},
+desc:{ms:'Sokongan kesihatan mental komuniti.',en:'Mental health support.'},
+criteria:[{ms:'Daftar program',en:'Program registration'}],
+link:'https://miasa.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:104,category:'ngo',provider:'Befrienders',amount:'Free',
+title:{ms:'Befrienders Support Line',en:'Befrienders Support'},
+desc:{ms:'Talian sokongan emosi percuma.',en:'Free emotional support line.'},
+criteria:[{ms:'Terbuka semua',en:'Open to all'}],
+link:'https://www.befrienders.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:105,category:'ngo',provider:'Persatuan Spinal Malaysia',amount:'Program',
+title:{ms:'Sokongan Spinal Cord Malaysia',en:'Spinal Cord Support'},
+desc:{ms:'Program komuniti kecederaan saraf tunjang.',en:'Spinal cord injury community support.'},
+criteria:[{ms:'Ahli komuniti',en:'Community member'}],
+link:'https://www.scm.org.my/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:106,category:'ngo',provider:'OKU Sentral',amount:'Advokasi',
+title:{ms:'OKU Sentral Advocacy',en:'OKU Sentral Advocacy'},
+desc:{ms:'Advokasi hak OKU di Malaysia.',en:'PWD rights advocacy.'},
+criteria:[{ms:'Terbuka komuniti',en:'Open community'}],
+link:'https://okusentral.com/',
+colorClass:'bg-gray-500',textClass:'text-gray-700',bgClass:'bg-gray-700 hover:bg-gray-800'
+},
+
+{
+id:107,category:'international',provider:'World Bank',amount:'Grant',
+title:{ms:'World Bank Inclusion Program',en:'World Bank Inclusion'},
+desc:{ms:'Geran pembangunan sosial.',en:'Social development grant.'},
+criteria:[{ms:'NGO layak',en:'Eligible NGO'}],
+link:'https://www.worldbank.org/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:108,category:'international',provider:'ADB',amount:'Grant',
+title:{ms:'Asian Development Bank Grant',en:'ADB Inclusion Grant'},
+desc:{ms:'Geran pembangunan komuniti Asia.',en:'Asian development grant.'},
+criteria:[{ms:'Organisasi layak',en:'Eligible organisation'}],
+link:'https://www.adb.org/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:109,category:'international',provider:'UN Women',amount:'Grant',
+title:{ms:'UN Women Disability Program',en:'UN Women Program'},
+desc:{ms:'Program inklusiviti wanita OKU.',en:'PWD women inclusion program.'},
+criteria:[{ms:'Projek wanita',en:'Women project'}],
+link:'https://www.unwomen.org/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:110,category:'international',provider:'ILO',amount:'Grant',
+title:{ms:'ILO Inclusive Employment',en:'ILO Inclusive Employment'},
+desc:{ms:'Program pekerjaan inklusif global.',en:'Inclusive employment program.'},
+criteria:[{ms:'NGO/Agensi',en:'NGO/Agency'}],
+link:'https://www.ilo.org/',
+colorClass:'bg-violet-500',textClass:'text-violet-600',bgClass:'bg-violet-600 hover:bg-violet-700'
+},
+
+{
+id:111,category:'education',provider:'UNIKL',amount:'Biasiswa',
+title:{ms:'Biasiswa OKU UNIKL',en:'UNIKL PWD Scholarship'},
+desc:{ms:'Biasiswa pendidikan pelajar OKU.',en:'Scholarship for PWD students.'},
+criteria:[{ms:'Pelajar layak',en:'Eligible student'}],
+link:'https://www.unikl.edu.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:112,category:'education',provider:'UPU',amount:'Program',
+title:{ms:'Saluran Khas UPU OKU',en:'UPU Special Channel'},
+desc:{ms:'Saluran khas kemasukan IPTA.',en:'Special admission pathway.'},
+criteria:[{ms:'Pelajar OKU',en:'PWD student'}],
+link:'https://upu.mohe.gov.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:113,category:'education',provider:'USM',amount:'Biasiswa',
+title:{ms:'USM Inclusive Scholarship',en:'USM Scholarship'},
+desc:{ms:'Biasiswa inklusif universiti.',en:'University inclusion scholarship.'},
+criteria:[{ms:'Pelajar layak',en:'Eligible student'}],
+link:'https://www.usm.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:114,category:'education',provider:'UTM',amount:'Biasiswa',
+title:{ms:'UTM OKU Scholarship',en:'UTM Scholarship'},
+desc:{ms:'Biasiswa pendidikan universiti.',en:'University scholarship.'},
+criteria:[{ms:'Pelajar layak',en:'Eligible student'}],
+link:'https://www.utm.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:115,category:'education',provider:'KPTM',amount:'Program',
+title:{ms:'Program Sokongan Pelajar OKU KPTM',en:'KPTM Support Program'},
+desc:{ms:'Program sokongan pelajar OKU.',en:'PWD student support program.'},
+criteria:[{ms:'Pelajar KPTM',en:'KPTM student'}],
+link:'https://www.kptm.edu.my/',
+colorClass:'bg-blue-500',textClass:'text-blue-600',bgClass:'bg-blue-600 hover:bg-blue-700'
+},
+
+{
+id:116,category:'financial_advice',provider:'RHB',amount:'Program',
+title:{ms:'RHB Financial Inclusion',en:'RHB Inclusion'},
+desc:{ms:'Program inklusi kewangan.',en:'Financial inclusion program.'},
+criteria:[{ms:'Komuniti layak',en:'Eligible community'}],
+link:'https://www.rhbgroup.com/',
+colorClass:'bg-sky-500',textClass:'text-sky-600',bgClass:'bg-sky-600 hover:bg-sky-700'
+},
+
+{
+id:117,category:'financial_advice',provider:'Public Bank',amount:'Program',
+title:{ms:'Public Bank Literacy',en:'Public Bank Literacy'},
+desc:{ms:'Program literasi kewangan.',en:'Financial literacy.'},
+criteria:[{ms:'Terbuka umum',en:'Open public'}],
+link:'https://www.pbebank.com/',
+colorClass:'bg-sky-500',textClass:'text-sky-600',bgClass:'bg-sky-600 hover:bg-sky-700'
+},
+
+{
+id:118,category:'health',provider:'KKM',amount:'Subsidi',
+title:{ms:'Program Pemulihan Komuniti',en:'Community Rehab Program'},
+desc:{ms:'Program pemulihan komuniti OKU.',en:'Community rehabilitation program.'},
+criteria:[{ms:'Rujukan klinik',en:'Clinic referral'}],
+link:'https://www.moh.gov.my/',
+colorClass:'bg-rose-500',textClass:'text-rose-600',bgClass:'bg-rose-600 hover:bg-rose-700'
+},
+
+{
+id:119,category:'health',provider:'Hospital Rehabilitasi Cheras',amount:'Program',
+title:{ms:'Rehabilitasi Intensif',en:'Intensive Rehab'},
+desc:{ms:'Program pemulihan intensif.',en:'Intensive rehabilitation program.'},
+criteria:[{ms:'Rujukan pakar',en:'Specialist referral'}],
+link:'https://www.moh.gov.my/',
+colorClass:'bg-rose-500',textClass:'text-rose-600',bgClass:'bg-rose-600 hover:bg-rose-700'
+},
+
+{
+id:120,category:'lain',provider:'Malaysia Government',amount:'Portal',
+title:{ms:'Portal MyGovernment OKU',en:'MyGovernment Portal'},
+desc:{ms:'Portal rasmi maklumat bantuan OKU.',en:'Official PWD information portal.'},
+criteria:[{ms:'Terbuka umum',en:'Open public'}],
+link:'https://www.malaysia.gov.my/',
+colorClass:'bg-slate-500',textClass:'text-slate-600',bgClass:'bg-slate-600 hover:bg-slate-700'
+},
+
+        
+                ],    // data kekal sama (120 items)
+
+                // --- UI STRINGS (KEKAL) ---
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        menu_home: 'Utama',
+                        btn_settings: 'Akses',
+                        hero_kew_subtitle: 'Pangkalan Data Kewangan',
+                        hero_kew_title: 'Bantuan & Elaun',
+                        hero_kew_desc: 'Panduan lengkap untuk Elaun Pekerja Cacat (EPC), Bantuan Penjagaan (BPT), insentif cukai, dan geran perniagaan. Semak kelayakan anda di sini.',
+                        search_kew_ph: 'Cari bantuan (cth: EPC, Kerusi Roda, Biasiswa)...',
+                        stat_card_text: 'Untuk OKU bekerja dengan pendapatan < RM1,500 sebulan.',
+                        btn_view_cond: 'LIHAT SYARAT',
+                        btn_hide_cond: 'TUTUP SYARAT',
+                        btn_apply_now: 'Mohon Sekarang',
+                        no_result_title: 'Tiada Hasil',
+                        no_result_desc: 'Cuba ubah carian atau kategori anda.',
+                        promo_title: 'Perlukan Bantuan Mengurus Kewangan?',
+                        promo_desc: 'AKPK menyediakan khidmat nasihat kewangan percuma untuk OKU. Jangan biarkan hutang membebankan anda.',
+                        btn_akpk: 'Laman Web AKPK',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Taip soalan...'
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        menu_home: 'Home',
+                        btn_settings: 'Access',
+                        hero_kew_subtitle: 'Financial Database',
+                        hero_kew_title: 'Aid & Allowances',
+                        hero_kew_desc: 'Complete guide to Disabled Workers Allowance (EPC), Caregiver Assistance (BPT), tax incentives, and business grants. Check eligibility here.',
+                        search_kew_ph: 'Search aid (e.g., EPC, Wheelchair, Scholarship)...',
+                        stat_card_text: 'For working PWDs earning < RM1,500 monthly.',
+                        btn_view_cond: 'VIEW CRITERIA',
+                        btn_hide_cond: 'HIDE CRITERIA',
+                        btn_apply_now: 'Apply Now',
+                        no_result_title: 'No Results',
+                        no_result_desc: 'Try changing your search or category.',
+                        promo_title: 'Need Help Managing Finances?',
+                        promo_desc: 'AKPK provides free financial advisory services for PWDs. Don\'t let debt burden you.',
+                        btn_akpk: 'AKPK Website',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Type question...'
+                    }
+                },
+
+                // --- FUNCTIONS (DIUPDATE UNTUK SYNC) ---
+                initApp() {
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                get filteredItems() {
+                    return this.allItems.filter(item => {
+                        let matchesCategory = (this.activeFilter === 'all') ? true : (item.category === this.activeFilter);
+                        let searchLower = this.search.toLowerCase();
+                        let matchesSearch = item.title[this.lang].toLowerCase().includes(searchLower) || 
+                                            item.desc[this.lang].toLowerCase().includes(searchLower) ||
+                                            item.provider.toLowerCase().includes(searchLower);
+                        return matchesCategory && matchesSearch;
+                    });
+                },
+
+                sendMessage() {
+                    if (!this.userMsg.trim()) return;
+                    
+                    this.messages.push({ id: Date.now(), text: this.userMsg, sender: 'user' });
+                    let input = this.userMsg.toLowerCase();
+                    this.userMsg = '';
+
+                    setTimeout(() => {
+                        let response = "";
+                        if (input.includes('epc') || input.includes('kerja')) {
+                            response = this.lang === 'ms' 
+                                ? "Untuk <b>EPC</b>, anda perlu bekerja dengan gaji bawah RM1,500. Boleh mohon di link JKM di atas." 
+                                : "For <b>EPC</b>, you need to be working with salary below RM1,500. Apply via the JKM link above.";
+                        } else if (input.includes('belajar') || input.includes('sekolah') || input.includes('siswa')) {
+                            response = this.lang === 'ms'
+                                ? "Untuk pelajar, anda boleh mohon <b>EMK</b> (Sekolah) atau <b>BKOKU</b> (Universiti)."
+                                : "For students, you can apply for <b>EMK</b> (School) or <b>BKOKU</b> (University).";
+                        } else {
+                            response = this.lang === 'ms'
+                                ? "Maaf, saya robot ringkas. Sila cari di senarai di atas atau hubungi JKM di 15999."
+                                : "Sorry, I am a simple bot. Please search the list above or contact JKM at 15999.";
+                        }
+                        this.messages.push({ id: Date.now() + 1, text: response, sender: 'bot' });
+                        
+                        this.$nextTick(() => {
+                            const chatContainer = document.querySelector('#chat-messages');
+                            if(chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+                        });
+                    }, 800);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
