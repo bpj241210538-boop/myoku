@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendaftaran JKM - MY OKU SENTRAL</title>
+    <meta name="description" content="Panduan lengkap pendaftaran OKU dengan JKM, kategori, dan cara memohon.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+<!-- MARKED.JS -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- FONT AWESOME -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SETTINGS.JS SEBELUM ALPINE -->
+    <script defer src="settings.js"></script>
+    <!-- ALPINE.JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
+                        access: { 500: '#FBBF24', 600: '#D97706' }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(17, 24, 39, 0.95); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 5px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased transition-colors duration-300 flex flex-col min-h-screen"
+      x-data="daftarData()" 
+      x-init="initApp(); $store.prefs.init(); syncSettings($data);"
+      @prefs:lang.window="lang = $event.detail"
+      @prefs:dark.window="isDark = $event.detail; $store.prefs.applyTheme(isDark)"
+      @prefs:font.window="currentFontSize = $event.detail; document.documentElement.style.fontSize = currentFontSize + 'px'">
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-2xl p-8 border-4 border-brand-500 relative">
+            <button @click="showSettings = false" class="absolute top-4 right-4 text-2xl hover:text-red-500 transition"><i class="fas fa-times-circle"></i></button>
+            
+            <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                <i class="fas fa-universal-access text-brand-600"></i>
+                <span x-text="txt[lang].settings_title">Tetapan Akses</span>
+            </h2>
+
+            <div class="mb-8 p-4 bg-brand-50 dark:bg-gray-700 rounded-xl">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-3" x-text="txt[lang].lbl_lang">Bahasa / Language</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="setLang('ms')" :class="lang === 'ms' ? 'bg-brand-600 text-white shadow-lg ring-2 ring-brand-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇲🇾 Bahasa Melayu
+                    </button>
+                    <button @click="setLang('en')" :class="lang === 'en' ? 'bg-blue-700 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-600 hover:bg-gray-100'" class="py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                        🇬🇧 English
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button @click="toggleDark(false)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="!isDark ? 'border-brand-500 bg-brand-50' : 'border-gray-200'">
+                    <i class="fas fa-sun text-2xl text-orange-500"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_light">Mod Cerah</span>
+                </button>
+                <button @click="toggleDark(true)" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2" :class="isDark ? 'border-brand-500 bg-gray-700' : 'border-gray-200'">
+                    <i class="fas fa-moon text-2xl text-purple-400"></i>
+                    <span class="font-bold" x-text="txt[lang].mode_dark">Mod Gelap</span>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300 mb-2" x-text="txt[lang].lbl_font">Saiz Tulisan</label>
+                <div class="flex gap-2">
+                    <button @click="setFontSize(16)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">A</button>
+                    <button @click="setFontSize(20)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-lg font-bold">A+</button>
+                    <button @click="setFontSize(24)" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 rounded text-2xl font-black">A++</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="glass-panel fixed w-full top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <a href="../index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-brand-600 text-white rounded-lg flex items-center justify-center text-xl shadow-lg group-hover:rotate-12 transition">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tighter block leading-none">MY<span class="text-brand-600">OKU</span></span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">CENTRAL</span>
+                </div>
+            </a>
+
+            <div class="flex items-center gap-3 md:gap-6">
+                 <button @click="showSettings = true" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 md:px-5 py-2 rounded-full font-bold text-sm hover:opacity-80 transition flex items-center gap-2 shadow-xl">
+        <i class="fas fa-cog animate-spin-slow"></i> 
+        <span x-text="txt[lang].btn_settings">Tetapan</span>
+    </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-12 px-4 bg-brand-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto max-w-4xl text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-100 text-brand-600 text-3xl mb-6 shadow-inner">
+                <i class="fas fa-id-card"></i>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-black mb-4 text-gray-900 dark:text-white" x-text="txt[lang].page_title">Panduan Pendaftaran JKM</h1>
+            <p class="text-lg text-gray-500 dark:text-gray-300 max-w-2xl mx-auto" x-text="txt[lang].page_desc">
+                Ketahui cara mendaftar sebagai OKU, kategori ketidakupayaan, dan dokumen yang diperlukan untuk mendapatkan Kad OKU.
+            </p>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-12 max-w-6xl">
+        
+        <div class="flex flex-wrap justify-center gap-4 mb-12">
+            <template x-for="tab in tabs">
+                <button @click="activeTab = tab.id" 
+                        class="px-6 py-3 rounded-full font-bold text-sm transition-all border-2 flex items-center gap-2"
+                        :class="activeTab === tab.id ? 'bg-brand-600 border-brand-600 text-white shadow-lg scale-105' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-brand-300 text-gray-600 dark:text-gray-300'">
+                    <i :class="tab.icon"></i> <span x-text="tab.label[lang]"></span>
+                </button>
+            </template>
+        </div>
+
+        <div x-show="activeTab === 'intro'" x-transition.opacity>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700">
+                    <h2 class="text-2xl font-black mb-6 text-brand-600" x-text="txt[lang].def_title">Siapa Itu OKU?</h2>
+                    <p class="mb-4 leading-relaxed" x-text="txt[lang].def_text1">
+                        Mengikut Akta OKU 2008, OKU adalah mereka yang mempunyai kekurangan jangka panjang fizikal, mental, intelektual atau deria yang apabila berinteraksi dengan pelbagai halangan, boleh menyekat penyertaan penuh dan berkesan mereka dalam masyarakat.
+                    </p>
+                    <div class="bg-brand-50 dark:bg-gray-700 p-4 rounded-xl border-l-4 border-brand-500">
+                        <p class="font-bold italic text-brand-800 dark:text-brand-200" x-text="txt[lang].def_note">
+                            "Pendaftaran adalah secara sukarela tetapi digalakkan bagi membolehkan OKU menikmati kemudahan yang disediakan kerajaan."
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold mb-4" x-text="txt[lang].why_title">Kenapa Perlu Daftar?</h3>
+                    <template x-for="benefit in benefits">
+                        <div class="flex items-start gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition">
+                            <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                                <i :class="benefit.icon"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white" x-text="benefit.title[lang]"></h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400" x-text="benefit.desc[lang]"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'kategori'" x-cloak x-transition.opacity>
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-black" x-text="txt[lang].cat_header">7 Kategori Ketidakupayaan</h2>
+                <p class="text-gray-500" x-text="txt[lang].cat_sub">Kategori ini ditentukan oleh Pegawai Perubatan.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="cat in okuCategories">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border-t-4 hover:-translate-y-2 transition duration-300" :class="cat.color">
+                        <div class="flex justify-between items-start mb-4">
+                            <i :class="cat.icon" class="text-4xl text-gray-700 dark:text-white opacity-80"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-500" x-text="cat.code"></span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-gray-900 dark:text-white" x-text="cat.name[lang]"></h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed" x-text="cat.desc[lang]"></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'cara'" x-cloak x-transition.opacity>
+            <div class="grid lg:grid-cols-3 gap-8">
+               <div class="lg:col-span-2">
+    <h2 class="text-2xl font-black mb-6 flex items-center gap-3">
+        <i class="fas fa-list-ol text-brand-600"></i>
+        <span x-text="txt[lang].step_title">Proses Pendaftaran</span>
+    </h2>
+
+    <!-- PRINT GUIDE (STEPS AREA) -->
+    <button type="button"
+            @click="printGuide()"
+            class="inline-flex items-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-black shadow-lg transition mt-2 mb-2">
+        <i class="fas fa-print"></i>
+        <span x-text="txt[lang].btn_print_guide"></span>
+    </button>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 mb-6"
+       x-text="txt[lang].btn_print_guide_hint"></p>
+
+    <div class="relative border-l-4 border-gray-200 dark:border-gray-700 ml-4 space-y-8">
+                        <template x-for="(step, index) in steps">
+                            <div class="relative pl-8">
+                                <div class="absolute -left-[1.3rem] top-0 w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold shadow-lg border-4 border-white dark:border-gray-900" x-text="index + 1"></div>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white" x-text="step.title[lang]"></h3>
+                                <p class="text-gray-600 dark:text-gray-400 mb-2" x-text="step.desc[lang]"></p>
+                                
+                                <template x-if="step.link">
+                                    <a :href="step.link" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 text-brand-700 rounded-lg font-bold text-sm hover:bg-brand-100 transition mt-2">
+                                        <i class="fas fa-external-link-alt"></i> <span x-text="step.linkText[lang]"></span>
+                                    </a>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="bg-brand-900 text-white p-8 rounded-3xl h-fit sticky top-24 shadow-2xl">
+                    <h3 class="text-xl font-black mb-6 border-b border-brand-700 pb-4" x-text="txt[lang].doc_title">Dokumen Diperlukan</h3>
+                    <ul class="space-y-4">
+                        <template x-for="doc in documents">
+                            <li class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <span class="text-sm font-medium opacity-90" x-text="doc[lang]"></span>
+                            </li>
+                        </template>
+                    </ul>
+                    
+                   <div class="mt-8 pt-6 border-t border-brand-700">
+    <p class="text-xs text-brand-200 mb-4" x-text="txt[lang].doc_note">Borang boleh dimuat turun atau diambil di Pejabat Kebajikan Masyarakat Daerah.</p>
+
+    <!-- PRINT GUIDE (DOCUMENTS AREA) -->
+    <button type="button"
+            @click="printGuide()"
+            class="w-full py-3 bg-access-500 hover:bg-access-600 text-gray-900 font-black text-center rounded-xl transition shadow-lg flex items-center justify-center gap-2 mb-3">
+        <i class="fas fa-print"></i>
+        <span x-text="txt[lang].btn_print_guide"></span>
+    </button>
+    <p class="text-xs text-brand-200 mb-4" x-text="txt[lang].btn_print_guide_hint"></p>
+
+    <a href="https://mydaftaroku.jkm.gov.my/" target="_blank" class="block w-full py-3 bg-white text-brand-900 font-black text-center rounded-xl hover:bg-brand-50 hover:scale-105 transition shadow-lg">
+        <i class="fas fa-laptop-medical mr-2"></i> MyDaftarOKU
+    </a>
+</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white pt-20 pb-10 border-t-4 border-brand-500 mt-auto">
+        <div class="container mx-auto px-4 grid md:grid-cols-4 gap-12 text-sm">
+            <div class="col-span-2">
+                <h3 class="text-3xl font-black mb-4">MY<span class="text-brand-500">OKU</span></h3>
+                <p class="text-gray-400 max-w-sm mb-6">Membina masyarakat inklusif melalui akses maklumat tanpa halangan. Dibuat dengan ❤️ untuk Malaysia.</p>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_links">Pautan Pantas</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="index.html" class="hover:text-brand-400">Utama</a></li>
+                    <li><a href="https://www.jkm.gov.my" target="_blank" class="hover:text-brand-400">Laman Web JKM</a></li>
+                    <li><a href="https://mydaftaroku.jkm.gov.my" target="_blank" class="hover:text-brand-400">Portal MyDaftarOKU</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 text-white" x-text="txt[lang].ft_contact">Hubungi</h4>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-brand-500"></i> Talian Kasih 15999</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center pt-10 mt-10 border-t border-gray-800 text-gray-600 text-xs">
+            © 2026 MYOKU Project. Not affiliated with Government agencies.
+        </div>
+    </footer>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" x-cloak>
+        <div x-show="chatOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="bg-white dark:bg-gray-800 w-[90vw] md:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden mb-4">
+            
+            <div class="bg-brand-600 p-4 flex justify-between items-center text-white shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">OKU Assist Bot</h4>
+                        <span class="text-[10px] opacity-80 block">Registration Help</span>
+                    </div>
+                </div>
+                <button @click="chatOpen = false" class="hover:bg-white/20 rounded p-1"><i class="fas fa-times"></i></button>
+            </div>
+
+           <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+    <template x-for="msg in messages" :key="msg.id">
+        <div :class="msg.sender === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+            <div :class="msg.sender === 'bot' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'" 
+                 class="max-w-[85%] p-3 rounded-2xl text-sm shadow-sm border border-gray-100 dark:border-gray-600 leading-relaxed" x-html="msg.text">
+            </div>
+        </div>
+    </template>
+
+    <div x-show="isTyping" class="flex justify-start">
+        <div class="bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 h-10 items-center">
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+        </div>
+    </div>
+</div>
+
+            <form @submit.prevent="sendMessage" class="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <input type="text" x-model="userMsg" :placeholder="txt[lang].chat_ph" class="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white">
+                <button type="submit" :disabled="!userMsg.trim()" class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <button @click="chatOpen = !chatOpen" class="w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl flex items-center justify-center hover:scale-110 transition duration-300 relative group border-4 border-white dark:border-gray-800">
+            <span class="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            <i class="fas fa-comment-medical text-2xl group-hover:rotate-12 transition"></i>
+        </button>
+    </div>
+
+    <script>
+        function daftarData() {
+            return {
+                lang: 'ms',
+                isDark: false,
+                currentFontSize: 16,  // << TUKAR DARI fontSize KEPADA currentFontSize
+                showSettings: false,
+                activeTab: 'intro',
+                pdfGuideUrl: 'Panduan_Permohonan_Pendaftaran_OKU_Online.pdf',
+                printGuide() {
+                window.open(this.pdfGuideUrl, '_blank');
+                },
+                
+                // Chatbot
+chatOpen: false,
+userMsg: '',
+isTyping: false,
+messages: [
+    { id: 1, text: "Hai! Perlukan bantuan tentang <b>Pendaftaran JKM</b>? Anda boleh tanya saya tentang borang, syarat, dokumen, kategori OKU, atau proses permohonan.", sender: 'bot' }
+],
+chatHistory: [
+    {
+        role: "system",
+        content: "Anda adalah pembantu AI untuk portal MY OKU SENTRAL, khusus membantu pengguna tentang pendaftaran OKU JKM di Malaysia. Fokus anda ialah proses pendaftaran, kategori ketidakupayaan, borang BPPOKU, dokumen diperlukan, dan langkah permohonan. Jawab dalam Bahasa Melayu yang jelas, mesra, dan profesional. Jika tidak pasti, sarankan pengguna semak portal MyDaftarOKU atau hubungi JKM."
+    }
+],
+
+                // Data Translation
+                txt: {
+                    ms: {
+                        settings_title: 'Tetapan Akses',
+                        lbl_lang: 'Bahasa',
+                        mode_light: 'Cerah',
+                        mode_dark: 'Gelap',
+                        lbl_font: 'Saiz Tulisan',
+                        btn_settings: 'Akses',
+                        page_title: 'Panduan Pendaftaran JKM',
+                        page_desc: 'Ketahui cara mendaftar sebagai OKU, kategori ketidakupayaan, dan dokumen yang diperlukan untuk mendapatkan Kad OKU.',
+                        def_title: 'Siapa Itu OKU?',
+                        def_text1: 'Mengikut Akta OKU 2008, OKU adalah mereka yang mempunyai kekurangan jangka panjang fizikal, mental, intelektual atau deria yang apabila berinteraksi dengan pelbagai halangan, boleh menyekat penyertaan penuh dan berkesan mereka dalam masyarakat.',
+                        def_note: '"Pendaftaran adalah secara sukarela tetapi digalakkan bagi membolehkan OKU menikmati kemudahan yang disediakan kerajaan."',
+                        why_title: 'Kenapa Perlu Daftar?',
+                        cat_header: '7 Kategori Ketidakupayaan',
+                        cat_sub: 'Kategori ini ditentukan oleh Pegawai Perubatan bertauliah.',
+                        step_title: 'Proses Pendaftaran',
+                        doc_title: 'Dokumen Diperlukan',
+                        doc_note: 'Borang boleh dimuat turun atau diambil di Pejabat JKM.',
+                        ft_links: 'Pautan Pantas',
+                        ft_contact: 'Hubungi',
+                        chat_ph: 'Taip soalan anda...',
+                       btn_print_guide: 'Print panduan lengkap di sini',
+                        btn_print_guide_hint: 'Buka PDF untuk cetakan penuh',
+                    },
+                    en: {
+                        settings_title: 'Access Settings',
+                        lbl_lang: 'Language',
+                        mode_light: 'Light',
+                        mode_dark: 'Dark',
+                        lbl_font: 'Font Size',
+                        btn_settings: 'Access',
+                        page_title: 'JKM Registration Guide',
+                        page_desc: 'Learn how to register as a PWD, disability categories, and documents required to get the OKU Card.',
+                        def_title: 'Who is a PWD?',
+                        def_text1: 'According to the PWD Act 2008, PWDs include those who have long-term physical, mental, intellectual or sensory impairments which in interaction with various barriers may hinder their full and effective participation in society.',
+                        def_note: '"Registration is voluntary but encouraged to allow PWDs to enjoy facilities provided by the government."',
+                        why_title: 'Why Register?',
+                        cat_header: '7 Categories of Disability',
+                        cat_sub: 'These categories are determined by a certified Medical Officer.',
+                        step_title: 'Registration Process',
+                        doc_title: 'Required Documents',
+                        doc_note: 'Forms can be downloaded or collected at the JKM Office.',
+                        ft_links: 'Quick Links',
+                        ft_contact: 'Contact',
+                        chat_ph: 'Type your question...',
+                        btn_print_guide: 'Print full guide here',
+                        btn_print_guide_hint: 'Open the PDF for full printing',
+                    }
+                },
+
+                // Tabs
+                tabs: [
+                    { id: 'intro', icon: 'fas fa-info-circle', label: { ms: 'Pengenalan', en: 'Introduction' } },
+                    { id: 'kategori', icon: 'fas fa-users', label: { ms: '7 Kategori', en: '7 Categories' } },
+                    { id: 'cara', icon: 'fas fa-file-signature', label: { ms: 'Cara & Dokumen', en: 'How To Apply' } }
+                ],
+
+                // Benefits List
+                benefits: [
+                    { icon: 'fas fa-wallet', title: { ms: 'Bantuan Kewangan', en: 'Financial Aid' }, desc: { ms: 'Layak memohon bantuan bulanan seperti EPC.', en: 'Eligible for monthly aids like EPC.' } },
+                    { icon: 'fas fa-graduation-cap', title: { ms: 'Pendidikan & Biasiswa', en: 'Education & Scholarship' }, desc: { ms: 'Elaun pelajar khas dan kemasukan sekolah khas.', en: 'Special student allowance and special school entry.' } },
+                    { icon: 'fas fa-parking', title: { ms: 'Kemudahan Awam', en: 'Public Facilities' }, desc: { ms: 'Pelekat OKU, parking khas, dan diskaun 50% pengangkutan.', en: 'OKU stickers, special parking, and 50% transport discount.' } }
+                ],
+
+                // 7 Categories Data
+                okuCategories: [
+                    { code: 'DE', name: { ms: 'Pendengaran', en: 'Hearing' }, desc: { ms: 'Kurang jelas pendengaran atau pekak sepenuhnya.', en: 'Hard of hearing or completely deaf.' }, icon: 'fas fa-ear-deaf', color: 'border-blue-500' },
+                    { code: 'BL', name: { ms: 'Penglihatan', en: 'Visual' }, desc: { ms: 'Rabun teruk atau buta (kedua-dua atau sebelah mata).', en: 'Low vision or blind (both or one eye).' }, icon: 'fas fa-eye-slash', color: 'border-purple-500' },
+                    { code: 'SD', name: { ms: 'Pertuturan', en: 'Speech' }, desc: { ms: 'Masalah bercakap atau tidak boleh bercakap.', en: 'Speech impairment or mute.' }, icon: 'fas fa-comments', color: 'border-pink-500' },
+                    { code: 'PH', name: { ms: 'Fizikal', en: 'Physical' }, desc: { ms: 'Kecacatan anggota badan (tangan/kaki) yang kekal.', en: 'Permanent limb disability (arms/legs).' }, icon: 'fas fa-wheelchair', color: 'border-green-500' },
+                    { code: 'LD', name: { ms: 'Pembelajaran', en: 'Learning' }, desc: { ms: 'Down Syndrome, Autisme, ADHD, Dyslexia.', en: 'Down Syndrome, Autism, ADHD, Dyslexia.' }, icon: 'fas fa-puzzle-piece', color: 'border-yellow-500' },
+                    { code: 'ME', name: { ms: 'Mental', en: 'Mental' }, desc: { ms: 'Penyakit mental kronik (Skizofrenia, Bipolar) dirawat > 2 tahun.', en: 'Chronic mental illness (Schizophrenia, Bipolar) treated > 2 years.' }, icon: 'fas fa-brain', color: 'border-red-500' },
+                    { code: 'MD', name: { ms: 'Pelbagai', en: 'Multiple' }, desc: { ms: 'Gabungan lebih daripada satu jenis ketidakupayaan.', en: 'Combination of more than one type of disability.' }, icon: 'fas fa-layer-group', color: 'border-gray-500' }
+                ],
+
+                // Steps to Apply
+                steps: [
+                    { 
+                        title: { ms: 'Dapatkan Borang / Daftar Online', en: 'Get Form / Register Online' }, 
+                        desc: { ms: 'Daftar di portal MyDaftarOKU atau dapatkan Borang Pendaftaran OKU (BPPOKU) di pejabat JKM.', en: 'Register at MyDaftarOKU portal or get the BPPOKU Form at JKM office.' },
+                        link: 'https://mydaftaroku.jkm.gov.my/',
+                        linkText: { ms: 'Portal MyDaftarOKU', en: 'MyDaftarOKU Portal' }
+                    },
+                    { 
+                        title: { ms: 'Pemeriksaan Kesihatan', en: 'Medical Examination' }, 
+                        desc: { ms: 'Bawa borang ke Klinik Kesihatan/Hospital Kerajaan untuk disahkan oleh Pegawai Perubatan.', en: 'Bring form to Health Clinic/Gov Hospital to be certified by a Medical Officer.' }
+                    },
+                    { 
+                        title: { ms: 'Serahan Dokumen', en: 'Document Submission' }, 
+                        desc: { ms: 'Hantar borang lengkap beserta salinan KP dan gambar ke Pejabat Kebajikan Masyarakat Daerah (PKMD).', en: 'Submit completed form with IC copy and photo to the District Social Welfare Office (PKMD).' }
+                    },
+                    { 
+                        title: { ms: 'Pengeluaran Kad', en: 'Card Issuance' }, 
+                        desc: { ms: 'Kad OKU akan diproses dalam tempoh 30 hari bekerja selepas permohonan lengkap diterima.', en: 'OKU Card will be processed within 30 working days after complete application.' }
+                    }
+                ],
+
+                // Documents List
+                documents: [
+                    { ms: 'Salinan MyKad / MyKid', en: 'Copy of MyKad / MyKid' },
+                    { ms: '1x Gambar Berukuran Pasport', en: '1x Passport Sized Photo' },
+                    { ms: 'Borang BPPOKU (Lengkap Disi)', en: 'BPPOKU Form (Completed)' },
+                    { ms: 'Laporan Perubatan (Jika ada)', en: 'Medical Report (If any)' }
+                ],
+
+                initApp() {
+                    // 1. Sync dengan global store
+                    if (this.$store?.prefs) {
+                        const prefs = this.$store.prefs;
+                        this.lang = prefs.lang;
+                        this.isDark = prefs.isDark;
+                        this.currentFontSize = prefs.fontSize;
+                        
+                        // Apply theme & font
+                        prefs.applyTheme(this.isDark);
+                        document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                    } else {
+                        // Fallback kalau store tak ready
+                        const savedLang = localStorage.getItem('myoku_lang');
+                        const savedDark = localStorage.getItem('myoku_dark');
+                        const savedFont = localStorage.getItem('myoku_font');
+                        
+                        if (savedLang) this.lang = savedLang;
+                        if (savedFont) {
+                            this.currentFontSize = parseInt(savedFont);
+                            document.documentElement.style.fontSize = this.currentFontSize + 'px';
+                        }
+                        if (savedDark === 'true') {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        } else if (savedDark === 'false') {
+                            document.documentElement.classList.remove('dark');
+                        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.isDark = true;
+                            document.documentElement.classList.add('dark');
+                        }
+                    }
+                    
+                    console.log('Page initialized with settings:', {
+                        lang: this.lang,
+                        isDark: this.isDark,
+                        fontSize: this.currentFontSize
+                    });
+                },
+
+                setLang(val) {
+                    this.lang = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setLang(val);
+                    } else {
+                        localStorage.setItem('myoku_lang', val);
+                    }
+                },
+
+                toggleDark(val) {
+                    this.isDark = val;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setDark(val);
+                    } else {
+                        localStorage.setItem('myoku_dark', val);
+                        if (val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                setFontSize(size) {
+                    this.currentFontSize = size;
+                    if (this.$store?.prefs) {
+                        this.$store.prefs.setFontSize(size);
+                    } else {
+                        localStorage.setItem('myoku_font', size);
+                        document.documentElement.style.fontSize = size + 'px';
+                    }
+                },
+
+                async sendMessage() {
+    if (this.userMsg.trim() === '') return;
+
+    const userText = this.userMsg;
+
+    // Papar mesej user
+    this.messages.push({
+        id: Date.now(),
+        text: userText,
+        sender: 'user'
+    });
+
+    // Simpan history
+    this.chatHistory.push({
+        role: "user",
+        content: userText
+    });
+
+    this.userMsg = '';
+    this.isTyping = true;
+
+    this.$nextTick(() => {
+        const container = document.getElementById('chat-messages');
+        if (container) container.scrollTop = container.scrollHeight;
+    });
+
+    try {
+        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer YOUR_MISTRAL_API_KEY`
+            },
+            body: JSON.stringify({
+                model: "mistral-small-latest",
+                messages: this.chatHistory,
+                max_tokens: 1000,
+                temperature: 0.7
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            throw new Error('Respons API tidak sah');
+        }
+
+        const botReply = data.choices[0].message.content;
+
+        this.chatHistory.push({
+            role: "assistant",
+            content: botReply
+        });
+
+        this.messages.push({
+            id: Date.now() + 1,
+            text: marked.parse(botReply),
+            sender: 'bot'
+        });
+
+    } catch (error) {
+        console.error("Ralat Mistral AI:", error);
+
+        this.messages.push({
+            id: Date.now() + 1,
+            text: "Maaf, sistem sedang sibuk. Sila cuba lagi sebentar atau semak portal MyDaftarOKU.",
+            sender: 'bot'
+        });
+    } finally {
+        this.isTyping = false;
+
+        this.$nextTick(() => {
+            const container = document.getElementById('chat-messages');
+            if (container) container.scrollTop = container.scrollHeight;
+        });
+    }
+}
+            }
+        }
+    </script>
+</body>
+</html>
